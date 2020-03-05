@@ -1034,7 +1034,7 @@ The Annotation Tab consists of three sub-tabs. These are the: (i) Convex Hull, (
       ),
       br(),
       strong("Code:"),
-      helpText("Available upon request."),
+      helpText("Available available at: https://github.com/PavlopoulosLab/NORMA "),
       br(),
       strong("Publications:"),
       helpText(
