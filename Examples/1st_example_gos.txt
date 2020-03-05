@@ -1,0 +1,46 @@
+response to steroid hormone stimulus	FOS,KRT19,DUSP1,OXTR
+response to organic substance	FOS,KRT19,DUSP1,OXTR,HSPA1B,CYR61
+response to estrogen stimulus	KRT19,DUSP1,OXTR
+response to hormone stimulus	FOS,KRT19,DUSP1,OXTR
+response to endogenous stimulus	FOS,KRT19,DUSP1,OXTR
+oxygen binding	HBA2,HBA1,HBB,CYP4B1
+heme binding	HBA2,HBA1,HBB,CYP4B1
+tetrapyrrole binding	HBA2,HBA1,HBB,CYP4B1
+iron ion binding	HBA2,HBA1,HBB,CYP4B1
+transition metal ion binding	ADH1B,HBA2,HBA1,HBB,KLF4,CYP4B1
+metal ion binding	FMO2,ADH1B,HBA2,HBA1,HBB,KLF4,CYP4B1
+cation binding	FMO2,ADH1B,HBA2,HBA1,HBB,KLF4,CYP4B1
+ion binding	FMO2,ADH1B,HBA2,HBA1,HBB,KLF4,CYP4B1
+cell adhesion	WISP2,MMRN1,NEGR1,CYR61
+biological adhesion	WISP2,MMRN1,NEGR1,CYR61
+extracellular region	WISP2,TPSB2,MMRN1,CYR61
+positive regulation of nitrogen compound metabolic process	FOS,HBB,KLF4
+positive regulation of cellular biosynthetic process	FOS,HBB,KLF4
+positive regulation of biosynthetic process	FOS,HBB,KLF4
+cell fraction	FOS,WISP2,FMO2,CYP4B1
+membrane fraction	FOS,FMO2,CYP4B1
+insoluble fraction	FOS,FMO2,CYP4B1
+response to wounding	FOS,MYH2,MMRN1
+nucleolus	FOS,MYH2,KLF4
+organelle lumen	FOS,MYH2,MMRN1,KLF4
+membrane-enclosed lumen	FOS,MYH2,MMRN1,KLF4
+intracellular non-membrane-bounded organelle	FOS,KRT19,MYH2,HBA2,HBA1,KLF4
+non-membrane-bounded organelle	FOS,KRT19,MYH2,HBA2,HBA1,KLF4
+nuclear lumen	FOS,MYH2,KLF4
+intracellular organelle lumen	FOS,MYH2,KLF4
+adenyl nucleotide binding	FMO2,MYH2,HSPA1B
+purine nucleoside binding	FMO2,MYH2,HSPA1B
+nucleoside binding	FMO2,MYH2,HSPA1B
+purine nucleotide binding	FMO2,MYH2,HSPA1B
+nucleotide binding	FMO2,MYH2,HSPA1B
+response to protein stimulus	FOS,HSPA1B,CYR61
+response to extracellular stimulus	FOS,DUSP1,KLF4
+oxidation reduction	ALDH1A1,FMO2,ADH1B,CYP4B1
+behavior	FOS,OXTR,CYR61
+cytosol	ALDH1A1,ADH1B,HBA2,HBA1,HBB
+endoplasmic reticulum	FMO2,HSPA1B,CYP4B1
+intracellular signaling cascade	PLCXD3,DUSP1,OXTR
+transcription regulator activity	FOS,ADH1B,KLF4
+plasma membrane	WISP2,KRT19,MYH2,OXTR,NEGR1
+intrinsic to membrane	FMO2,HS6ST3,OXTR,NEGR1
+integral to membrane	FMO2,HS6ST3,OXTR
