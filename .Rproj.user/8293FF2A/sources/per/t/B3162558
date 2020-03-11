@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1582664686498.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1055994239",
+    "id" : "B3162558",
+    "lastKnownWriteTime" : 1582664682,
+    "last_content_update" : 1582664682,
+    "path" : "~/NetBeansProjects/Papanikolopoulou/annotations_clearance.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "43,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

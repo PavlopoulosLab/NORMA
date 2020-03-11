@@ -1,0 +1,46 @@
+annotation_file<-"C:\\Users\\George\\Documents\\NetBeansProjects\\Papanikolopoulou\\PAP_new_BP.txt"
+network_file<-"C:\\Users\\George\\Documents\\NetBeansProjects\\Papanikolopoulou\\string_interactions_PAP_new.txt"
+
+network<- read.delim(network_file)
+annotations <- read.delim(annotation_file,header = F)
+number_of_groups<- length(annotations$V1)
+
+column1<- unique(network$from)
+column2<- unique(network$to)
+
+df1<- data.frame(V1= column1)
+df2<- data.frame(V1= column2)
+
+unique_nodes_network<- full_join(df1,df2)
+
+
+annotations2<- as.character(annotations[,2])
+genes <- strsplit(annotations2, ",")
+unlist_genes<- unlist(genes)
+
+unique_nodes_annotations<- as.data.frame(unique(unlist(genes)))
+colnames(unique_nodes_annotations)<- "V1"
+
+merged<- full_join(unique_nodes_network, unique_nodes_annotations)
+
+
+not_common_nodes<- anti_join(merged,unique_nodes_network)
+not_common_nodes<- not_common_nodes$V1
+
+if(!is.null(not_common_nodes)){
+  unlist_genes<- unlist_genes[!unlist_genes%in%not_common_nodes]
+}
+
+mylist<-list()
+for(i in 1:length(annotations$V1)){
+  a<- genes[[i]][!genes[[i]]%in%not_common_nodes]
+  mylist[i]<- list(a)
+}
+
+# names(mylist)<- annotations$V1
+
+l <- melt(data.table(mylist))
+l<- cbind(annotations$V1,l)
+l<- as.data.frame(l)
+colnames(l)<- NULL
+gsub(l,pattern = "//s", replacement="//")
