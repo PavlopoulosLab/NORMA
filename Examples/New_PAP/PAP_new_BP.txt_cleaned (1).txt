@@ -1,0 +1,11 @@
+translation	AGO1,Aats-asp,Aats-ile,Aats-val,CG31739,CG33123,CG4679,CG5394,CG5642,EfTuM,Elf,Rack1,Rbp2,RpL10,RpL10Ab,RpL12,RpL13,RpL18A,RpL26,RpL3,RpL30,RpL4,RpLP0,RpS10a,RpS11,RpS12,RpS13,RpS14a,RpS15Aa,RpS16,RpS17,RpS18,RpS2,RpS23,RpS27,RpS3,RpS3A,RpS4,RpS6,RpS7,RpS8,Tango7,Trip1,bonsai,clu,eIF-3p66,eIF3-S10,eIF3-S8,eIF3-S9,eIF4G,mRpL12,mRpL44,mRpS10,mRpS18B,mRpS22,mRpS23,mRpS34,mRpS35,mRpS5,mRpS7,mRpS9,sta
+cytoskeleton organization	Act79B,BicD,CG10932,CG11876,CG7033,CG8258,Cct5,Cctgamma,Dhc64C,Dlic,Fmr1,Hsc70-3,Hsp83,Khc,Klp10A,Lam,Mtl,Mtor,Prosbeta7,Rac1,Rae1,RanBPM,RpL10,RpL10Ab,RpL11,RpL12,RpL13,RpL18A,RpL26,RpL3,RpL30,RpL4,RpS11,RpS13,RpS15Aa,RpS16,RpS18,RpS23,RpS3A,RpS4,RpS6,Rpn12,Rpt2,T-cp1,TER94,Tcp-1eta,Tcp-1zeta,Top2,U2A,U2af50,alpha-Cat,arm,betaTub56D,cpa,cpb,eIF3-S10,eIF4G,emb,flr,heph,mago,ninaC,pont,smt3,sqh,sta,tubA84B,zip
+nervous system development	AGO1,Aats-asp,Aats-val,Abl,Bap55,CG15100,CG33123,CG5642,CG7033,CG7603,CG7770,CadN,Cct5,Dhc64C,Dlic,Dscam2,FKBP59,Fmr1,Hrb27C,Hrs,Hsp83,Iswi,Khc,Lam,Lar,LpR2,Mdr65,Mi-2,Mtl,Nacalpha,Not1,Ost48,Prosbeta7,Prp8,Rab5,Rac1,RpL30,RpS10a,RpS11,RpS8,Rpd3,Rpn12,Rpt4,SF2,Srp54,TER94,Tango7,Tcp-1eta,U2af50,Uch-L5,arm,clu,dock,flr,mRpL44,mor,nrv2,p47,poe,rin,robl,smt3,sqh,tsr,zip
+neurogenesis	Aats-asp,Aats-val,Abl,Bap55,CG15100,CG33123,CG5642,CG7033,CG7603,CG7770,CadN,Cct5,Dhc64C,Dlic,Dscam2,Fmr1,Hrb27C,Hrs,Hsp83,Iswi,Khc,Lar,LpR2,Mdr65,Mi-2,Mtl,Nacalpha,Not1,Ost48,Prosbeta7,Prp8,Rab5,Rac1,RpS10a,RpS11,RpS8,Rpd3,Rpn12,Rpt4,SF2,Srp54,TER94,Tango7,Tcp-1eta,U2af50,Uch-L5,arm,clu,dock,flr,mRpL44,mor,nrv2,p47,poe,rin,robl,smt3,sqh,tsr,zip
+neuron recognition	Abl,CadN,Fmr1,Rac1
+ubiquitin-dependent protein catabolic process	Prosalpha1,Prosalpha6,Prosalpha7,Prosbeta7,Rad23,Rpn12,Rpn13,Rpn2,Rpn3,Rpn5,Rpn6,Rpt1,Rpt2,Rpt4,Rpt5,Rpt6,TER94,Uch,Uch-L5,Ufd1-like
+acetylcholine metabolic process	Ace,Cha
+regulation of neurotransmitter levels	Ace,Cha,Fmr1,Gdi,HDAC6,Hrs,Khc,lqf
+positive regulation of neurotransmitter secretion	BicD
+regulation of behavior	AGO1,CadN,Fmr1,Hsp83,Ilp2,Lar,bai,me31B
+behavior	AGO1,AcCoAS,CG3011,Fmr1,Ilp2,Ilp3,Khc,Lam,Rack1,RanBPM,ade5,arm,e,fne,lig,me31B,mub

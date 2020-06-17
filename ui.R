@@ -543,8 +543,114 @@ fixedPage(
           class = 'box-panel-padding',
           class = 'box-panel'
           
-        )
-        ,
+        ),
+        
+        tabPanel(
+          "Convex Hulls - 3D",
+          helpText("Select the layout you want in the analysis."),
+          selectInput(
+            "layouts_3D",
+            "The layouts:",
+            choices = layouts_3D,
+            selected = selected_layouts,
+            multiple = FALSE
+          ),
+          # prettyCheckbox(
+          #   inputId = "layouts_with_virtual_nodes_3D",
+          #   label = "Allow modification of the selected layout taking into account the groups",
+          #   thick = TRUE,
+          #   shape = "curve",
+          #   animation = "pulse",
+          #   status = "info",
+          #   inline = F,
+          #   value = F
+          # ),
+          prettyCheckbox(
+            inputId = "Dark",
+            label = "Dark mode",
+            thick = TRUE,
+            shape = "curve",
+            animation = "pulse",
+            status = "info",
+            inline = F,
+            value = F
+          ),
+          prettyCheckbox(
+            inputId = "show_some_labels_3D",
+            label = "Some Labels",
+            thick = TRUE,
+            shape = "curve",
+            animation = "pulse",
+            status = "info",
+            inline = F,
+            value = F
+          ),
+          prettyCheckbox(
+            inputId = "expressions_3D",
+            label = "Show node - coloring",
+            thick = TRUE,
+            shape = "curve",
+            animation = "pulse",
+            status = "info",
+            inline = F,
+            value = F
+          ),
+          # plotlyOutput("convex_hull_3D")
+          uiOutput("convex_hull_3D"),
+          eval(ui_dataTable_panel("chooseGroups_3D")),
+          
+          tags$style(
+            HTML(
+              ".js-irs-0 .irs-bar {border-top-color: #2C8160; border-bottom-color: #2C8160;} .js-irs-0 .irs-bar-edge {border-color: #2C8160;}
+                                .js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #2C8160;}"
+            )
+          ),
+          
+          tags$style(
+            HTML(
+              ".js-irs-1 .irs-bar {border-top-color: #2C8160;border-bottom-color: #2C8160;} .js-irs-1 .irs-bar-edge {border-color: #2C8160;}
+                                .js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #2C8160;}"
+            )
+          ),
+          
+          tags$style(
+            HTML(
+              ".js-irs-2 .irs-bar {border-top-color: #2C8160; border-bottom-color: #2C8160;} .js-irs-2 .irs-bar-edge {border-color: #2C8160;}
+                                .js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #2C8160;}"
+            )
+          ),
+          div(
+            style = "display:inline-block",
+            sliderInput(
+              inputId = "scaling_coordinates_convex_3D_X",
+              label = "Scale x coordinates:",
+              min = 1,
+              max = 10,
+              value = 1
+            )
+          ),
+          div(
+            style = "display:inline-block",
+            sliderInput(
+              inputId = "scaling_coordinates_convex_3D_Y",
+              label = "Scale y coordinates:",
+              min = 1,
+              max = 10,
+              value = 1
+            )
+          ),
+          div(
+            style = "display:inline-block",
+            sliderInput(
+              inputId = "scaling_coordinates_convex_3D_Z",
+              label = "Scale z coordinates:",
+              min = 1,
+              max = 10,
+              value = 1
+            )
+          )
+        ),
+        
         # tags$a("Large window",target="_blank",href="output_convex_11188.html")
         tabPanel("Venn Diagrams",
                  br(),
@@ -662,7 +768,7 @@ fixedPage(
           br(),
           strong("The network file:"),
           helpText(
-            "It is an obligatory, 2-column (unweighted), tab-delimited file, containing all network connections of an undirected network. This file must contain headers, namely: 'from' and 'to'. Notably, self-loops and multiple-edges are eliminated automatically."
+            "It is an obligatory, 2-column (unweighted), tab-delimited file, containing all network connections of an undirected network. This file must contain headers, namely: 'Source' and 'Target'. Notably, self-loops and multiple-edges are eliminated automatically."
           ),
           strong("The annotation file:"),
           helpText(
@@ -680,7 +786,7 @@ Examples are shown below:"),
             "
 Network File:             Annotation File:                        Node-coloring file            Warnings!
 
-from    to                Group-2 BCL2L1,MDM4,MDM2,CHEK2          CDKN1A  blue                - Network file: Must have headers: from - to
+Source    Target                Group-2 BCL2L1,MDM4,MDM2,CHEK2          CDKN1A  blue                - Network file: Must have headers: Source - Target
 CDKN1A  TP53              Group-5 TP53,EP300                      TP53    blue                - Annotation file: no headers, no spaces
 TP53	MDM2              Group-1 CDKN2A,ATM,TP53BP2,MDM2         MDM4    blue                  only commas (e.g. BCL2L1,MDM4,MDM2)
 MDM4	TP53              Group-4 CHEK2,CREBBP,MDM2               BCL2L1  red
@@ -1034,7 +1140,7 @@ The Annotation Tab consists of three sub-tabs. These are the: (i) Convex Hull, (
       ),
       br(),
       strong("Code:"),
-      helpText("Available available at: https://github.com/PavlopoulosLab/NORMA "),
+      helpText("Available at: https://github.com/PavlopoulosLab/NORMA"),
       br(),
       strong("Publications:"),
       helpText(

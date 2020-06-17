@@ -1,5 +1,6 @@
 layouts_ui<-c(
-"Fruchterman-Reingold"="Fructerman\tlayout.fruchterman.reingold(igraph, dim=2)",
+"Fruchterman-Reingold"="Fructerman\tlayout_nicely(igraph, dim=2)",
+# "Fruchterman-Reingold"="Fructerman\tlayout.fruchterman.reingold(igraph, dim=2)",
 "Random"="Random\tlayout.random(igraph, dim=2)",
 "Circle"="Circle\tlayout.circle(igraph)",
 "Kamada-Kawai"="Kamada-Kawai\tlayout.kamada.kawai(igraph, dim=2)",
@@ -19,5 +20,5 @@ layouts_ui<-c(
 )
 
 selected_layouts=c(
-  "Fructerman\tlayout.fruchterman.reingold(igraph, dim=2)"
+  "Fructerman\tlayout_nicely(igraph, dim=2)"
   )

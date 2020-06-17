@@ -5,7 +5,7 @@ pie_charts<- function(){
     return()
   dataset1<- get.edgelist(g)
   my_network<- as.data.frame(get.edgelist(g))
-  my_network<- data.frame(from = my_network$V1, to = my_network$V2)
+  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
   
   gName <- SelectedStoredNets()$name
   
@@ -35,8 +35,8 @@ pie_charts<- function(){
     GO[[i]]<-rep(groups[i,1], length(x[[i]]))
   }
   
-  column1<-my_network$from
-  column2<-my_network$to
+  column1<-my_network$Source
+  column2<-my_network$Target
   node_names<-unique(union(column1, column2))
   tt<-unlist(x)
   nodes_with_NA_groups<-setdiff(node_names,tt)
@@ -119,15 +119,29 @@ pie_charts<- function(){
     group_by(id) %>% 
     summarise_all(funs(trimws(paste(., collapse = ','))))
   groupss <- inner_join(members_with_zeros, groupss, by = "id")
-  groupss <-data.frame(groupss[,1],groupss[,3])
-  groupss<-groupss[!duplicated(groupss[,1]), ]
+  groupss <- data.frame(groupss[,1],groupss[,3])
+  groupss <- groupss[!duplicated(groupss[,1]), ]
   colnames(groupss)<- c("V1", "V2")
   groupss <- as.data.frame(groupss)
-  groupss_as_charachter<- as.character(groupss$V2)
   
-  
+  #---------------------------------#
+  if(layouts_with_virtual_nodes_pies==T){
+    node_name <- unique(members_with_NA_groups$id)
+    node_name_links <- unique(members_with_NA_groups$id)
+    groupss_as_charachter<- as.character(groupss$V2)
+    
+  }else{
+    node_name<-names(V(g))
+    node_name_links<-names(V(g))
+    
+    not_virtual_nodes <- groupss[order(match(groupss[,1],node_name)),]
+    groupss_as_charachter<- as.character(not_virtual_nodes$V2)
+    
+  }
   Groupss <- strsplit(groupss_as_charachter, ",")
-
+  #--------------------------------#
+  
+  
   #### Expressions ####
   
   if (!is.null(getStoredExpressionChoices())){
@@ -156,7 +170,7 @@ pie_charts<- function(){
   }
   
   ###################
-
+  
   minx<-min(lay[,1])
   maxx<-max(lay[,1])
   miny<-min(lay[,2])
@@ -240,26 +254,26 @@ pie_charts<- function(){
     genes <- strsplit(annotation1[s[i], 2], ",")$Nodes
     selected_genes<-unique(c(selected_genes, genes))
   }
-  
+
   if(zoom_slider==TRUE)
   {
   for (i in 1:length(new_nodes)){
     coor_x<-mapper(lay[i,1], minx, maxx, 100, 800)
     coor_y<-mapper(lay[i,2], miny, maxy, 100, 800)
-    node_name<-nodes[i]
+    # node_name<-nodes[i]
     
     if(some_labels_pies==T)
     if(x!=number_of_groups)
-      if(!(node_name  %in% selected_genes))
-        node_name<-""
+      if(!(node_name[i]  %in% selected_genes))
+        node_name[i]<-""
     
     if(show_labels_pies == F)
-      node_name<-""
+      node_name<-rep("", length(node_name))
     if(expression_colors_pies == T){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name,"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
     }
     if(expression_colors_pies == F){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name,"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
     }
     
     if(pie_to_be_colored[i]==F){
@@ -268,6 +282,8 @@ pie_charts<- function(){
     if(pie_to_be_colored[i]==T){
       counter<-1
       max_length<-length(intersect(Groupss[[i]], annotation1[s]))
+      
+      
       for (j in 1:length(Groupss[[i]])) {
         if(is.element(Groupss[[i]][j], annotation1[s]) == T){
         if(counter<max_length){
@@ -287,14 +303,14 @@ pie_charts<- function(){
     for (i in 1:length(new_nodes)){
       coor_x<-mapper(lay[i,1], minx, maxx, 100, 800)
       coor_y<-mapper(lay[i,2], miny, maxy, 100, 800)
-      node_name<-nodes[i]
+      # node_name<-node_name[i]
       if(show_labels_pies == F)
-        node_name<-""
+        node_name<-rep("", length(node_name))
       if(expression_colors_pies == T){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name,"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
       }
       if(expression_colors_pies == F){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name,"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
       }
       
       if(pie_to_be_colored[i]==F){
@@ -321,7 +337,7 @@ pie_charts<- function(){
   cat(sprintf("],\n
 						\"links\":[\n"), file = fileConn)
   for (i in 1:nrowdat){
-    cat(sprintf(paste("{\"source\":", which(nodes %in% dataset1[i,1])-1, ",\"target\":", which(nodes %in% dataset1[i,2])-1, "},\n",sep="")), file = fileConn
+    cat(sprintf(paste("{\"source\":", which(node_name_links %in% dataset1[i,1])-1, ",\"target\":", which(node_name_links %in% dataset1[i,2])-1, "},\n",sep="")), file = fileConn
     )}
   cat(sprintf(
     "]

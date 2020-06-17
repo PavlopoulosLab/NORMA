@@ -57,6 +57,7 @@ if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
 if (!require(networkD3)) install.packages("networkD3")
 if (!require(randomcoloR)) install.packages("randomcoloR")
 if (!require(Cairo)) install.packages("Cairo")
+if (!require(plotly)) install.packages("Plotly")
 
 
 
@@ -113,6 +114,8 @@ source("statistics.R")
 source("netstats.R")
 source("automated_annotations_vector.R")
 source("automated_annotations_choices.R")
+source("layouts_3D.R")
+source("layout_choices_3D.R")
 
 
 # Images for help pages and banner
@@ -227,4 +230,3 @@ mapper<-function(value, istart, istop, ostart, ostop)
 { 
   return (ostart + (ostop - ostart) * ((value - istart) / (istop - istart)))
 }
-

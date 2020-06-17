@@ -21,8 +21,8 @@ library(purrr)
 network<- read.delim(choose.files())
 annotations <- read.delim(choose.files(),header = F)
 
-column1<- unique(network$from)
-column2<- unique(network$to)
+column1<- unique(network$Source)
+column2<- unique(network$Target)
 
 df1<- data.frame(V1= column1)
 df2<- data.frame(V1= column2)

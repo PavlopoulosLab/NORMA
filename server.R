@@ -29,7 +29,6 @@ read_data <-
       return(dataset1)
     })
 
-
 read_annotations <-
   function(datapath,
            type = c("txt"),
@@ -162,7 +161,17 @@ shinyServer(function(input, output, session) {
           sample(1:10, nrow(dataset1), replace = T)
       colnames(dataset1) <- c("Source", "Target", "Weight")
       # } else { colnames(dataset1) <- c('Source', 'Target') }
+    }       
+    row_to_keep <- c()
+    for(i in 1:nrow(dataset1)){
+      if(dataset1[i,1]==dataset1[i,2]){
+        row_to_keep <- c(row_to_keep, FALSE) 
+      }
+      if(dataset1[i,1]!=dataset1[i,2]){
+        row_to_keep <- c(row_to_keep, TRUE) 
+      }
     }
+    dataset1 = dataset1[row_to_keep,]
     return(dataset1)
   }
   
@@ -487,7 +496,7 @@ shinyServer(function(input, output, session) {
         }
       }
       
-      if (nrow(dataset) >= 100000) {
+      if (nrow(dataset) >= 10000) {
         createAlert(
           session,
           "tabUpload_up_to_10000_rows",
@@ -1176,7 +1185,7 @@ shinyServer(function(input, output, session) {
     set.seed(123)
     my_network <- as.data.frame(get.edgelist(g))
     my_network <-
-      data.frame(from = my_network$V1, to = my_network$V2)
+      data.frame(Source = my_network$V1, Target= my_network$V2)
     
     withProgress(min = 0, max = 1, {
       incProgress(message = "Processing data into plot",
@@ -1428,7 +1437,6 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  uiOutputTextError<- 
   
   #######################################################################
   #Expression
@@ -2330,6 +2338,114 @@ shinyServer(function(input, output, session) {
           }
           datatable(df,rownames = FALSE, extensions = 'Responsive') %>% formatStyle(colnames(df), fontSize = ui_options["ui_table_font_sz"])
   })
+  
+  
+  
+  
+  #--------------------------------------------------#
+  scaling_coordinates_convex_3D_X <- reactive({
+    input$scaling_coordinates_convex_3D_X
+  }) 
+  scaling_coordinates_convex_3D_Y <- reactive({
+    input$scaling_coordinates_convex_3D_Y
+  }) 
+  scaling_coordinates_convex_3D_Z <- reactive({
+    input$scaling_coordinates_convex_3D_Z
+  })
+  
+  output$convex_hull_3D<- renderUI({
+    s = input$chooseGroups_3D_rows_selected
+    
+    if (input$Dark == T) {
+      Dark_mode = T
+    }
+    else  if (input$Dark == F) {
+      Dark_mode = F
+    }
+    if (input$expressions_3D == T) {
+      expression_colors_3D = T
+    }
+    else if (input$expressions_3D == F) {
+      expression_colors_3D = F
+    }
+    # if (input$layouts_with_virtual_nodes_3D == T) {
+    #   layouts_with_virtual_nodes_3D = T
+    # }
+    # else  if (input$layouts_with_virtual_nodes_3D == F) {
+    #   layouts_with_virtual_nodes_3D = F
+    # }
+    if (input$show_some_labels_3D == T) {
+      show_some_labels_3D = T
+    }
+    else  if (input$show_some_labels_3D == F) {
+      show_some_labels_3D = F
+    }
+    
+    withProgress(min = 0, max = 1, {
+      incProgress(message = "Processing data into plot",
+                  detail = "This may take a while...",
+                  amount = .1)
+      
+    lay <- input$layouts_3D
+    source("convex_hulls_3D.R", local = T)
+    convex_hull_3D()
+    
+    tags$iframe(
+      srcdoc = paste(readLines(
+        paste("convex_3D_",Sys.getpid(),".html", sep="")
+      ), collapse = '\n'),
+      width = "100%",
+      height = "850px"
+    )
+    })
+  })
+  
+  output$chooseGroups_3D <- DT::renderDataTable({
+    annotation <- fetchFirstSelectedStoredGroups2_annotations_tab()
+    if (is.null(annotation))
+      annotation <- EmptyDataset(c("Annotations", "Nodes"))
+    rowCallback_generated <-
+      "function(row, dat, displayNum, index){"
+    for (i in 1:length(rownames(annotation)))
+    {
+      rowCallback_generated <-
+        paste(
+          rowCallback_generated,
+          "if(dat[0]==",
+          i,
+          "){",
+          "$('td:eq(1)', row).addClass('x",
+          i,
+          "');}" ,
+          sep = ""
+        )
+    }
+    rowCallback_generated <-
+      paste(rowCallback_generated, "}", sep = "")
+    
+    css_colors <- group_pal_rows(length(rownames(annotation)))
+    
+    x <- length(rownames(annotation))
+    tmp_css_colors <- c()
+    for (i in 1:x)
+    {
+      tmp_css_colors <- c(tmp_css_colors, css_colors[i])
+    }
+    datatable(
+      annotation,
+      extensions = 'Scroller',
+      options = list(
+        rownames = T,
+        deferRender = TRUE,
+        scrollY = 200,
+        scroller = TRUE,
+        rowCallback = JS(rowCallback_generated)
+      )
+    )
+  })
+  
+  #--------------------------------------------------#
+  
   
   
   #### Help pages - Download files ###

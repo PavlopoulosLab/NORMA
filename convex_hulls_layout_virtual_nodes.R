@@ -4,7 +4,7 @@ convexInput <- function(){
   if (is.null(g)) 
     return()
   my_network<- as.data.frame(get.edgelist(g))
-  my_network<- data.frame(from = my_network$V1, to = my_network$V2)
+  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
   
   gName <- SelectedStoredNets()$name
 
@@ -26,14 +26,14 @@ convexInput <- function(){
     group_i <- group_i[!is.na(group_i)]
     x[[i]]<- (group_i)
   }
-  
+
   GO <- list()
   for (i in 1:number_of_groups) {
     GO[[i]]<-rep(groups[i,1], length(x[[i]]))
   }
 
-  column1<-my_network$from
-  column2<-my_network$to
+  column1<-my_network$Source
+  column2<-my_network$Target
   node_names<-unique(union(column1, column2))
   tt<-unlist(x)
   nodes_with_NA_groups<-setdiff(node_names,tt)
@@ -49,15 +49,15 @@ convexInput <- function(){
     members_with_NA_groups<-unique(members_with_NA_groups)
   }
   
-  edge <- data_frame(from = my_network$from, to = my_network$to, group = NA) #edge --> not edges
+  edge <- data_frame(Source = my_network$Source, Target = my_network$Target, group = NA) #edge --> not edges
 
   within_group_edges <- members %>%
     split(.$group) %>%
     map_dfr(function (grp) {
       if(length(grp$id)>=2){
         id2id <- combn(grp$id, 2)
-        data_frame(from = id2id[1,],
-                   to = id2id[2,],
+        data_frame(Source = id2id[1,],
+                   Target = id2id[2,],
                    group = unique(grp$group))
       }
     })
@@ -88,7 +88,7 @@ convexInput <- function(){
   
   virt_group_nodes <- length(members_with_NA_groups$id) + 1:number_of_groups
   names(virt_group_nodes) <- c(letters[1:number_of_groups])
-  edges_virt <- data_frame(from = edge$from, to = edge$to, weight = 5, group = edge$group)
+  edges_virt <- data_frame(Source = edge$Source, Target = edge$Target, weight = 5, group = edge$group)
   
   within_virt <- members %>% split(.$group) %>% map_dfr(function (grp) {
     group_name <- unique(grp$group)
@@ -96,8 +96,8 @@ convexInput <- function(){
     if(length(grp$id)>=2){
       id2id <- combn(grp$id, 2)
       data_frame(
-        from = c(id2id[1,], virt_from),
-        to = c(id2id[2,], grp$id),            # also connects from virtual_from node to each group node
+        Source = c(id2id[1,], virt_from),
+        Target = c(id2id[2,], grp$id),            # also connects from virtual_from node to each group node
         weight = c(rep(0.1, ncol(id2id)),     # weight between group nodes
                    rep(50, length(grp$id))),
         to_be_deleted = c(rep(T, ncol(id2id)),     # weight between group nodes

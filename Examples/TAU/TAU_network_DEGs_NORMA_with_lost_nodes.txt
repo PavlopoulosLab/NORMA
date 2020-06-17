@@ -1,4 +1,4 @@
-from	to
+Source	Target
 CG6178	yip2
 shep	ScpX
 nito	Ref1

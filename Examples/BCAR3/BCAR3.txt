@@ -1,4 +1,4 @@
-from	to
+Source	Target
 VCP	NPLOC4
 BCAR1	PXN
 VCP	DERL2

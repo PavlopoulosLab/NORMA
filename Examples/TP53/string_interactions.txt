@@ -1,4 +1,4 @@
-from	to
+Source	Target
 CDKN1A	TP53
 TP53	MDM2
 MDM4	TP53

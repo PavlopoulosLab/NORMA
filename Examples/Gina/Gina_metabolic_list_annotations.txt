@@ -1,0 +1,6 @@
+Microbial metabolism in diverse environments	Hk1,Pgd,Prdx6,Taldo1,Acly,Aldoa,Asns,Bpnt1,G6pdx,Gls,Pfkl,Pgls,PkmOxidative phosphorylation	Atp5a1,Atp5f1,Atp5j,Atp6v1a,Atp6v1b2,Cox4i1,Sdha,Tcirg1,Uqcrc2Glycolysis / Gluconeogenesis	Pfkl,Pkm,Hk1,Aldoa
+Carbon metabolism	Pgls,Pkm,Taldo1,Pgd,Sdha,Pfkl,Hk1,G6pdx,AldoaPentose phosphate pathway	Pgd,Pgls,Pfkl,Aldoa,Taldo1,G6pdx
+Fructose and mannose metabolism	Aldoa,Hk1,Pfkl,Pmm2
+Alanine and aspartate and glutamate metabolism	Asns,Asl,Gls,Glud1
+Arginine and proline metabolism	Asl,Cndp2,Gls,Glud1
+Citrate cycle (TCA cycle)	Acly,Sdha

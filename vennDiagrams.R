@@ -3,7 +3,7 @@ g <- fetchFirstSelectedStoredIgraph_annotations_tab()
 if (is.null(g))
   return()
 my_network <- as.data.frame(get.edgelist(g))
-my_network <- data.frame(from = my_network$V1, to = my_network$V2)
+my_network <- data.frame(Source = my_network$V1, Target = my_network$V2)
 
 gName <- SelectedStoredNets()$name
 annoation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
@@ -31,8 +31,8 @@ for (i in 1:number_of_groups) {
   GO[[i]] <- rep(groups[i, 1], length(x[[i]]))
 }
 
-column1 <- my_network$from
-column2 <- my_network$to
+column1 <- my_network$Source
+column2 <- my_network$Target
 node_names <- unique(union(column1, column2))
 tt <- unlist(x)
 nodes_with_NA_groups <- setdiff(node_names, tt)
