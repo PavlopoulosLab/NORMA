@@ -1,5 +1,6 @@
 library(shiny)
 
+
 ui_options <- c("ui_table_line_height" = "80%")
 
 ui_css <- paste0(
@@ -47,6 +48,7 @@ ui_dataTable_panel <- function(datasetName, pagination = TRUE) {
   ))
 }
 
+
 fixedPage(
   theme = shinytheme("sandstone"),
   # shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
@@ -56,6 +58,9 @@ fixedPage(
             )),
   useShinyjs(),
   tags$head(tags$script(src = "cyjs.js")),
+  tags$head(tags$script(src = "intro.js")),
+  tags$head(tags$script(src = "introbutton.js")),
+  tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "intro.css")),
   tags$img(src = b64_1),
   navbarPage(
     "NORMA: The NetwORk Makeup Artist",
@@ -86,6 +91,7 @@ fixedPage(
       )
       
     ),# tabPanel 'Welcome'
+    
     tabPanel(
       "Upload",
       icon = icon("upload"),
@@ -93,6 +99,9 @@ fixedPage(
         sidebarPanel(
           bsAlert("tabUploadSideAlert"),
           bsAlert("tabUpload_up_to_10000_rows"),
+          actionButton("introButton", "Guide Tutorial"),
+          br(),
+          br(),
           helpText("Please follow the steps below:"),
           helpText(tags$ul(
             tags$li("Load your network file in tab delimited format"),
@@ -109,6 +118,7 @@ fixedPage(
             )
           ),
           uiOutput("uiLoadGraphOptionsOutput"),
+          # checkboxInput("weighted",label = "Weight", value =F),
           div(
             span(
               actionButton(
@@ -280,7 +290,7 @@ fixedPage(
           br(),
           br(),
           prettyCheckbox(
-            inputId = "show_labels_algorithms_tab",
+            inputId = "show_labels_algorithms_tab",outline = T,fill = T,bigger = T,
             label = "Show Labels",
             thick = T,
             shape = "curve",
@@ -317,7 +327,7 @@ fixedPage(
       br(),
       tabsetPanel(
         tabPanel(
-          "Convex Hull",
+          "Convex Hulls",
           br(),
           # Layouts #
           helpText("Select the layout for the analysis:"),
@@ -330,7 +340,7 @@ fixedPage(
             multiple = FALSE
           ),
           prettyCheckbox(
-            inputId = "layouts_with_virtual_nodes",
+            inputId = "layouts_with_virtual_nodes",outline = T,fill = T,bigger = T,
             label = "Allow modification of the selected layout taking into account the groups",
             thick = TRUE,
             shape = "curve",
@@ -341,7 +351,7 @@ fixedPage(
           ),
           hr(),
           prettyCheckbox(
-            inputId = "show_labels",
+            inputId = "show_labels",outline = T,fill = T,bigger = T,
             label = "Show Labels",
             thick = TRUE,
             shape = "curve",
@@ -351,7 +361,7 @@ fixedPage(
             value = T
           ),
           prettyCheckbox(
-            inputId = "expressions",
+            inputId = "expressions",outline = T,fill = T,bigger = T,
             label = "Show node - coloring",
             thick = TRUE,
             shape = "curve",
@@ -361,8 +371,8 @@ fixedPage(
             value = F
           ),
           prettyCheckbox(
-            inputId = "some_labels",
-            label = "Show only chosen labels",
+            inputId = "some_labels",outline = T,fill = T,bigger = T,
+            label = "Show only labels of selected annotation groups",
             thick = TRUE,
             shape = "curve",
             animation = "pulse",
@@ -426,7 +436,15 @@ fixedPage(
               step = 2
             )
           ),
-          
+          br(),
+          br(),
+          downloadBttn("HTML_convex", "Download HTML file", 
+                       style = "bordered", 
+                       color = "success",
+                       size = "sm",
+                       no_outline = T),
+          br(),
+          br()
         ),
         
         tabPanel(
@@ -441,7 +459,7 @@ fixedPage(
               multiple = FALSE
             ),
             prettyCheckbox(
-              inputId = "layouts_with_virtual_nodes_pies",
+              inputId = "layouts_with_virtual_nodes_pies",outline = T,fill = T,bigger = T,
               label = "Allow modification of the selected layout taking into account the groups",
               thick = TRUE,
               shape = "curve",
@@ -453,7 +471,7 @@ fixedPage(
             hr(),
             ###############
             prettyCheckbox(
-              inputId = "show_labels_pies",
+              inputId = "show_labels_pies",outline = T,fill = T,bigger = T,
               label = "Show Labels",
               thick = TRUE,
               shape = "curve",
@@ -463,7 +481,7 @@ fixedPage(
               value = T
             ),
             prettyCheckbox(
-              inputId = "expressions_pies",
+              inputId = "expressions_pies",outline = T,fill = T,bigger = T,
               label = "Show node - coloring",
               thick = TRUE,
               shape = "curve",
@@ -473,8 +491,8 @@ fixedPage(
               value = F
             ),
             prettyCheckbox(
-              inputId = "some_labels_pies",
-              label = "Show only chosen labels",
+              inputId = "some_labels_pies",outline = T,fill = T,bigger = T,
+              label = "Show only labels of selected annotation groups",
               thick = TRUE,
               shape = "curve",
               animation = "pulse",
@@ -541,7 +559,17 @@ fixedPage(
           
           hr(),
           class = 'box-panel-padding',
-          class = 'box-panel'
+          class = 'box-panel',
+          
+          br(),
+          br(),
+          downloadBttn("HTML_pies", "Download HTML file",
+                       style = "bordered", 
+                       color = "success",
+                       size = "sm",
+                       no_outline = T),
+          br(),
+          br()
           
         ),
         
@@ -550,23 +578,13 @@ fixedPage(
           helpText("Select the layout you want in the analysis."),
           selectInput(
             "layouts_3D",
-            "The layouts:",
+            "The 3D layouts:",
             choices = layouts_3D,
             selected = selected_layouts,
             multiple = FALSE
           ),
-          # prettyCheckbox(
-          #   inputId = "layouts_with_virtual_nodes_3D",
-          #   label = "Allow modification of the selected layout taking into account the groups",
-          #   thick = TRUE,
-          #   shape = "curve",
-          #   animation = "pulse",
-          #   status = "info",
-          #   inline = F,
-          #   value = F
-          # ),
           prettyCheckbox(
-            inputId = "Dark",
+            inputId = "Dark",outline = T,fill = T,bigger = T,
             label = "Dark mode",
             thick = TRUE,
             shape = "curve",
@@ -576,8 +594,8 @@ fixedPage(
             value = F
           ),
           prettyCheckbox(
-            inputId = "show_some_labels_3D",
-            label = "Some Labels",
+            inputId = "show_labels_3D",outline = T,fill = T,bigger = T,
+            label = "Show labels on network",
             thick = TRUE,
             shape = "curve",
             animation = "pulse",
@@ -586,7 +604,17 @@ fixedPage(
             value = F
           ),
           prettyCheckbox(
-            inputId = "expressions_3D",
+            inputId = "show_some_labels_3D",outline = T,fill = T,bigger = T,
+            label = "Show only labels of selected annotation groups",
+            thick = TRUE,
+            shape = "curve",
+            animation = "pulse",
+            status = "info",
+            inline = F,
+            value = F
+          ),
+          prettyCheckbox(
+            inputId = "expressions_3D",outline = T,fill = T,bigger = T,
             label = "Show node - coloring",
             thick = TRUE,
             shape = "curve",
@@ -595,7 +623,6 @@ fixedPage(
             inline = F,
             value = F
           ),
-          # plotlyOutput("convex_hull_3D")
           uiOutput("convex_hull_3D"),
           eval(ui_dataTable_panel("chooseGroups_3D")),
           
@@ -648,7 +675,17 @@ fixedPage(
               max = 10,
               value = 1
             )
-          )
+          ),
+          
+          br(),
+          br(),
+          downloadBttn("HTML_convex_3D", "Download HTML file",
+                       style = "bordered", 
+                       color = "success",
+                       size = "sm",
+                       no_outline = T),
+          br(),
+          br()
         ),
         
         # tags$a("Large window",target="_blank",href="output_convex_11188.html")
@@ -768,7 +805,7 @@ fixedPage(
           br(),
           strong("The network file:"),
           helpText(
-            "It is an obligatory, 2-column (unweighted), tab-delimited file, containing all network connections of an undirected network. This file must contain headers, namely: 'Source' and 'Target'. Notably, self-loops and multiple-edges are eliminated automatically."
+            "It is an obligatory, 2-column (unweighted) or 3-column (weighted), tab-delimited file, containing all network connections of an undirected network. This file must contain headers, namely: 'Source' and 'Target' (and 'Weight' optionally). Notably, self-loops and multiple-edges are eliminated automatically."
           ),
           strong("The annotation file:"),
           helpText(
@@ -778,33 +815,33 @@ fixedPage(
           strong("The expression file:"),
           helpText(
             "
-The expression file: It is an optional, 2-column, tab-delimited file which contains information about node coloring (e.g. gene expressions). The first column contains the node names and the second column the node colors (e.g. red, green, yellow, blue, orange). Nodes without color assignment will be colored gray. No headers are allowed in this file."
+The expression file: It is an optional, 2-column, tab-delimited file which contains information about node coloring (e.g. gene expressions). The first column contains the node names and the second column the node colors (e.g. red, green, yellow, blue, orange, #00ff00, #ff0000, #ffff00). Nodes without color assignment will be colored gray. No headers are allowed in this file."
           ),
           helpText("
 Examples are shown below:"),
           pre(
             "
-Network File:             Annotation File:                        Node-coloring file            Warnings!
+Network File:               Annotation File:                        Node-coloring file            Warnings!
 
-Source    Target                Group-2 BCL2L1,MDM4,MDM2,CHEK2          CDKN1A  blue                - Network file: Must have headers: Source - Target
-CDKN1A  TP53              Group-5 TP53,EP300                      TP53    blue                - Annotation file: no headers, no spaces
-TP53	MDM2              Group-1 CDKN2A,ATM,TP53BP2,MDM2         MDM4    blue                  only commas (e.g. BCL2L1,MDM4,MDM2)
-MDM4	TP53              Group-4 CHEK2,CREBBP,MDM2               BCL2L1  red
-BCL2L1	TP53              Group-3 TP53,BCL2L1                     CHEK2   red                 - Node-coloring file: no headers
-CHEK2   ATM               Group-6 MDM4,MDM2                       ATM     red                   Basic colors allowed:
-TP53    EP300                                                     TP53BP2 red                   (e.g. red, green, yellow, blue, orange, purple, gray, etc.)
-ATM	TP53                                                      CDKN2A  blue
-TP53    CREBBP                                                    EP300   red
-MDM4    MDM2                                                      CREBBP  red
-CHEK2	TP53                                                      MDM2    blue
-TP53BP2	TP53
-CDKN2A	TP53
-CDKN2A	MDM2
-ATM	MDM2
-EP300	CREBBP
-  .       .
-  .       .
-  .       .
+Source  Target  Weight      Group-2 BCL2L1,MDM4,MDM2,CHEK2          CDKN1A  blue                - Network file: Must have headers: Source - Target
+CDKN1A  TP53    5           Group-5 TP53,EP300                      TP53    blue                - Annotation file: no headers, no spaces only commas
+TP53	MDM2    1           Group-1 CDKN2A,ATM,TP53BP2,MDM2         MDM4    #00ff00              (e.g. BCL2L1,MDM4,MDM2)
+MDM4	TP53    3           Group-4 CHEK2,CREBBP,MDM2               BCL2L1  red
+BCL2L1	TP53    4           Group-3 TP53,BCL2L1                     CHEK2   red                 - Node-coloring file: no headers
+CHEK2   ATM     2           Group-6 MDM4,MDM2                       ATM     red                   Colors can be either color names (e.g. blue, red) 
+TP53    EP300   1                                                   TP53BP2 red                   or hex codes (#00ff00, #ff0000, #ffff00)
+ATM	TP53    4                                                   CDKN2A  blue
+TP53    CREBBP  1                                                   EP300   #ffff00
+MDM4    MDM2    1                                                   CREBBP  red
+CHEK2	TP53    2                                                   MDM2    blue
+TP53BP2	TP53    8
+CDKN2A	TP53    3
+CDKN2A	MDM2    3
+ATM	MDM2    1
+EP300	CREBBP  2
+  .       .     .
+  .       .     .
+  .       .     .
 "
           ),
           
@@ -885,8 +922,37 @@ Once a network or an annotation file has been named and uploaded, it will appear
           downloadLink('co_express_kegg', "KEGG pathways"),
           br(),
           downloadLink('co_express_mcode', "MCODE Node coloring"),
-          br()
-        ),
+          br(),
+        hr(),
+        br(),
+        strong("COVID-19:"),
+        helpText("Intact Database"),
+        br(),
+        downloadLink('covid_19_net', "COVID-19 Network"),
+        br(),
+        downloadLink('covid_19_interpro', "HomoSapiens Protein Domains - INTERPRO"),
+        br(),
+        downloadLink('covid_19_bp', "HomoSapiens GO Annotation - Biological Process"),
+        br(),
+        downloadLink('covid_19_mf', "HomoSapiens GO Annotation - Molecular Function"),
+        br(),
+        downloadLink('covid_19_cc', "HomoSapiens Protein Domains GO Annotation - Cellular Components"),
+        br(),
+        downloadLink('covid_19_kegg', "HomoSapiens Protein Domains KEGG pathways"),
+        br(),
+        downloadLink('covid_19_smart', "HomoSapiens Protein Domains SMART"),
+        br(),
+        hr(),
+        br(),
+        strong("Gallus gallus:"),
+        helpText("BioGrid Database"),
+        br(),
+        downloadLink('Gallus_gallus_net', "Gallus gallus Network"),
+        br(),
+        downloadLink('Gallus_gallus_kegg', "BioGrid Gallus gallus KEGG pathways"),
+        br(),
+        br()
+      ),
         
         tabPanel(
           "The Upload Tab",
@@ -965,7 +1031,7 @@ The Annotation Tab consists of three sub-tabs. These are the: (i) Convex Hull, (
           ),
           br(),
           br(),
-          strong("Convex Hull:"),
+          strong("Convex Hulls:"),
           helpText(
             "In this tab, the selected network is initially visualized after applying any of the offered layout algorithms and shaded convex hulls are then used to highlight communities in a Venn-diagram-like view. A node might belong to more than one group. In this case, NORMA tries to bring closer together the overlapping regions which share common nodes while simultaneously it tries to keep the distinct groups apart. Groups are highlighted using visually distinct colors, whereas transparency is used to efficiently highlight the overlapping regions."
           ),
@@ -980,6 +1046,17 @@ The Annotation Tab consists of three sub-tabs. These are the: (i) Convex Hull, (
           ),
           br(),
           tags$img(src = b64_8),
+          
+          br(),
+          br(), 
+          
+          strong("Convex Hulls 3D:"),
+          helpText(
+            "Like in 2D Convex Hulls, in this tab, the selected network is initially visualized after applying any of the offered 3D layout algorithms and 3D shaded convex hulls are then used to highlight communities in a 3D Venn-diagram-like view. The visualization is fully interactive and a dark mode visualization is also supported.
+"
+          ),
+          br(),
+          tags$img(src = b64_3D_convex),
           
           br(),
           br(),

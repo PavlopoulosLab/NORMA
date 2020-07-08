@@ -145,6 +145,7 @@ b64_11 <-
   base64enc::dataURI(file = "Figures/Topology_comparisons.PNG", mime = "image/png")
 b64_12 <-
   base64enc::dataURI(file = "Figures/venn.png", mime = "image/png")
+b64_3D_convex <- base64enc::dataURI(file = "Figures/Convex_Hulls_3D.PNG", mime = "image/png")
 
 
 # 300 Colors - Up to 100 are distinct
@@ -230,3 +231,6 @@ mapper<-function(value, istart, istop, ostart, ostop)
 { 
   return (ostart + (ostop - ostart) * ((value - istart) / (istop - istart)))
 }
+
+
+  

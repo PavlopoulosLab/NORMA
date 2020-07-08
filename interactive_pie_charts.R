@@ -4,6 +4,12 @@ pie_charts<- function(){
   if (is.null(g)) 
     return()
   dataset1<- get.edgelist(g)
+  
+  original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
+  if (is.null(original_dataset_weighted))
+    return(NULL)
+  
+  
   my_network<- as.data.frame(get.edgelist(g))
   my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
   
@@ -147,25 +153,23 @@ pie_charts<- function(){
   if (!is.null(getStoredExpressionChoices())){
     expressions_pies<-fetchFirstSelectedStoredExpression()
     colnames(expressions_pies) <- c("id", "color")
-    express_order<- as.data.frame(members_with_NA_groups)
-    express_order<- as.data.frame(unique(express_order$id))
+    express_order<- as.data.frame(names(V(g)))
     colnames(express_order) <- "id"
     expressions_pies<-left_join(express_order, expressions_pies, by = "id")
     expressions_pies$color<- as.character(expressions_pies$color)
-    expressions_pies$color[which(expressions_pies$color=="blue")] <- "0"
-    expressions_pies$color[which(expressions_pies$color=="yellow")] <- "16"
-    expressions_pies$color[which(expressions_pies$color=="orange")] <- "2"
-    expressions_pies$color[which(expressions_pies$color=="green")] <- "4"
-    expressions_pies$color[which(expressions_pies$color=="red")] <- "6"
-    expressions_pies$color[which(expressions_pies$color=="purple")] <- "8"
-    expressions_pies$color[which(expressions_pies$color=="gray")] <- "15"
-    expressions_pies$color[which(is.na(expressions_pies$color))] <- "15"
+    # expressions_pies$color <- gsub("-|\\s+|^$","lightgray", expressions_pies$color)
+    
+    for(i in 1:length(expressions_pies$color)){
+      if(expressions_pies$color[i] == "" || is.na(expressions_pies$color[i])){
+        expressions_pies$color[i] <- "lightgray"
+      }
+    }
+    
   }
   
   if (is.null(getStoredExpressionChoices())){
-    expressions_pies<- as.data.frame(members_with_NA_groups)
-    expressions_pies<- as.data.frame(unique(expressions_pies$id))
-    expressions_pies$color <- rep(c("15"))
+    expressions_pies<- as.data.frame(names(V(g)))
+    expressions_pies$color <- rep(c("lightgray"))
     colnames(expressions_pies) <- c("id", "color")
   }
   
@@ -270,10 +274,10 @@ pie_charts<- function(){
     if(show_labels_pies == F)
       node_name<-rep("", length(node_name))
     if(expression_colors_pies == T){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":\"", expressions_pies$color[i], "\",\"proportions\": [\n",sep="")), file = fileConn)
     }
     if(expression_colors_pies == F){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20  , ", 'y':", coor_y*scaling_coordinates_pies()-100*scaling_coordinates_pies()+20 , ", 'fixed': true, \"color_value\":", "\"lightgrey\"", ",\"proportions\": [\n",sep="")), file = fileConn)
     }
     
     if(pie_to_be_colored[i]==F){
@@ -307,10 +311,10 @@ pie_charts<- function(){
       if(show_labels_pies == F)
         node_name<-rep("", length(node_name))
       if(expression_colors_pies == T){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", expressions_pies$color[i], ",\"proportions\": [\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":\"", expressions_pies$color[i], "\",\"proportions\": [\n",sep="")), file = fileConn)
       }
       if(expression_colors_pies == F){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", 15, ",\"proportions\": [\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":", 3,",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20  , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20 , ", 'fixed': true, \"color_value\":", "\"lightgrey\"", ",\"proportions\": [\n",sep="")), file = fileConn)
       }
       
       if(pie_to_be_colored[i]==F){
@@ -333,11 +337,16 @@ pie_charts<- function(){
       }
     }#for
   }
-
+  
+  
+  if(!(is.weighted(g))){
+    original_dataset_weighted <- cbind(original_dataset_weighted[,1:2],"Weight"=rep(1, nrow(original_dataset_weighted)))
+  }
+  
   cat(sprintf("],\n
 						\"links\":[\n"), file = fileConn)
   for (i in 1:nrowdat){
-    cat(sprintf(paste("{\"source\":", which(node_name_links %in% dataset1[i,1])-1, ",\"target\":", which(node_name_links %in% dataset1[i,2])-1, "},\n",sep="")), file = fileConn
+    cat(sprintf(paste("{\"source\":", which(node_name_links %in% dataset1[i,1])-1, ",\"target\":", which(node_name_links %in% dataset1[i,2])-1, ",\"value_links\":", original_dataset_weighted[i,3] ,"},\n",sep="")), file = fileConn
     )}
   cat(sprintf(
     "]
@@ -363,28 +372,7 @@ pie_charts<- function(){
     }
   cat(sprintf("])\n"), file = fileConn)
  
-  cat(sprintf("var color_border = d3.scale.category20();
-              color_border(0);
-              color_border(1);
-              color_border(2);
-              color_border(3);
-              color_border(4);
-              color_border(5);
-              color_border(6);
-              color_border(7);
-              color_border(8);
-              color_border(9);
-			        color_border(10);
-              color_border(11);
-              color_border(12);
-              color_border(13);
-              color_border(14);
-              color_border(15);
-              color_border(16);
-              color_border(17);
-              color_border(18);
-              color_border(19);
-              
+  cat(sprintf("
   var pie = d3.layout.pie()
 			.sort(null)
 			.value(function(d) { return d.value; });
@@ -433,13 +421,14 @@ pie_charts<- function(){
 		var link = svg.selectAll(\".link\")
 			.data(graph.links)
 			.enter().append(\"line\")
-			.attr(\"class\", \"link\");
+			.attr(\"class\", \"link\")
+			.style(\"stroke-width\", function(d) { return Math.sqrt(d.value_links); });
 
 		var node = svg.selectAll(\".node\")
 			.data(graph.nodes)
 			.enter().append(\"g\")
 			.attr(\"class\", \"node\")
-			.style(\"stroke\", function(d) { return color_border(d.color_value); })
+			.style(\"stroke\", function(d) { return (d.color_value); })
 			.call(force.drag);
 			
 		var nodelabels = svg.selectAll(\".nodelabel\") 

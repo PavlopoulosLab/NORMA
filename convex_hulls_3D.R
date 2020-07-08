@@ -10,6 +10,10 @@ convex_hull_3D <- function() {
   if (is.null(dataset))
     return()
   
+  original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
+  if (is.null(original_dataset_weighted))
+    return(NULL)
+  
   annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
   if (is.null(annotation_graph))
     return()
@@ -149,6 +153,23 @@ convex_hull_3D <- function() {
   nrowdat <- nrow(dataset)
   nrowannot <- nrow(annotation_graph)
   
+  
+  if(!(is.weighted(g))){
+    original_dataset_weighted <- cbind(original_dataset_weighted[,1:2],"Weight"=rep(0.5, nrow(original_dataset_weighted)))
+  } else{
+    minx <- min(original_dataset_weighted[,3])
+    maxx <- max(original_dataset_weighted[,3])
+    
+    scaling_weight_values<- c()
+    for (i in 1:nrow(original_dataset_weighted)){
+      scaling_weight_values_i <- mapper(original_dataset_weighted[i,3], minx, maxx, 0.5, 20)
+      scaling_weight_values <- c(scaling_weight_values, scaling_weight_values_i)
+    }
+    if(maxx > 50){
+    original_dataset_weighted <- cbind(original_dataset_weighted[,1:2],"Weight"=scaling_weight_values)
+    }
+  }
+
   if (length(s)==0)
   {
     s<-c(1:nrowannot)
@@ -170,46 +191,46 @@ convex_hull_3D <- function() {
 
     edges_for_plotly <- data.frame("Source.x" = source[,1], "Source.y" = source[,2], "Source.z" = source[,3],
                                    "Target.x" = target[,1], "Target.y" = target[,2], "Target.z" = target[,3])
-  x<- c()
-  for(i in 1:nrow(edges_for_plotly)){
-    if(i == nrow(edges_for_plotly)){
-      a <- paste(edges_for_plotly$Source.x[i], edges_for_plotly$Target.x[i], "null", sep = "," )
-    }else{
-      a <- paste(edges_for_plotly$Source.x[i], edges_for_plotly$Target.x[i], "null,", sep = "," )
-
-    }
-    x<- c(x, a)
-  }
-  
-  x <- as.vector(unlist(x))
-  x <- paste(x,  collapse=" ")
-  
-  y<- c()
-  for(i in 1:nrow(edges_for_plotly)){
-    if(i == nrow(edges_for_plotly)){
-      a = paste(edges_for_plotly$Source.y[i], edges_for_plotly$Target.y[i], "null", sep = "," )
-    }else{
-      a = paste(edges_for_plotly$Source.y[i], edges_for_plotly$Target.y[i], "null,", sep = "," )
-    }
-    y<- c(y, a)
-  }
-  
-  y <- as.vector(unlist(y))
-  y <- paste(y,  collapse=" ")
-  
-  
-  z<- c()
-  for(i in 1:nrow(edges_for_plotly)){
-    if(i == nrow(edges_for_plotly)){
-      a = paste(edges_for_plotly$Source.z[i], edges_for_plotly$Target.z[i], "null", sep = "," )
-    }else{
-      a = paste(edges_for_plotly$Source.z[i], edges_for_plotly$Target.z[i], "null,", sep = "," )
-    }
-    z<- c(z, a)
-  }
-  
-  z <- as.vector(unlist(z))
-  z <- paste(z,  collapse=" ")
+  # x<- c()
+  # for(i in 1:nrow(edges_for_plotly)){
+  #   if(i == nrow(edges_for_plotly)){
+  #     a <- paste(edges_for_plotly$Source.x[i], edges_for_plotly$Target.x[i], "null", sep = "," )
+  #   }else{
+  #     a <- paste(edges_for_plotly$Source.x[i], edges_for_plotly$Target.x[i], "null,", sep = "," )
+  # 
+  #   }
+  #   x<- c(x, a)
+  # }
+  # 
+  # x <- as.vector(unlist(x))
+  # x <- paste(x,  collapse=" ")
+  # 
+  # y<- c()
+  # for(i in 1:nrow(edges_for_plotly)){
+  #   if(i == nrow(edges_for_plotly)){
+  #     a = paste(edges_for_plotly$Source.y[i], edges_for_plotly$Target.y[i], "null", sep = "," )
+  #   }else{
+  #     a = paste(edges_for_plotly$Source.y[i], edges_for_plotly$Target.y[i], "null,", sep = "," )
+  #   }
+  #   y<- c(y, a)
+  # }
+  # 
+  # y <- as.vector(unlist(y))
+  # y <- paste(y,  collapse=" ")
+  # 
+  # 
+  # z<- c()
+  # for(i in 1:nrow(edges_for_plotly)){
+  #   if(i == nrow(edges_for_plotly)){
+  #     a = paste(edges_for_plotly$Source.z[i], edges_for_plotly$Target.z[i], "null", sep = "," )
+  #   }else{
+  #     a = paste(edges_for_plotly$Source.z[i], edges_for_plotly$Target.z[i], "null,", sep = "," )
+  #   }
+  #   z<- c(z, a)
+  # }
+  # 
+  # z <- as.vector(unlist(z))
+  # z <- paste(z,  collapse=" ")
   
   #--------------------------------------------------------------------#  
   fileConn <- file(paste("convex_3D_",Sys.getpid(),".html", sep=""), "w")
@@ -225,27 +246,56 @@ convex_hull_3D <- function() {
 
      <script>" ), file = fileConn)
   
-  cat(sprintf("
+  # cat(sprintf("
+  # 
+  # trace_edges = {
+  # uid: 'bcd52d', 
+  # line: {
+  #   color: 'rgb(125,125,125)', 
+  #   width: 0.5
+  # }, 
+  # mode: 'lines', 
+  # name: 'Edges', 
+  # type: 'scatter3d',"), file = fileConn)
   
-  trace_edges = {
+ #---------------------------------------#   
+  for(i in 1:nrow(edges_for_plotly)){
+    x_trial <- paste(edges_for_plotly$Source.x[i], edges_for_plotly$Target.x[i], sep = "," )
+    
+      cat(sprintf(paste("trace_edges_",i," = {
   uid: 'bcd52d', 
   line: {
     color: 'rgb(125,125,125)', 
-    width: 0.5
+    width:", original_dataset_weighted[i,3], "
   }, 
   mode: 'lines', 
   name: 'Edges', 
-  type: 'scatter3d',"), file = fileConn)
+  type: 'scatter3d',
+                        x : [", edges_for_plotly$Source.x[i], ",", edges_for_plotly$Target.x[i], "],\n
+                        y : [", edges_for_plotly$Source.y[i], ",", edges_for_plotly$Target.y[i], "],\n
+                        z : [", edges_for_plotly$Source.z[i], "," ,edges_for_plotly$Target.z[i], "], \n
+    hoverinfo : 'none'};
+                        
+                        " , sep="")), file = fileConn)
     
+  }
   
-    write(paste("
-    x : [", x, "],\n" , sep=""), file = fileConn, append = T)
-    write(paste("
-    y : [", y, "],\n" , sep=""), file = fileConn, append = T)
-    write(paste("
-    z : [", z, "], \n
-    hoverinfo : 'none'
-  };", sep=""), file = fileConn, append = T)
+  traces_edges<- c()
+  for(i in 1:nrow(original_dataset_weighted)){
+    traces_edges_i <- paste("trace_edges_", i, sep = "")
+    traces_edges<- c(traces_edges,traces_edges_i)
+    traces_edges <- paste(traces_edges, collapse=",")
+  }
+  # print(traces_edges)
+    
+    # write(paste("
+    # x : [", x, "],\n" , sep=""), file = fileConn, append = T)
+  #   write(paste("
+  #   y : [", y, "],\n" , sep=""), file = fileConn, append = T)
+  #   write(paste("
+  #   z : [", z, "], \n
+  #   hoverinfo : 'none'
+  # };", sep=""), file = fileConn, append = T)
     
   # print("______________________________")
     
@@ -256,15 +306,28 @@ convex_hull_3D <- function() {
     x_nodes <- paste(lay[,1],  collapse=",")
     y_nodes <- paste(lay[,2],  collapse=",")
     z_nodes <- paste(lay[,3],  collapse=",")
+
+    if(show_labels_3D == T){    
+      show_labels <- "markers+text"
+    }else{
+      show_labels <- "markers"
+    }
     
-    # print(x_nodes)
-    
-    cat(sprintf("
+    if(Dark_mode ==T){
+      textColor <-  "textfont: {
+        color: 'white'
+      },"
+    } else{
+      textColor <-  "textfont: {
+        color: 'black'
+      },"
+    }
+    cat(sprintf(paste("
   trace_nodes = {
   uid: 'a2e4a0', 
-  mode: 'markers', 
-  name: 'Nodes', 
-  type: 'scatter3d',"), file = fileConn)
+  mode: '", show_labels , "', 
+  name: 'Nodes',", textColor,"
+  type: 'scatter3d',", sep="")), file = fileConn)
     
     
     
@@ -280,11 +343,26 @@ convex_hull_3D <- function() {
     if (!is.null(getStoredExpressionChoices())){
       expression<-fetchFirstSelectedStoredExpression()
       colnames(expression) <- c("id", "color")
-      express_order<- as.data.frame(members_with_NA_groups)
-      express_order<- as.data.frame(unique(express_order$id))
+      express_order<- as.data.frame(names(V(g)))
       colnames(express_order) <- "id"
       expression<-left_join(express_order, expression, by = "id")
       expression$color<- as.character(expression$color)
+      for(i in 1:length(expression$color)){
+        if(Dark_mode ==F){
+          if(expression$color[i] == "" || is.na(expression$color[i])){
+            expression$color[i] <- "purple"
+          }
+        } else if (expression$color[i] == "" || is.na(expression$color[i])){
+          expression$color[i] <- "#a419bc"
+        }
+      }
+    }
+    if (is.null(getStoredExpressionChoices())){
+      expression<- as.data.frame(names(V(g)))
+      if(Dark_mode == F){
+        expression$color <- rep(c("purple"))
+      } else expression$color <- rep(c("#a419bc"))
+      colnames(expression) <- c("id", "color")
     }
 
     #---------------------------------------------------#
@@ -301,9 +379,14 @@ marker: {
     symbol: 'dot', 
     " , sep=""), file = fileConn, append = T) 
     
+    if(Dark_mode==F){
+      node_colors <- "purple"
+    }else{
+      node_colors <- "#a419bc"
+    }
     
     if(expression_colors_3D == F){
-      write(paste("color:'purple'" , sep=""), file = fileConn, append = T)
+      write(paste("color:'", node_colors, "'" , sep=""), file = fileConn, append = T)
     }else{
       write(paste("color:[", sep = ""), file = fileConn, append = T)
       
@@ -322,7 +405,6 @@ marker: {
               text: [" , sep=""), file = fileConn, append = T)
   
   annotations_split <- str_split(annotation_graph[,2], ",", simplify = T)
-  
   if(show_some_labels_3D == T){
     selected <- matrix("", ncol=1, nrow=0)
     for(i in 1:length(s)){
@@ -407,60 +489,20 @@ marker: {
   if(Dark_mode == T){
     cat(sprintf(paste("var layout = {
 	paper_bgcolor: 'black',
-    plot_bgcolor: '#c7c7c7',
-    scene: {
-      xaxis: {
-      	  range: [",scene_scale_x_min, ",",scene_scale_x_max,"],
-          title: '',
-          autorange: false,
-          showgrid: false,
-          zeroline: false,
-          showline: false,
-          autotick: true,
-          ticks: '',
-          showticklabels: false
-      },
-      yaxis: {
-          range: [",scene_scale_y_min, ",",scene_scale_y_max,"],
-          title: '',
-          autorange: false,
-          showgrid: false,
-          zeroline: false,
-          showline: false,
-          autotick: true,
-          ticks: '',
-          showticklabels: false
-      },
-      zaxis: {
-          range: [",scene_scale_z_min,",", scene_scale_z_max,"],
-          title: '',
-          autorange: false,
-          showgrid: false,
-          zeroline: false,
-          showline: false,
-          autotick: true,
-          ticks: '',
-          showticklabels: false
-      }
-    },
-	 width: 1100,
-  height: 900,
-    margin: {
-        l: 0,
-        r: 0,
-        b: 0,
-        t: 0
-    },
-    showlegend: true,
-    legend: {
-        \"x\": \"0\",
-        \"margin.r\": \"120\"
-    }
-};", sep="")), file = fileConn)
+    plot_bgcolor: '#c7c7c7',", sep="")), file = fileConn)
   }else{
-  cat(sprintf(paste("var layout = {
-    scene: {
+  cat(sprintf(paste("var layout = {", sep="")), file = fileConn)
+  }
+    
+  if(show_labels_3D == T){
+    hovermode <- "hovermode: false,"
+  }else{
+    hovermode <- "hovermode: true,"
+  }
+    cat(sprintf(paste(hovermode,
+    "scene: {
       xaxis: {
+      showspikes: false,
       	  range: [",scene_scale_x_min, ",",scene_scale_x_max,"],
           title: '',
           autorange: false,
@@ -472,6 +514,7 @@ marker: {
           showticklabels: false
       },
       yaxis: {
+      showspikes: false,
           range: [",scene_scale_y_min, ",",scene_scale_y_max,"],
           title: '',
           autorange: false,
@@ -483,6 +526,7 @@ marker: {
           showticklabels: false
       },
       zaxis: {
+      showspikes: false,
           range: [",scene_scale_z_min,",", scene_scale_z_max,"],
           title: '',
           autorange: false,
@@ -502,16 +546,17 @@ marker: {
         b: 0,
         t: 0
     },
-    showlegend: true,
+    showlegend: false,
     legend: {
         \"x\": \"0\",
         \"margin.r\": \"120\"
     }
 };", sep="")), file = fileConn)
-  }     
 
-  cat(sprintf(paste("
-  data = [trace_edges, trace_nodes,", traces,"]; 
+    # print(traces_edges)
+    # print(traces)
+  write(paste("
+  data = [",traces_edges,",trace_nodes,", traces,"]; 
 
 Plotly.plot('plotly-div', {
   data: data,
@@ -520,7 +565,7 @@ Plotly.plot('plotly-div', {
      </script>
    </body>
  </html> 
-                    ", sep="")), file = fileConn)
+                    ", sep = ""), file = fileConn, append = T)
   
   
   

@@ -5,6 +5,11 @@ convex_hulls<- function(){
     return()
   dataset1<- get.edgelist(g)
   
+  original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
+  if (is.null(original_dataset_weighted))
+    return(NULL)
+
+  
   my_network<- as.data.frame(get.edgelist(g))
   my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
   gName <- SelectedStoredNets()$name
@@ -111,30 +116,17 @@ convex_hulls<- function(){
   	var width =",max_pixels_panel,",
   		height =", max_pixels_panel,";
             
-            
-            // The color functions: in this example I'm coloring all the convex hulls at the same layer the same to more easily see the result.
-		var color = d3.scale.category20();
-              color(0);
-              color(1);
-              color(2);
-              color(3);
-              color(4);
-              color(5);
-              color(6);
-              color(7);
-              color(8);
-              color(9);
-			        color(10);
-              color(11);
-              color(12);
-              color(13);
-              color(14);
-              color(15);
-              color(16);
-              color(17);
-              color(18);
-              color(19);
           ",sep="")), file = fileConn)
+  
+#   // The color functions: in this example I'm coloring all the convex hulls at the same layer the same to more easily see the result.
+# 		var color_value = [\"#63b598\", \"#ce7d78\", \"#ea9e70\", \"#a48a9e\", \"#c6e1e8\", \"#648177\", \"#0d5ac1\", 
+#                     \"#f205e6\", \"#1c0365\", \"#14a9ad\", \"#4ca2f9\", \"#a4e43f\", \"#d298e2\", \"#6119d0\",
+#                     \"#d2737d\", \"#c0a43c\", \"#f2510e\", \"#651be6\", \"#79806e\", \"#61da5e\", \"#cd2f00\", 
+#                     \"#9348af\", \"#01ac53\", \"#c5a4fb\", \"#996635\",\"#b11573\", \"#4bb473\", \"#75d89e\", 
+#                     \"#2f3f94\", \"#2f7b99\"];
+# 		
+#   
+  
   
   for(i in 1:x){
     cat(sprintf(
@@ -206,26 +198,24 @@ var theGraphData = {
   
   if (!is.null(getStoredExpressionChoices())){
     expression<-fetchFirstSelectedStoredExpression()
+    print(expression)
     colnames(expression) <- c("id", "color")
-    express_order<- as.data.frame(members_with_NA_groups)
-    express_order<- as.data.frame(unique(express_order$id))
+    express_order<- as.data.frame(names(V(g)))
     colnames(express_order) <- "id"
     expression<-left_join(express_order, expression, by = "id")
     expression$color<- as.character(expression$color)
-    expression$color[which(expression$color=="blue")] <- "0"
-    expression$color[which(expression$color=="yellow")] <- "16"
-    expression$color[which(expression$color=="orange")] <- "2"
-    expression$color[which(expression$color=="green")] <- "4"
-    expression$color[which(expression$color=="red")] <- "6"
-    expression$color[which(expression$color=="purple")] <- "8"
-    expression$color[which(expression$color=="gray")] <- "15"
-    expression$color[which(is.na(expression$color))] <- "15"
+    print(expression$color)
+    for(i in 1:length(expression$color)){
+      if(expression$color[i] == "" || is.na(expression$color[i])){
+        expression$color[i] <- "lightgray"
+      }
+    }
+    # expression$color <- gsub("-|\\s+|^$","lightgray", expression$color)
   }
   
   if (is.null(getStoredExpressionChoices())){
-      expression<- as.data.frame(members_with_NA_groups)
-      expression<- as.data.frame(unique(expression$id))
-      expression$color <- rep(c("15"))
+      expression<- as.data.frame(names(V(g)))
+      expression$color <- rep(c("lightgray"))
       colnames(expression) <- c("id", "color")
   }
   
@@ -319,11 +309,11 @@ var theGraphData = {
       if(show_labels == F)
         node_name<-rep("", length(node_name))
       if(expression_colors == T){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20 , ", 'y':", coor_y*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20, ", 'fixed': true, \"color_value\":", expression$color[i], "},\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20 , ", 'y':", coor_y*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20, ", 'fixed': true, \"color_value\":\"", expression$color[i], "\"},\n",sep="")), file = fileConn)
       }
       
       if(expression_colors == F){
-    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20 , ", 'y':", coor_y*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20, ", 'fixed': true, \"color_value\":", 15, "},\n",sep="")), file = fileConn)
+    cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20 , ", 'y':", coor_y*scaling_coordinates_convex()-100*scaling_coordinates_convex()+20, ", 'fixed': true, \"color_value\":", "\"lightgrey\"", "},\n",sep="")), file = fileConn)
       }
     }
   }#if zoom_slider
@@ -341,22 +331,71 @@ var theGraphData = {
         node_name<-""
       
       if(expression_colors == T){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20 , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20, ", 'fixed': true, \"color_value\":", expression$color[i], "},\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20 , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20, ", 'fixed': true, \"color_value\":\"", expression$color[i], "\"},\n",sep="")), file = fileConn)
       }
       
       if(expression_colors == F){
-        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20 , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20, ", 'fixed': true, \"color_value\":", 15, "},\n",sep="")), file = fileConn)
+        cat(sprintf(paste("{\"id\":", i-1, ",name:\"", node_name[i],"\",\"propertyValue\":",scaling_nodes_convex(), ",'x':", coor_x*max_allowed_scale-100*max_allowed_scale+20 , ", 'y':", coor_y*max_allowed_scale-100*max_allowed_scale+20, ", 'fixed': true, \"color_value\":", "\"lightgrey\"", "},\n",sep="")), file = fileConn)
       }
     }
   }
   
   
+  #--------------------------------#
+  # coords_results <- results[[description]]
+  # print(coords_results)
+  # 
+  # graph <- get.edgelist(igraph)
+  # a<- data.frame(V1= n[,1])
+  # b<- data.frame(V1= n[,2])
+  # m<- full_join(a,b)
+  # 
+  # names <- unique(m)
+  # hash_coords <- new.env(hash = TRUE)
+  # for (i in 1:length(V(igraph))) {
+  #   hash_coords[[ as.character(names[i,1]) ]] <- c(coords_results[[i,1]],coords_results[[i,2]])
+  # }
+  
+  # return(hash_coords)
+  
+  # name_as_key <- c()
+  # ConvexHash <- new.env(hash = TRUE , parent=emptyenv())
+  # for(i in 1:length(V(a)))
+  # {
+  #   names <- V(a)
+  #   # name_as_key <- c(name_as_key, names)
+  #   # print(name_as_key)
+  #   ConvexHash[[ as.character( names[i] ) ]] <- i-1
+  #   # hash_coords[[ as.character(names[i,1]) ]] <- c(coords_results[[i,1]],coords_results[[i,2]])
+  # }
+  
+  # ConvexHash <- new.env(hash = TRUE , parent=emptyenv())
+  # for(i in 1:nrow(original_dataset_weighted))
+  # {
+  #   original_dataset_weighted
+  #   ConvexHash[[ as.character( original_dataset_weighted[i,1] ) ]] <- original_dataset_weighted[i,2]
+  #   # hash_coords[[ as.character(names[i,1]) ]] <- c(coords_results[[i,1]],coords_results[[i,2]])
+  # }
+  #------------------------------------#
+  
+  if(!(is.weighted(g))){
+    original_dataset_weighted <- cbind(original_dataset_weighted[,1:2],"Weight"=rep(1, nrow(original_dataset_weighted)))
+  }
+  
+  # links_df_weighted <- original_dataset_weighted[order(match(original_dataset_weighted[,1],dataset1[,1])),]
   
   cat(sprintf("],
   \"links\":[\n"), file= fileConn)
+  
   for (i in 1:nrowdat){
-    cat(sprintf(paste("{\"source\":", which(node_name_links %in% dataset1[i,1])-1, ",\"target\":", which(node_name_links %in% dataset1[i,2])-1, ",\"value\":1},\n",sep="")), file = fileConn
-    )}
+    # print(node_name_links[node_name_links %in% dataset1[i,1]])
+    # print(links_df_weighted[i,3])
+      cat(sprintf(paste("{\"source\":", which(node_name_links %in% dataset1[i,1])-1, 
+                        ",\"target\":", which(node_name_links %in% dataset1[i,2])-1, ",\"value\":", 
+                        original_dataset_weighted[i,3],"},\n",sep="")), file = fileConn)
+  }
+  
+
   
   cat(sprintf(
     "]
@@ -444,7 +483,7 @@ var node = g.selectAll(\".node\")
 	.enter().append(\"circle\")
     .attr(\"class\", \"node\")
     .attr(\"r\", function(d) { return 2 + (4 * d.propertyValue); })
-	  .style(\"fill\", function(d) { return color(d.color_value); })
+	  .style(\"fill\", function(d) { return (d.color_value); })
     .style(\"stroke-width\", 1.5)
     .call(force.drag);
   
@@ -502,5 +541,6 @@ force.on(\"tick\", function() {
 
   close(fileConn)
  
+  
   }#if (length(s)) 
 }#function

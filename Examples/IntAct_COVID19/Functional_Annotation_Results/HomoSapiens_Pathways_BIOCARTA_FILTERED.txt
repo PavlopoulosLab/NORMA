@@ -1,0 +1,2 @@
+h_cell2cellPathway:Cell to Cell Adhesion Signaling	P12814, Q08043, P35222, P35609
+h_uCalpainPathway:uCalpain and friends in Cell spread	P12814, Q08043, P05556, P35609

@@ -1,0 +1,11 @@
+VCP	#ffc0cb
+BCAR1	blue
+NSFL1C	yellow
+CDC42	#ff0000
+NPLOC4	green
+SYVN1	gray
+VIMP	lightblue
+DERL1	lightblue
+WAS	blue
+FAF2	blue
+UFD1L	lightblue

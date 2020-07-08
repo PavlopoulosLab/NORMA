@@ -2,32 +2,19 @@ library(shiny)
 
 colors <- randomColor(50)
 
-read_data <-
-  function(datapath,
-           type = c("txt"),
-           header = T,
-           sep = "\t",
-           quote = "\"",
-           weighted = F,
-           directed = F)
-    ({
-      dataset1 <-
-        read.table(datapath,
-                   header = header,
-                   sep = sep,
-                   quote = quote)
-      # if(weighted)
-      if (ncol(dataset1) == 2) {
-        dataset1$V3 <- 1
-      } else if (ncol(dataset1) > 3) {
-        dataset1 <- dataset1[, 1:3]
-      } else if (ncol(dataset1) != 3)
-        return(NULL)
-      
-      colnames(dataset1) <- c("Source", "Target", "Weight")
-      #else colnames(dataset1) <- c('Source', 'Target')
-      return(dataset1)
-    })
+read_data <- function(datapath, type = c("txt"), header = T, sep = "\t", quote = "\"", weighted = F) ({
+  dataset1 <- read.table(datapath, header = header, sep = sep, quote = quote)
+  # if(weighted1)
+  if (ncol(dataset1) == 2) {
+    dataset1$V3 <- 1
+  } else if (ncol(dataset1) > 3) {
+    dataset1 <- dataset1[, 1:3]
+  } else if (ncol(dataset1) != 3) 
+    return(NULL)
+  colnames(dataset1) <- c("Source", "Target", "Weight")
+  # else colnames(dataset1) <- c('Source', 'Target')
+  return(dataset1)
+})
 
 read_annotations <-
   function(datapath,
@@ -59,21 +46,39 @@ read_expressions <-
         read.table(datapath,
                    header = header,
                    sep = sep,
-                   quote = quote)
-      
+                   quote = quote,
+                   comment.char="?")
     })
 
-convert_to_igraph <- function(dataset1)
-  ({
-    # directed_tf <- FALSE
-    # if (attr(dataset1, "directed")) {
-    #     directed_tf <- attr(dataset1, "directed")
-    # }
-    igraph <-
-      graph.data.frame(dataset1, vertices = NULL, directed = F)
-    
-    return(simplify(igraph))
-  })
+
+
+
+convert_to_igraph <- function(dataset1) ({
+  weighted_tf <- FALSE
+  # colnames(dataset1) <- c("Source", "Target", "weight") #new
+  # print(attr(dataset1, "weighted"))
+  if (attr(dataset1, "weighted")) {
+    weighted_tf <- attr(dataset1, "weighted")
+  }
+  set.seed(123)
+  igraph <- graph.data.frame(dataset1, directed = F, vertices = NULL)
+  if (attr(dataset1, which = "weighted"))
+    E(igraph)$weight <- dataset1$Weight
+  return(igraph)
+})
+
+
+# convert_to_igraph <- function(dataset1)
+#   ({
+#     # directed_tf <- FALSE
+#     # if (attr(dataset1, "directed")) {
+#     #     directed_tf <- attr(dataset1, "directed")
+#     # }
+#     igraph <-
+#       graph.data.frame(dataset1, vertices = NULL, directed = F)
+# 
+#     return(simplify(igraph))
+#   })
 
 EmptyDataset <- function(columns) {
   dataset <- data.frame(V1 = integer())
@@ -89,6 +94,19 @@ options(shiny.error = browser) #debugging
 
 
 shinyServer(function(input, output, session) {
+  set.seed(123)
+  
+  # observeEvent(input$startHelp,{
+  #   tags$iframe(
+  #     srcdoc = paste(readLines(
+  #       paste("guide_example.html", sep = "")
+  #     ), collapse = '\n'))
+  #   
+  #   # introJs().start();
+  #   # on click, send custom message to start help
+  #   session$sendCustomMessage(type = 'startHelp', message = list(""))
+  # })
+  
   reactiveVars <- reactiveValues()
   reactiveVars$StoredNetworks <-
     data.frame(id = character(),
@@ -137,6 +155,8 @@ shinyServer(function(input, output, session) {
   ############ Read the files ################
   loadNetworkFromFile <- function() {
     dataset1 <- NULL
+    set.seed(123)
+    
     switch(
       input$uiLoadGraphOptionsInput,
       oF = {
@@ -147,21 +167,34 @@ shinyServer(function(input, output, session) {
       oR_String_interactions = {
         dataset1 <-
           read.delim("Examples/BCAR3/BCAR3.txt", header = T)
+          dataset1 <- cbind(dataset1[,1:2], "Weight" = rep(1, nrow(dataset1)))
       },
       oR_Drosophila = {
         n <- as.integer(input$oR_selected_size)
         dataset1 <- read.delim("Examples/TAU/TAU_network_DEGs_NORMA.txt")
+        dataset1 <- cbind(dataset1[,1:2], "Weight" = rep(1, nrow(dataset1)))
       }
     )
-    if (input$uiLoadGraphOptionsInput != "oF" &&
-        !is.null(dataset1)) {
-      # if(input$weighted1) {
-      if (!is.null(dataset1))
-        dataset1$X3 <-
-          sample(1:10, nrow(dataset1), replace = T)
+    if (input$uiLoadGraphOptionsInput != "oF" && !is.null(dataset1)) {
+      set.seed(123)
+      if(input$weighted1==F) {
+        dataset1 <- cbind(dataset1[,1:2], "Weight" = rep(1, nrow(dataset1)))
+      } else {
+        if (ncol(dataset1) == 2) {
+          dataset1$V3 <- 1
+        } else if (ncol(dataset1) > 3) {
+          dataset1 <- dataset1[, 1:3]
+        } else if (ncol(dataset1) != 3) 
+          return(NULL)
+      }
+      
+      # if (!is.null(dataset1))
+      #   dataset1$X3 <- sample(1, nrow(dataset1), replace = T)
+      
       colnames(dataset1) <- c("Source", "Target", "Weight")
+
       # } else { colnames(dataset1) <- c('Source', 'Target') }
-    }       
+  }
     row_to_keep <- c()
     for(i in 1:nrow(dataset1)){
       if(dataset1[i,1]==dataset1[i,2]){
@@ -189,9 +222,13 @@ shinyServer(function(input, output, session) {
           "text/csv",
           "text/comma-separated-values,text/plain",
           ".csv"
-        )
-      ))
+        )),
+        div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
+  )
+    } else {
+      div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
     }
+
     #, checkboxInput(inputId = "directed1", "Directed", value = FALSE)
   })
   
@@ -471,16 +508,20 @@ shinyServer(function(input, output, session) {
           nn <-
             paste(input$networkName, cnt)      #paste: converts its arguments (via as.character) to character strings
         }
-        df <-
-          data.frame(id = nid,
-                     name = nn,
-                     stringsAsFactors = F)
+        df <- data.frame(id = nid, name = nn, stringsAsFactors = F)
         if (nrow(dataset) > 10000) {
           dataset <- dataset[1:10000,]
         }
+        attr(dataset, which = 'weighted') <- input$weighted1
+        # if(input$weighted1 == F){
+        #   dataset <- cbind(dataset[,1:2], "Weight" = rep(1, nrow(dataset)))
+        # }
+        # if(input$weighted1 == F){
+        #   dataset <- dataset[,1:2]
+        # }
+        # print(dataset)
         # attr(dataset, which = "directed") <- input$directed1
-        # attr(dataset, which = 'weighted') <- input$weighted1
-        
+
         reactiveVars$StoredNetworks <-
           rbind(reactiveVars$StoredNetworks, df)
         reactiveVars$StoredNetworks_just_network <-
@@ -1179,16 +1220,40 @@ shinyServer(function(input, output, session) {
   ######## Plots#######################
   ### Interactive Network ###
   output$tabVizIgraphSimple <- renderVisNetwork({
+    set.seed(123)
     g <- fetchFirstSelectedStoredIgraph_just_network()
     if (is.null(g))
       return()
-    set.seed(123)
-    my_network <- as.data.frame(get.edgelist(g))
-    my_network <-
-      data.frame(Source = my_network$V1, Target= my_network$V2)
+    igraph_visn <- toVisNetworkData(g)
+    igraph_visn$edges$value <- E(g)$weight
     
+    # print(is.weighted(g))
+      
+    set.seed(123)
+    if(is.weighted(g)){
     withProgress(min = 0, max = 1, {
-      incProgress(message = "Processing data into plot",
+        incProgress(message = "Plotting",
+                    detail = "This may take a while...",
+                    amount = .1)
+      set.seed(123)
+    visNetwork(igraph_visn$nodes, igraph_visn$edges) %>%
+      visNodes(size = 25, shape = "ellipse") %>%
+      visEdges(smooth = FALSE) %>%
+      visIgraphLayout(layout = "layout_with_fr") %>%
+      visOptions(highlightNearest = TRUE,
+                 nodesIdSelection = TRUE) %>%
+      visPhysics(enabled = F) %>%
+      visInteraction(
+        keyboard = TRUE,
+        navigationButtons = TRUE,
+        zoomView = TRUE,
+        multiselect = TRUE,
+        dragView = TRUE
+      )
+    })
+      } else{
+    withProgress(min = 0, max = 1, {
+      incProgress(message = "Plotting",
                   detail = "This may take a while...",
                   amount = .1)
       visIgraph(as.undirected(g)) %>%
@@ -1203,6 +1268,7 @@ shinyServer(function(input, output, session) {
           dragView = TRUE
         )
     })
+    }
   })
   
   ### Scaling - Sliders###
@@ -1318,7 +1384,7 @@ shinyServer(function(input, output, session) {
     }
     
     withProgress(min = 0, max = 1, {
-      incProgress(message = "Processing data into plot",
+      incProgress(message = "Plotting",
                   detail = "This may take a while...",
                   amount = .1)
       source("interactive_pie_charts.R", local = T)
@@ -1388,8 +1454,7 @@ shinyServer(function(input, output, session) {
     s = input$chooseGroups_rows_selected
     
     g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-    annoation_graph <-
-      fetchFirstSelectedStoredGroups2_annotations_tab()
+    annoation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
     if (is.null(g) | is.null(annoation_graph))
       return(NULL)
     
@@ -1418,9 +1483,15 @@ shinyServer(function(input, output, session) {
     else if (input$some_labels == F) {
       some_labels = F
     }
+    if (input$weighted1 == T) {
+      weighted1 = T
+    }
+    else if (input$weighted1 == F) {
+      weighted1 = F
+    }
     
     withProgress(min = 0, max = 1, {
-      incProgress(message = "Processing data into plot",
+      incProgress(message = "Plotting",
                   detail = "This may take a while...",
                   amount = .1)
       source("interactive_convex_hulls.R", local = T)
@@ -1436,6 +1507,48 @@ shinyServer(function(input, output, session) {
       )
     })
   })
+  
+  #--- Download HTML files---#
+  
+  
+  
+  output$HTML_convex <- downloadHandler(
+    filename = function() {
+      paste("Convex_hulls_2D_", Sys.getpid(), ".html", sep = "")
+    },
+    content = function(file) {
+      HTML_convex <- paste(readLines(paste("output_convex_", Sys.getpid(), ".html", sep = "")
+                                     ), collapse = '\n')
+      write.table(HTML_convex, file, row.names = F,col.names = F, sep = "\t", quote = F)
+    }
+  ) 
+  
+
+  output$HTML_pies <- downloadHandler(
+    filename = function() {
+      paste("Pie_charts_", Sys.getpid(), ".html", sep = "")
+    },
+    content = function(file) {
+      HTML_pies <- paste(readLines(
+        paste("output_pies_", Sys.getpid(), ".html", sep = "")
+      ), collapse = '\n')
+      write.table(HTML_pies, file, row.names = F,col.names = F, sep = "\t", quote = F)
+    }
+  )
+
+
+  output$HTML_convex_3D <- downloadHandler(
+    filename = function() {
+      paste("Convex_hulls_3D_", Sys.getpid(), ".html", sep = "")
+    },
+    content = function(file) {
+      HTML_convex_3D <- paste(readLines(
+        paste("convex_3D_",Sys.getpid(),".html", sep="")
+      ), collapse = '\n')
+      write.table(HTML_convex_3D, file, row.names = F,col.names = F, sep = "\t", quote = F)
+    }
+  )
+  
   
   
   #######################################################################
@@ -1538,6 +1651,7 @@ shinyServer(function(input, output, session) {
     if (!is.null(expression1)) {
       colnames(expression1) <- c("ID", "Color")
     }
+    # print(expression1)
     return(expression1)
   }
   
@@ -1727,24 +1841,24 @@ shinyServer(function(input, output, session) {
     dataset <- fetchFirstSelectedStoredDataset()
     if (is.null(dataset))
       dataset <- EmptyDataset(c("Source", "Target", "Weight"))
-    else{
-      gg <- convert_to_igraph(dataset)
-      dataset <- as.data.frame(get.edgelist(gg))
-      dataset <- cbind(dataset, rep(1, nrow(dataset)))
-      colnames(dataset) <- c("Source", "Target", "Weight")
+    # else{
+    #   gg <- convert_to_igraph(dataset)
+    #   dataset <- as.data.frame(get.edgelist(gg))
+    #   dataset <- cbind(dataset, rep(1, nrow(dataset)))
+    #   colnames(dataset) <- c("Source", "Target", "Weight")
+    # }
+    if (nrow(dataset) == 0 || attr(dataset, 'weighted')){
+      return(datatable(dataset, rownames = F, editable = F, options=list(deferRender = TRUE, scrollY = 500, scroller = TRUE,pageLength = 500)
+        ) %>% formatStyle(colnames(dataset), fontSize = ui_options["ui_table_font_sz"]) %>% formatRound("Weight")
+      )
+    } else {
+    return(datatable(dataset, rownames = FALSE, options=list(deferRender = TRUE,
+                                                                  scrollY = 500,
+                                                                  scroller = TRUE,pageLength = 500,
+                                                             columnDefs = list(list(visible=FALSE, targets=c(2))))) %>% formatStyle(colnames(dataset),
+                                                                                                                                                                          fontSize = ui_options["ui_table_font_sz"]) %>% formatRound("Weight"))
     }
-    return(
-      datatable(
-        dataset,
-        options = list(columnDefs = list(list(
-          visible = FALSE, targets = c(2)
-        ))),
-        rownames = FALSE,
-        editable = F
-      ) %>% formatStyle(colnames(dataset), fontSize = ui_options["ui_table_font_sz"]) %>% formatRound("Weight")
-    )
-    
-  })
+      })
   
   ### Topology tab ###
   reactiveVars$StoredNetworks_topology_tab <-
@@ -2089,7 +2203,7 @@ shinyServer(function(input, output, session) {
       show_labels_algorithms_tab = F
       set.seed(123)
       withProgress(min = 0, max = 1, {
-        incProgress(message = "Processing data into plot",
+        incProgress(message = "Plotting",
                     detail = "This may take a while...",
                     amount = .1)
         plot(
@@ -2108,7 +2222,7 @@ shinyServer(function(input, output, session) {
     else{
       set.seed(123)
       withProgress(min = 0, max = 1, {
-        incProgress(message = "Processing data into plot",
+        incProgress(message = "Plotting",
                     detail = "This may take a while...",
                     amount = .1)
         plot(
@@ -2356,11 +2470,22 @@ shinyServer(function(input, output, session) {
   output$convex_hull_3D<- renderUI({
     s = input$chooseGroups_3D_rows_selected
     
+    g <- fetchFirstSelectedStoredIgraph_annotations_tab()
+    annoation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
+    if (is.null(g) | is.null(annoation_graph))
+      return(NULL)
+    
     if (input$Dark == T) {
       Dark_mode = T
     }
     else  if (input$Dark == F) {
       Dark_mode = F
+    }
+    if (input$show_labels_3D == T) {
+      show_labels_3D = T
+    }
+    else  if (input$show_labels_3D == F) {
+      show_labels_3D = F
     }
     if (input$expressions_3D == T) {
       expression_colors_3D = T
@@ -2382,7 +2507,7 @@ shinyServer(function(input, output, session) {
     }
     
     withProgress(min = 0, max = 1, {
-      incProgress(message = "Processing data into plot",
+      incProgress(message = "Plotting",
                   detail = "This may take a while...",
                   amount = .1)
       
@@ -2459,7 +2584,7 @@ shinyServer(function(input, output, session) {
       paste('Drosophila (TAU) Network file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(dros_net, file, row.names = F, sep = "\t")
+      write.table(dros_net, file, row.names = F, sep = "\t", quote = F)
     }
   )
   output$dros_annot <- downloadHandler(
@@ -2467,7 +2592,7 @@ shinyServer(function(input, output, session) {
       paste('Drosophila KEGG pathways', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(dros_annot, file,row.names = F,col.names = F, sep = "\t")
+      write.table(dros_annot, file,row.names = F, col.names = F, sep = "\t", quote = F)
     }
   )
   output$dros_louvain <- downloadHandler(
@@ -2475,7 +2600,7 @@ shinyServer(function(input, output, session) {
       paste('Drosophila Louvain automated annotation', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(dros_louvain, file,row.names = F,col.names = F, sep = "\t")
+      write.table(dros_louvain, file,row.names = F, col.names = F, sep = "\t", quote = F)
     }
   )
   output$dros_express <- downloadHandler(
@@ -2483,7 +2608,7 @@ shinyServer(function(input, output, session) {
       paste('Drosophila Expressions file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(dros_express, file,row.names = F,col.names = F, sep = "\t")
+      write.table(dros_express, file,row.names = F, col.names = F, sep = "\t", quote = F)
     }
   )
   
@@ -2502,7 +2627,7 @@ shinyServer(function(input, output, session) {
       paste('STRING TP53 Network file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_net_tp53, file, row.names = F, sep = "\t")
+      write.table(string_net_tp53, file, row.names = F, sep = "\t", quote = F)
     }
   )
   output$string_annot <- downloadHandler(
@@ -2510,7 +2635,7 @@ shinyServer(function(input, output, session) {
       paste('STRING TP53 Annotation file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_annot, file, row.names = F,col.names = F, sep = "\t")
+      write.table(string_annot, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   output$string_expr <- downloadHandler(
@@ -2518,7 +2643,7 @@ shinyServer(function(input, output, session) {
       paste('STRING TP53 Expression file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_expr, file, row.names = F,col.names = F, sep = "\t")
+      write.table(string_expr, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   
@@ -2539,7 +2664,7 @@ shinyServer(function(input, output, session) {
       paste('STRING BCAR3 Network file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_net_bcar3, file, row.names = F, sep = "\t")
+      write.table(string_net_bcar3, file, row.names = F, sep = "\t", quote = F)
     }
   )
   output$string_bp <- downloadHandler(
@@ -2547,15 +2672,15 @@ shinyServer(function(input, output, session) {
       paste('STRING BCAR3 GO Biological Processes file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_bp, file, row.names = F,col.names = F, sep = "\t")
+      write.table(string_bp, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   output$string_mf <- downloadHandler(
     filename = function() {
-      paste('STRING BCAR3 GO Molecura functions file', '.txt', sep = '')
+      paste('STRING BCAR3 GO Molecular functions file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_mf, file, row.names = F,col.names = F, sep = "\t")
+      write.table(string_mf, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
   ) 
   output$string_kegg <- downloadHandler(
@@ -2563,7 +2688,7 @@ shinyServer(function(input, output, session) {
       paste('STRING BCAR3 GO KEGG file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(string_kegg, file, row.names = F,col.names = F, sep = "\t")
+      write.table(string_kegg, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   
@@ -2588,7 +2713,7 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression Network file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express, file, row.names = F, sep = "\t")
+      write.table(co_express, file, row.names = F, sep = "\t", quote = F)
     }
   )
   output$co_express_bp <- downloadHandler(
@@ -2596,7 +2721,7 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression GO Biological Processes file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express_bp, file,row.names = F,col.names = F, sep = "\t")
+      write.table(co_express_bp, file,row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   output$co_express_mf <- downloadHandler(
@@ -2604,7 +2729,7 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression GO Molecura functions file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express_mf, file,row.names = F,col.names = F, sep = "\t")
+      write.table(co_express_mf, file,row.names = F,col.names = F, sep = "\t", quote = F)
     }
   ) 
   output$co_express_cc <- downloadHandler(
@@ -2612,7 +2737,7 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression Cellular Componets file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express_cc, file,row.names = F,col.names = F, sep = "\t")
+      write.table(co_express_cc, file,row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
   output$co_express_kegg <- downloadHandler(
@@ -2620,7 +2745,7 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression KEGG pathways file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express_kegg, file,row.names = F,col.names = F, sep = "\t")
+      write.table(co_express_kegg, file,row.names = F,col.names = F, sep = "\t", quote = F)
     }
   ) 
   output$co_express_mcode <- downloadHandler(
@@ -2628,9 +2753,96 @@ shinyServer(function(input, output, session) {
       paste('Human Gene Co-expression MCODE node coloring file', '.txt', sep = '')
     },
     content = function(file) {
-      write.table(co_express_mcode, file,row.names = F,col.names = F, sep = "\t")
+      write.table(co_express_mcode, file,row.names = F,col.names = F, sep = "\t", quote = F)
     }
   )
+  #-----------------------------------------------------------------------------#
+  covid_19_net <- read.delim("Examples/IntAct_COVID19/Intact-data_COVID19_no_self_loops.txt", header = T)
+  covid_19_interpro <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Protein_Domains_INTERPRO_FILTERED.txt", header = F)
+  covid_19_bp <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Gene_Ontology_GOTERM_BP_DIRECT_FILTERED.txt", header = F)
+  covid_19_mf <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Gene_Ontology_GOTERM_MF_DIRECT_FILTERED.txt", header = F)
+  covid_19_cc <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Gene_Ontology_GOTERM_CC_DIRECT_FILTERED.txt", header = F)
+  covid_19_kegg <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Pathways_KEGG_PATHWAY_FILTERED.txt", header = F)
+  covid_19_smart <- read.delim("Examples/IntAct_COVID19/Functional_Annotation_Results/HomoSapiens_Protein_Domains_SMART_FILTERED.txt", header = F)
+  
+  output$covid_19_net <- downloadHandler(
+    filename = function() {
+      paste('COVID-19 Network file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_net, file, row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_interpro <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens Protein Domains - INTERPRO file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_interpro, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_bp <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens GO Annotation - Biological Process file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_bp, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_mf <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens GO Annotation - Molecular Function file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_mf, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_cc <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens Protein Domains GO Annotation - Cellular Components file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_cc, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_kegg <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens Protein Domains KEGG pathways file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_kegg, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$covid_19_smart <- downloadHandler(
+    filename = function() {
+      paste('HomoSapiens Protein Domains SMART file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(covid_19_smart, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  
+  #-----------------------------------------------------------------------------#
+  Gallus_gallus_net <- read.delim("Examples/BioGrid_Chicken_Gallus/Biogrid_no_self_loops.txt", header = T)
+  Gallus_gallus_kegg <- read.delim("Examples/BioGrid_Chicken_Gallus/BioGrid_Chicken_Gallus_Pathways_KEGG_PATHWAY_FILTERED.txt", header = F)
+  
+  output$Gallus_gallus_net <- downloadHandler(
+    filename = function() {
+      paste('Gallus gallus Network file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(Gallus_gallus_net, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  output$Gallus_gallus_kegg <- downloadHandler(
+    filename = function() {
+      paste('BioGrid Chicken Gallus KEGG pathways file', '.txt', sep = '')
+    },
+    content = function(file) {
+      write.table(Gallus_gallus_kegg, file,row.names = F, quote = F, sep = "\t")
+    }
+  )
+  
   ##############################################################################
   R_script <- read.delim("annotation_cleaner.R", header = F)
   
