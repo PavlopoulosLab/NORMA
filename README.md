@@ -39,3 +39,4 @@ NORMA-The network makeup artist: a web tool for network annotation visualization
 Koutrouli M., Karatzas E, Papanikolopoulou K, Pavlopoulos GA.
 Genomics Proteomics and Bioinformatics, 2021 Jun 22:S1672-0229(21)00130-3. doi: 10.1016/j.gpb.2021.02.005. 
 PMID:34171457
+https://pubmed.ncbi.nlm.nih.gov/34171457/
