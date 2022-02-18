@@ -1,2 +1,0 @@
-Term	Genes
-Intracellular trafficking and secretion	O00629, O60684, Q14974, Q9UBF2, P52292, O00505

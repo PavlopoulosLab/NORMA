@@ -1,8 +1,0 @@
-mRNA metabolic process	"Edc4,Hnrnpl,Hnrnpu,Hspa1a,Khdrbs1,Lsm4,Luc7l2,Pcbp1,Psip1,Rbm39,Sfpq,Snrpa1,Ssb,Strap,Syncrip,Tra2b,U2af1,Ybx1"
-RNA processing	"Hnrnpl,Hnrnpu,Khdrbs1,Lsm4,Luc7l2,Nhp2,Nop56,Nop58,Pcbp1,Psip1,Rbm3,Rbm39,Rsl1d1,Sfpq,Snrpa1,Ssb,Strap,Syncrip,Tra2b,U2af1,Ybx1"
-mRNA processing	"Hnrnpl,Hnrnpu,Khdrbs1,Lsm4,Luc7l2,Pcbp1,Psip1,Rbm39,Sfpq,Snrpa1,Strap,Syncrip,Tra2b,U2af1,Ybx1"
-RNA Splicing	"Hnrnpu,Khdrbs1,Luc7l2,Psip1,Rbm39,Sfpq,Snrpa1,Strap,Syncrip,Tra2b,U2af1,Ybx1"
-RNA binding	"Aimp1,Apex1,Caprin1,Eef1b2,Eif4b,Eif5,Ewsr1,Hnrnpl,Hnrnpu,Khdrbs1,Lsm4,Luc7l2,Mtdh,Ncl,Nhp2,Nop56,Nop58,Pcbp1,Ranbp2,Rbm3,Rbm39,Rpl12,Rpl17,Rsl1d1,Serbp1,Sfpq,Snrpa1,Srp14,Ssb,Syncrip,Tra2b,Tubb4b,U2af1,Yars,Ybx1"
-mRNA binding	"Hnrnpl,Hnrnpu,Luc7l2,Ncl,Pcbp1,Rsl1d1,Serbp1,Ssb,Tra2b,Ybx1"
-ribomucleoprotein complex	"Abcf1,Caprin1,Ckap4,Edc4,Eif4b,Hnrnpl,Hnrnpu,Hspa1a,Luc7l2,Ncl,Nhp2,Nop56,Nop58,Pcbp1,Rpl12,Rpl17,Rrbp1,Rsl1d1,Snrpa1,Srp14,Ssb,Syncrip,Tra2b,U2af1,Ybx1"
-ribonucleoprotein granule	"Caprin1,Ckap4,Edc4,Hnrnpl,Hnrnpu,Lsm4,Ncl,Pcbp1,Ybx1"
