@@ -21,7 +21,6 @@ convex_hull_3D <- function() {
   #---------------------------------------------------------------#
   my_network<- as.data.frame(get.edgelist(g))
   my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
-  gName <- SelectedStoredNets()$name
   
   groups <- as.data.frame(annotation_graph)
 
@@ -311,7 +310,7 @@ convex_hull_3D <- function() {
       colnames(expression) <- c("id", "color")
       express_order<- as.data.frame(names(V(g)))
       colnames(express_order) <- "id"
-      expression<-left_join(express_order, expression, by = "id")
+      expression <- suppressMessages(left_join(express_order, expression, by = "id"))
       expression$color<- as.character(expression$color)
       for(i in 1:length(expression$color)){
         if(Dark_mode ==F){

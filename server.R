@@ -262,12 +262,13 @@ shinyServer(function(input, output, session) {
             "text/csv",
             "text/comma-separated-values,text/plain",
             ".csv"
-          )),
-          div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
+          ))#,
+          #div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
         )
-      } else {
-        div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
-      }
+      } 
+      # else {
+      #   div(list(div(wellPanel(checkboxInput(inputId = "weighted1", label = "Weighted", value = F)), class = "col-md-6")), class = "row")
+      # }
     }, error = function(e) {
       print(paste("Upload tab error: ", e))
       shinyalert("Error!", "Upload tab error.", type = "error")
@@ -697,7 +698,6 @@ shinyServer(function(input, output, session) {
       node1 <- input$node_1
       node2 <- input$node_2
       
-      source("./functions/refreshing/vennDiagrams.R", local = T)
       venn<- vennDiagrams()
       if(is.null(input$node1))
         df<- EmptyDataset(c("V1", "V2"))
@@ -728,7 +728,6 @@ shinyServer(function(input, output, session) {
       node2 <- input$node_2
       node1 <- input$node_1
       
-      source("./functions/refreshing/vennDiagrams.R", local = T)
       venn<- vennDiagrams()
       if(is.null(input$node2))
         df<- EmptyDataset(c("V1", "V2"))
@@ -818,56 +817,20 @@ shinyServer(function(input, output, session) {
   # Convex hulls
   output$interactive_convex_hulls <- renderUI({
     tryCatch({
-      # expression_colors <- T
-      # show_labels <- T
-      # some_labels <- T
-      # layouts_with_virtual_nodes<- T
-      s = input$chooseGroups_rows_selected
-      
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-      annoation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-      if (is.null(g) | is.null(annoation_graph))
+      annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
+      if (is.null(g) | is.null(annotation_graph))
         return(NULL)
-      
-      # if (input$layouts_with_virtual_nodes == T) {
-      #   layouts_with_virtual_nodes = T
-      # }
-      # else  if (input$layouts_with_virtual_nodes == F) {
-      #   layouts_with_virtual_nodes = F
-      # }
-      # if (input$show_labels == T) {
-      #   show_labels = T
-      # }
-      # else  if (input$show_labels == F) {
-      #   show_labels = F
-      # }
-      
-      # if (input$expressions == T) {
-      #   expression_colors = T
-      # }
-      # else if (input$expressions == F) {
-      #   expression_colors = F
-      # }
-      # if (input$some_labels == T) {
-      #   some_labels = T
-      # }
-      # else if (input$some_labels == F) {
-      #   some_labels = F
-      # }
-      # if (input$weighted1 == T) {
-      #   weighted1 = T
-      # }
-      # else if (input$weighted1 == F) {
-      #   weighted1 = F
-      # }
       
       withProgress(min = 0, max = 1, {
         incProgress(message = "Plotting",
                     detail = "This may take a while...",
                     amount = .1)
-        source("./functions/refreshing/interactive_convex_hulls.R", local = T)
-        lay <- input$layouts
+        
+        start_time <- Sys.time()
         convex_hulls()
+        end_time <- Sys.time()
+        if (PRINT_TIMES) print(paste("### TIME:", input$convex_layout_strategy, ": ", end_time - start_time, " seconds."))
         
         tags$iframe(
           srcdoc = paste(readLines(
@@ -935,52 +898,14 @@ shinyServer(function(input, output, session) {
   # PieCharts
   output$tabVizPie_charts <- renderUI({
     tryCatch({
-      expression_colors_pies <- T
-      show_labels_pies <- T
-      some_labels_pies <- T
-      layouts_with_virtual_nodes_pies<- T
-      s = input$chooseGroups2_rows_selected
-      
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-      annoation_graph <-
-        fetchFirstSelectedStoredGroups2_annotations_tab()
-      
-      if (is.null(g) | is.null(annoation_graph))
-        return(NULL)
-      
-      if (input$layouts_with_virtual_nodes_pies == T) {
-        layouts_with_virtual_nodes_pies = T
-      }
-      else if (input$layouts_with_virtual_nodes_pies == F) {
-        layouts_with_virtual_nodes_pies = F
-      }
-      if (input$show_labels_pies == T) {
-        show_labels_pies = T
-      }
-      else if (input$show_labels_pies == F) {
-        show_labels_pies = F
-      }
-      
-      if (input$expressions_pies == T) {
-        expression_colors_pies = T
-      }
-      else if (input$expressions_pies == F) {
-        expression_colors_pies = F
-      }
-      
-      if (input$some_labels_pies == T) {
-        some_labels_pies = T
-      }
-      else if (input$some_labels_pies == F) {
-        some_labels_pies = F
-      }
+      annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
       
       withProgress(min = 0, max = 1, {
         incProgress(message = "Plotting",
                     detail = "This may take a while...",
                     amount = .1)
-        source("./functions/refreshing/interactive_pie_charts.R", local = T)
-        lay <- input$layouts2
+        
         pie_charts()
         tags$iframe(
           srcdoc = paste(readLines(
@@ -1052,8 +977,8 @@ shinyServer(function(input, output, session) {
       s = input$chooseGroups_3D_rows_selected
       
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-      annoation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-      if (is.null(g) | is.null(annoation_graph))
+      annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
+      if (is.null(g) | is.null(annotation_graph))
         return(NULL)
       
       if (input$Dark == T) {
@@ -1162,8 +1087,7 @@ shinyServer(function(input, output, session) {
   # Venn Diagrams
   output$vennDiagram1<- renderUI({
     tryCatch({
-      source("./functions/refreshing/vennDiagrams.R", local=T)
-      venn<-vennDiagrams()
+      venn <- vennDiagrams()
       selectInput("node_1", label = "Node 1", choices = c("-",venn$id), selected = "-")
     }, error = function(e) {
       print(paste("Annotations tab error: ", e))
@@ -1173,7 +1097,6 @@ shinyServer(function(input, output, session) {
   
   output$vennDiagram2<- renderUI({
     tryCatch({
-      source("./functions/refreshing/vennDiagrams.R", local=T)
       venn<-vennDiagrams()
       selectInput("node_2", label = "Node 2", choices = c("-",venn$id), selected = "-")
     }, error = function(e) {
@@ -1187,7 +1110,6 @@ shinyServer(function(input, output, session) {
       node1_choice<- observe({ node1 <- input$node_1 })
       
       if(!is.null(input$node_1)){
-        source("./functions/refreshing/vennDiagrams.R", local = T)
         venn <- vennDiagrams()
         for(i in length(venn$id)){
           venn_i<-which(venn$id==input$node_1)
@@ -1199,7 +1121,6 @@ shinyServer(function(input, output, session) {
       node2_choice<- observe({ node2 <- input$node_2 })
       
       if(!is.null(input$node_2)){
-        source("./functions/refreshing/vennDiagrams.R", local = T)
         venn<- vennDiagrams()
         for(i in length(venn$id)){
           venn_i<-which(venn$id==input$node_2)
@@ -1234,7 +1155,6 @@ shinyServer(function(input, output, session) {
   
   output$venn_table_summ <- DT::renderDataTable({
     tryCatch({
-      source("./functions/refreshing/vennDiagrams.R", local = T)
       venn<- vennDiagrams()
       length_of_gaps<- c(input$node_1, input$node_2, input$node_3)
       empty_length<- length(which(length_of_gaps %in% "-"))

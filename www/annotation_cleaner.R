@@ -27,7 +27,7 @@ column2<- unique(network$Target)
 df1<- data.frame(V1= column1)
 df2<- data.frame(V1= column2)
 
-unique_nodes_network<- full_join(df1,df2)
+unique_nodes_network <- suppressMessages(full_join(df1, df2))
 
 annotations2<- as.character(annotations[,2])
 genes <- strsplit(annotations2, ',')
@@ -35,10 +35,10 @@ genes <- strsplit(annotations2, ',')
 unique_nodes_annotations<- as.data.frame(unique(unlist(genes)))
 colnames(unique_nodes_annotations)<- 'V1'
 
-merged<- full_join(unique_nodes_network, unique_nodes_annotations)
+merged <- suppressMessages(full_join(unique_nodes_network, unique_nodes_annotations))
 
 
-words_to_be_removed<- anti_join(merged,unique_nodes_network)
+words_to_be_removed <- suppressMessages(anti_join(merged,unique_nodes_network))
 
 annotations_new<- data.frame()
 if(!is.null(words_to_be_removed)){

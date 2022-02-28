@@ -1,82 +1,34 @@
-# Install dependencies ####
-if (!require(Rcpp)) install.packages("Rcpp")
-if (!require(shiny)) install.packages('shiny')
-if (!require(DT)) install.packages('DT')
-if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-if (!require(uuid))install.packages('uuid')
+# Load libraries or install dependencies ####
 if (!require(shinyBS)) install.packages('shinyBS')
-if (!require(networkD3)) install.packages('networkD3')
+if (!require(bsplus)) install.packages('bsplus')
+if (!require(visNetwork)) install.packages("visNetwork")
+if (!require(shinyWidgets)) install.packages('shinyWidgets')
+if (!require(shinythemes)) install.packages('shinythemes')
 if (!require(shinyjs)) install.packages('shinyjs')
 if (!require(shinyalert)) install.packages('shinyalert')
-if (!require(magrittr)) install.packages('magrittr')
-if (!require(devtools)) install.packages('devtools')
-if (!require(colourpicker)) install.packages('colourpicker')
-if (!require(backports)) install.packages('backports')
-if (!require(viridis)) install.packages('viridis')
-if (!require(tidyverse)) install.packages('tidyverse')
-if (!require(plyr)) install.packages('plyr')
-if (!require(dplyr)) install.packages('dplyr')
-if (!require(purrr)) install.packages('purrr')
+if (!require(shinycssloaders)) install.packages('shinycssloaders')
+if (!require(randomcoloR)) install.packages('randomcoloR')
+if (!require(DT)) install.packages('DT')
+if (!require(uuid))install.packages('uuid')
 if (!require(igraph)) install.packages('igraph')
-if (!require(RColorBrewer)) install.packages('RColorBrewer')
-if (!require(data.table)) install.packages('data.table')
 if (!require(stringi)) install.packages('stringi')
-if (!require(shinythemes)) install.packages('shinythemes')
-if (!require(rhandsontable)) install.packages('rhandsontable')
-if (!require(d3Network)) install.packages("d3Network")
+if (!require(dplyr)) install.packages('dplyr')
+if (!require(tidyr)) install.packages('tidyr')
+if (!require(stringr)) install.packages('tidyr')
+if (!require(VennDiagram)) install.packages("VennDiagram")
 if (!require(lattice)) install.packages("lattice")
-if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
-if (!require(networkD3)) install.packages("networkD3")
-if (!require(randomcoloR)) install.packages("randomcoloR")
-if (!require(Cairo)) install.packages("Cairo")
-if (!require(plotly)) install.packages("Plotly")
-
-# Load libraries ####
-library(shinythemes)
-library(BiocManager)
-library(devtools)
-library(shiny)
-library(shinyBS)
-library(shinyalert)
-library(DT)
-library(uuid)
-library(networkD3)
-library(magrittr)
-library(shinyjs)
-library(colourpicker)
-library(shinyWidgets)
-library(plyr)
-library(tidyr)
-library(dplyr)
-library(purrr)
-library(igraph)
-library(ggplot2)
-library(ggraph)
-library(RColorBrewer)
-library(data.table)
-library(networkD3)
-library(stringi)
-library(reshape2)
-library(shinyjs)
-library(visNetwork)
-library(shinyWidgets)
-library(jsonlite)
-library(d3Network)
-library(lattice)
-library(Cairo)
-library(randomcoloR)
-library(colourpicker)
-library(VennDiagram)
-library(reactlog) #debugging
+if (!require(purrr)) install.packages('purrr')
 
 # Options ####
 options(shiny.usecairo = F)
 options(shiny.maxRequestSize = 30*1024^2) # 30 MB for uploaded networks
-options(shiny.reactlog = TRUE) # debugging
-options(shiny.error = browser) # debugging
+# options(shiny.reactlog = TRUE) # debugging
+# options(shiny.error = browser) # debugging
 
 # Global variables ####
-ui_options <- c(ui_table_line_height = "80%", ui_table_font_sz = "80%")
+PRINT_TIMES <- T # true, to benchmark some function speeds
+
+ui_options <- c(ui_table_font_sz = "80%")
 layouts_ui <- c(
   "Fruchterman-Reingold"="Fructerman\tlayout_nicely(igraph, dim=2)",
   # "Fruchterman-Reingold"="Fructerman\tlayout.fruchterman.reingold(igraph, dim=2)",
@@ -131,6 +83,8 @@ statistics <- c(
   "Centralization degree" = "Centralization.degree\tcentralization.degree(igraph)$centralization"
 )
 selected_statistics <- c("Number of Edges" = "Number of Edges\tecount(igraph)")
+
+max_pixels_panel <- 5000
 
 # 300 Colors - Up to 100 are distinct
 qual_col_pals<-c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E","#E6AB02","#A6761D","#666666","#7FC97F","#BEAED4",
@@ -210,34 +164,6 @@ Gallus_gallus_kegg <- read.delim("./www/Examples/BioGrid_Chicken_Gallus/BioGrid_
 R_script <- read.delim("./www/annotation_cleaner.R", header = F)
 
 # General functions ####
-# functions for selectbox choices
-layout_choices <- function(igraph,layouts_ui){
-  if(length(layouts_ui)==0)
-    return(NULL)
-  results<-list()
-  for(i in layouts_ui){
-    tmp<-unlist(strsplit(i,"\t",fixed=T))
-    description<-tmp[1]
-    command<-tmp[2]
-    results[[description]]<-eval(parse(text=command))
-  }
-  return(results[[description]])
-}
-
-layout_choices_3D <- function(igraph, layouts_3D){
-  if(length(layouts_3D)==0)
-    return(NULL)
-  results<-list()
-  for(i in layouts_3D){
-    tmp<-unlist(strsplit(i,"\t",fixed=T))
-    description<-tmp[1]
-    command<-tmp[2]
-    results[[description]]<-eval(parse(text=command))
-  }
-  
-  return(results[[description]])
-}
-
 automated_annotation_choices <- function(igraph,automated_annotations_ui){
   if(length(automated_annotations_ui)==0) return(NULL)
   results<-list()
@@ -251,21 +177,8 @@ automated_annotation_choices <- function(igraph,automated_annotations_ui){
   return(results[[description]])
 }
 
-netstats <- function(igraph,statistics){
-  if(length(statistics)==0)
-    return(NULL)
-  results<-list()
-  for(i in statistics){
-    tmp<-unlist(strsplit(i,"\t",fixed=T))
-    description<-tmp[1]
-    command<-tmp[2]
-    results[[description]]<-eval(parse(text=command))
-  }
-  return(data.frame(cbind(names(results),as.character(results))))
-}
-
 # Colors if there is NOT "NA" in dataset (nodes)
-group_pal_rows<- function(n){
+group_pal_rows <- function(n){
   
   qual_col_pals[1:300]
     
@@ -273,39 +186,13 @@ group_pal_rows<- function(n){
     qual_col_pals<-c(qual_col_pals, rep(c("grey50"), times = (n-300) ))
     nn<-  qual_col_pals[1:n]
     nnames<-c(nn)
-  }
-  else {
+  } else {
     nn<-  qual_col_pals[1:n]
     nnames<-c(nn)
   }
 }
 
-# Colors if there is "NA" in dataset (nodes)
-group_palette<- function(n){
-  qual_col_pals[1:300]
-  
-  if(n>=300){
-    qual_col_pals<-c(qual_col_pals, rep(c("grey50"), times = (n-300) ))
-    nn<-  qual_col_pals[1:n]
-    nnames<-c(nn,"white")
-  }
-  else {
-    nn<-  qual_col_pals[1:n]
-    nnames<-c(nn,"white")
-  }
-}
-
-# DataTable / Legend colors
-css_colors <- group_pal_rows(300)
-
-css_generated <- ""
-for (i in 1: 300){
-  css_generated<-paste(css_generated, ".x", i, "{background-color: ", css_colors[i],";}","table.dataTable tr.selected td.x",i,"{background-color: ",css_colors[i], " !important;}",sep="")
-  css_generated<-paste(css_generated," ", sep="\n")
-}
-
-max_pixels_panel<-5000
-mapper<-function(value, istart, istop, ostart, ostop){ 
+mapper <- function(value, istart, istop, ostart, ostop){ 
   return (ostart + (ostop - ostart) * ((value - istart) / (istop - istart)))
 }
 
@@ -320,24 +207,6 @@ ui_dataTable_panel <- function(datasetName, pagination = TRUE) {
   ))
 }
 
-read_expressions <-
-  function(datapath,
-           type = c("txt"),
-           header = F,
-           sep = "\t",
-           quote = "\"",
-           weighted = F,
-           na.strings = c("", "NA"))
-    ({
-      expression1 <-
-        read.table(datapath,
-                   header = header,
-                   sep = sep,
-                   quote = quote,
-                   comment.char="?")
-    })
-
-
 EmptyDataset <- function(columns) {
   dataset <- data.frame(V1 = integer())
   lapply(columns[-1], function(x)
@@ -345,3 +214,12 @@ EmptyDataset <- function(columns) {
   colnames(dataset) <- columns
   return(dataset)
 }
+
+# # DO ONCE
+# css_colors <- group_pal_rows(300)
+# css_generated <- ""
+# for (i in 1: 300){
+#   css_generated <- paste(css_generated, ".x", i, "{background-color: ", css_colors[i],";}","table.dataTable tr.selected td.x",i,"{background-color: ",css_colors[i], " !important;}", sep="")
+#   css_generated <- paste(css_generated," ", sep="\n")
+# }
+# print(css_generated)

@@ -17,7 +17,8 @@ addNetwork <- function(){
       if (nrow(dataset) > 10000) {
         dataset <- dataset[1:10000,]
       }
-      attr(dataset, which = 'weighted') <- input$weighted1
+      if (ncol(dataset) == 3) attr(dataset, which = 'weighted') <- T
+      else attr(dataset, which = 'weighted') <- F
       
       reactiveVars$StoredNetworks <-
         rbind(reactiveVars$StoredNetworks, df)
@@ -264,7 +265,7 @@ loadNetworkFromFile <- function() {
   
   if (input$uiLoadGraphOptionsInput != "oF" && !is.null(dataset1)) {
     set.seed(123)
-    if(input$weighted1==F) {
+    if(ncol(dataset1) < 3) {
       dataset1 <- cbind(dataset1[,1:2], "Weight" = rep(1, nrow(dataset1)))
     } else {
       if (ncol(dataset1) == 2) {
@@ -357,6 +358,12 @@ loadExpressions <- function() {
     colnames(expression1) <- c("ID", "Color")
   }
   return(expression1)
+}
+
+read_expressions <- function(datapath, type = c("txt"), header = F, sep = "\t",
+                             quote = "\"", weighted = F, na.strings = c("", "NA")){
+  expression1 <- read.table(datapath, header = header, sep = sep,
+                            quote = quote, comment.char="?")
 }
 
 read_data <- function(datapath, type = c("txt"), header = T, sep = "\t", quote = "\"", weighted = F){

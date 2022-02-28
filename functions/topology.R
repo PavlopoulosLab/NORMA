@@ -116,3 +116,16 @@ SelectedStoredNets_topology_tab <- function() {
     return(StoredNets_topology_tab()[1,])
   }
 }
+
+netstats <- function(igraph,statistics){
+  if(length(statistics)==0)
+    return(NULL)
+  results<-list()
+  for(i in statistics){
+    tmp<-unlist(strsplit(i,"\t",fixed=T))
+    description<-tmp[1]
+    command<-tmp[2]
+    results[[description]]<-eval(parse(text=command))
+  }
+  return(data.frame(cbind(names(results),as.character(results))))
+}

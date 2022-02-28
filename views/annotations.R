@@ -19,27 +19,40 @@ annotationsPage <- div(id = "annotations_div",
                          tabPanel(
                            "Convex Hulls",
                            br(),
-                           # Layouts #
-                           helpText("Select the layout for the analysis:"),
-                           
-                           selectInput(
-                             "layouts",
-                             "The layouts:",
-                             choices = layouts_ui,
-                             selected = selected_layouts,
-                             multiple = FALSE
-                           ),
-                           prettyCheckbox(
-                             inputId = "layouts_with_virtual_nodes",outline = T,fill = T,bigger = T,
-                             label = "Allow modification of the selected layout taking into account the groups",
-                             thick = TRUE,
-                             shape = "curve",
-                             animation = "pulse",
-                             status = "info",
-                             inline = F,
-                             value = F
-                           ),
-                           hr(),
+                           tags$div(class = "strategies",
+                                    selectInput(
+                                      "layouts",
+                                      "General layout:",
+                                      choices = layouts_ui,
+                                      selected = selected_layouts,
+                                      multiple = FALSE
+                                    ),
+                                    selectInput(
+                                      "local_layout",
+                                      "Local layout:",
+                                      choices = layouts_ui,
+                                      selected = selected_layouts,
+                                      multiple = FALSE
+                                    ),
+                                    br(),
+                                    prettyRadioButtons(
+                                      inputId = "convex_layout_strategy",
+                                      label = "Layout modification strategy:",
+                                      choices = c("Simple layout", "Virtual node per group", "Group gravity", "Supernodes per group"),
+                                      thick = TRUE,
+                                      shape = "curve",
+                                      animation = "pulse",
+                                      status = "info"
+                                    ),
+                                    sliderInput(
+                                      inputId = "repeling_force",
+                                      label = "Adjust force strength:",
+                                      min = 1,
+                                      max = 20,
+                                      value = 10
+                                    )
+                           ), # strategies
+                           br(),
                            prettyCheckbox(
                              inputId = "show_labels",outline = T,fill = T,bigger = T,
                              label = "Show Labels",
@@ -71,7 +84,11 @@ annotationsPage <- div(id = "annotations_div",
                              value = F
                            ),
                            hr(),
-                           uiOutput("interactive_convex_hulls"),
+                           div(id="interactive_convex_hulls_loader",
+                               shinycssloaders::withSpinner(
+                                 uiOutput("interactive_convex_hulls")
+                               )
+                           ),
                            eval(ui_dataTable_panel("chooseGroups")),
                            tags$style(
                              HTML(
@@ -140,24 +157,39 @@ annotationsPage <- div(id = "annotations_div",
                          tabPanel(
                            "Pie - Chart Nodes",
                            fluidRow(
-                             helpText("Select the layout you want in the analysis."),
-                             selectInput(
-                               "layouts2",
-                               "The layouts:",
-                               choices = layouts_ui,
-                               selected = selected_layouts,
-                               multiple = FALSE
-                             ),
-                             prettyCheckbox(
-                               inputId = "layouts_with_virtual_nodes_pies",outline = T,fill = T,bigger = T,
-                               label = "Allow modification of the selected layout taking into account the groups",
-                               thick = TRUE,
-                               shape = "curve",
-                               animation = "pulse",
-                               status = "info",
-                               inline = F,
-                               value = F
-                             ),
+                             tags$div(class = "strategies",
+                                      selectInput(
+                                        "layouts2",
+                                        "General layout:",
+                                        choices = layouts_ui,
+                                        selected = selected_layouts,
+                                        multiple = FALSE
+                                      ),
+                                      selectInput(
+                                        "local_layout2",
+                                        "Local layout:",
+                                        choices = layouts_ui,
+                                        selected = selected_layouts,
+                                        multiple = FALSE
+                                      ),
+                                      br(),
+                                      prettyRadioButtons(
+                                        inputId = "piechart_layout_strategy",
+                                        label = "Layout modification strategy:",
+                                        choices = c("Simple layout", "Virtual node per group", "Group gravity", "Supernodes per group"),
+                                        thick = TRUE,
+                                        shape = "curve",
+                                        animation = "pulse",
+                                        status = "info"
+                                      ),
+                                      sliderInput(
+                                        inputId = "repeling_force2",
+                                        label = "Adjust force strength:",
+                                        min = 1,
+                                        max = 20,
+                                        value = 10
+                                      )
+                             ), # strategies pies
                              hr(),
                              prettyCheckbox(
                                inputId = "show_labels_pies",outline = T,fill = T,bigger = T,
@@ -189,7 +221,11 @@ annotationsPage <- div(id = "annotations_div",
                                inline = F,
                                value = F
                              ),
-                             uiOutput('tabVizPie_charts'),
+                             div(id="tabVizPie_charts_loader",
+                                 shinycssloaders::withSpinner(
+                                   uiOutput('tabVizPie_charts')
+                                 )
+                             ),
                              eval(ui_dataTable_panel("chooseGroups2")),
                            ),
                            tags$style(
@@ -267,7 +303,7 @@ annotationsPage <- div(id = "annotations_div",
                            helpText("Select the layout you want in the analysis."),
                            selectInput(
                              "layouts_3D",
-                             "The 3D layouts:",
+                             "3D layout:",
                              choices = layouts_3D,
                              selected = selected_layouts_3d,
                              multiple = FALSE
@@ -312,7 +348,11 @@ annotationsPage <- div(id = "annotations_div",
                              inline = F,
                              value = F
                            ),
-                           uiOutput("convex_hull_3D"),
+                           div(id="convex_hull_3D_loader",
+                               shinycssloaders::withSpinner(
+                                 uiOutput("convex_hull_3D")
+                               )
+                           ),
                            eval(ui_dataTable_panel("chooseGroups_3D")),
                            
                            tags$style(

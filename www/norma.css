@@ -1,0 +1,81 @@
+hr {border-top: 1px solid #000000;}
+
+td {
+  line-height: 1.2 !important;
+}
+
+.well{
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.box-panel {
+  border-radius: 0 0 5px 5px;
+  border-width: 1px;
+  border-color: #d7d7d7;
+  border-style: none solid solid solid;
+}
+
+.box-panel-padding {
+  padding: 20px 20px 20px 20px;
+}
+
+.tabBox-panel {
+  padding: 20px 20px 20px 20px;
+  border-width: 1px;
+  border-color: #d7d7d7;
+  border-radius: 0px 0px 8px 8px;
+  border-style: none solid solid solid;
+  background: #ffffff;
+}
+
+.centerBlock {
+  float: none;
+  margin: 0 auto;
+}
+
+.dataTables_wrapper td {
+  line-height: 80%;
+}
+
+.strategies{
+  background-color: #fff7f1;
+  border: 1px solid #ff9300;
+  border-radius: 25px;
+  padding: 5px;
+  padding-bottom: 0;
+  font-size: 1.2em;
+  display: block;
+}
+
+.strategies > div{
+  display: inline-block;
+  width: 45% !important;
+  margin: 20px;
+  margin-bottom: 5px;
+}
+
+.strategies > div:nth-child(5){
+  position: relative;
+  top: -87px;
+}
+
+.irs-single{
+  background-color: #2C8160 !important;
+}
+
+.irs-bar{
+  background: #2C8160 !important;
+}
+
+#introButton{
+  width: 100%;
+  margin-top: 15px;
+}
+
+@media only screen and (max-width: 991px) {
+  .strategies > div:nth-child(5){
+    top: 0;
+  }
+}
