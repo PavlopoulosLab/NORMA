@@ -27,7 +27,8 @@ options(shiny.maxRequestSize = 30*1024^2) # 30 MB for uploaded networks
 
 # Global variables ####
 PRINT_TIMES <- T # true, to benchmark some function speeds
-
+USER_TEMP_FOLDER <- 'user_temp'
+  
 ui_options <- c(ui_table_font_sz = "80%")
 layouts_ui <- c(
   "Fruchterman-Reingold"="Fructerman\tlayout_nicely(igraph, dim=2)",
@@ -132,6 +133,11 @@ b64_10 <- base64enc::dataURI(file = "./www/Figures/Topology.PNG", mime = "image/
 b64_11 <- base64enc::dataURI(file = "./www/Figures/Topology_comparisons.PNG", mime = "image/png")
 b64_12 <- base64enc::dataURI(file = "./www/Figures/venn.png", mime = "image/png")
 b64_3D_convex <- base64enc::dataURI(file = "./www/Figures/Convex_Hulls_3D.PNG", mime = "image/png")
+b64_strategy1 <- base64enc::dataURI(file = "./www/Figures/Strategy_1.png", mime = "image/png")
+b64_strategy2 <- base64enc::dataURI(file = "./www/Figures/Strategy_2.png", mime = "image/png")
+b64_strategy3 <- base64enc::dataURI(file = "./www/Figures/Strategy_3.png", mime = "image/png")
+
+
 
 # Help pages examples for download
 dros_net <- read.delim("./www/Examples/TAU/TAU_network_DEGs_NORMA.txt", header = T)

@@ -19,7 +19,7 @@ getDatasetName <- function(id) {
 fetchDataset_topology_tab <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)

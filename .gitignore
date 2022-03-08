@@ -38,7 +38,5 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-/Chinese_paper/nbproject/private/
-/Chinese_paper/build/
-*.html
-*.rda
+user_temp/*.html
+user_temp/*.rda

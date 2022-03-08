@@ -1,27 +1,27 @@
-Protein processing in endoplasmic reticulum	"DERL1,DERL2,NPLOC4,NSFL1C,SYVN1,UFD1L,VCP,VIMP"
-Regulation of actin cytoskeleton	"BAIAP2,BCAR1,CDC42,PAK1,PAK2,PXN,WAS,WASL"
-Chemokine signaling pathway	"BCAR1,CDC42,PAK1,PXN,WAS,WASL"
-Bacterial invasion of epithelial cells	"BCAR1,CDC42,PXN,WAS,WASL"
-Tight junction	"CDC42,PARD6A,PARD6B,WAS,WASL"
-Axon guidance	"CDC42,PAK1,PAK2,PARD6A,PARD6B"
-Focal adhesion	"BCAR1,CDC42,PAK1,PAK2,PXN"
-Endocytosis	"CDC42,PARD6A,PARD6B,WAS,WASL"
-Adherens junction	"BAIAP2,CDC42,WAS,WASL"
-Fc gamma R-mediated phagocytosis	"CDC42,PAK1,WAS,WASL"
-Rap1 signaling pathway	"BCAR1,CDC42,PARD6A,PARD6B"
-Human papillomavirus infection	"CDC42,PARD6A,PARD6B,PXN"
-Pathogenic Escherichia coli infection	"CDC42,WAS,WASL"
-Shigellosis	"CDC42,WAS,WASL"
-Renal cell carcinoma	"CDC42,PAK1,PAK2"
-Salmonella infection	"CDC42,WAS,WASL"
-T cell receptor signaling pathway	"CDC42,PAK1,PAK2"
-Leukocyte transendothelial migration	"BCAR1,CDC42,PXN"
-Proteoglycans in cancer	"CDC42,PAK1,PXN"
-Ras signaling pathway	"CDC42,PAK1,PAK2"
-MAPK signaling pathway	"CDC42,PAK1,PAK2"
-VEGF signaling pathway	"CDC42,PXN"
-Epithelial cell signaling in Helicobacter pylori infection	"CDC42,PAK1"
-ErbB signaling pathway	"PAK1,PAK2"
-Choline metabolism in cancer	"WAS,WASL"
-Neurotrophin signaling pathway	"ARHGDIA,CDC42"
-Hippo signaling pathway	"PARD6A,PARD6B"
+Protein processing in endoplasmic reticulum	DERL1,DERL2,NPLOC4,NSFL1C,SYVN1,UFD1L,VCP,VIMP
+Regulation of actin cytoskeleton	BAIAP2,BCAR1,CDC42,PAK1,PAK2,PXN,WAS,WASL
+Chemokine signaling pathway	BCAR1,CDC42,PAK1,PXN,WAS,WASL
+Bacterial invasion of epithelial cells	BCAR1,CDC42,PXN,WAS,WASL
+Tight junction	CDC42,PARD6A,PARD6B,WAS,WASL
+Axon guidance	CDC42,PAK1,PAK2,PARD6A,PARD6B
+Focal adhesion	BCAR1,CDC42,PAK1,PAK2,PXN
+Endocytosis	CDC42,PARD6A,PARD6B,WAS,WASL
+Adherens junction	BAIAP2,CDC42,WAS,WASL
+Fc gamma R-mediated phagocytosis	CDC42,PAK1,WAS,WASL
+Rap1 signaling pathway	BCAR1,CDC42,PARD6A,PARD6B
+Human papillomavirus infection	CDC42,PARD6A,PARD6B,PXN
+Pathogenic Escherichia coli infection	CDC42,WAS,WASL
+Shigellosis	CDC42,WAS,WASL
+Renal cell carcinoma	CDC42,PAK1,PAK2
+Salmonella infection	CDC42,WAS,WASL
+T cell receptor signaling pathway	CDC42,PAK1,PAK2
+Leukocyte transendothelial migration	BCAR1,CDC42,PXN
+Proteoglycans in cancer	CDC42,PAK1,PXN
+Ras signaling pathway	CDC42,PAK1,PAK2
+MAPK signaling pathway	CDC42,PAK1,PAK2
+VEGF signaling pathway	CDC42,PXN
+Epithelial cell signaling in Helicobacter pylori infection	CDC42,PAK1
+ErbB signaling pathway	PAK1,PAK2
+Choline metabolism in cancer	WAS,WASL
+Neurotrophin signaling pathway	ARHGDIA,CDC42
+Hippo signaling pathway	PARD6A,PARD6B

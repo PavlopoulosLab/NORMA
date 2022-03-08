@@ -88,7 +88,7 @@ convex_hulls <- function(){
   node_name_links <- node_name
   
   # Opening out conn
-  fileConn <- file(paste("output_convex_",Sys.getpid(),".html", sep=""), "w")
+  fileConn <- file(paste(USER_TEMP_FOLDER, "/output_convex_",Sys.getpid(),".html", sep=""), "w")
   
   s <- input$chooseGroups_rows_selected
   if (length(s)==0)
@@ -898,7 +898,7 @@ pie_charts<- function(){
     group_color <- tmp_selected_colors
     group_color_fill <- adjustcolor(group_color, alpha.f = 0.2)
     
-    fileConn <- file(paste("output_pies_",Sys.getpid(),".html", sep=""), "w")
+    fileConn <- file(paste(USER_TEMP_FOLDER, "/output_pies_",Sys.getpid(),".html", sep=""), "w")
     cat(sprintf(paste("<!DOCTYPE html>
 <head>
   <meta charset=\"utf-8\">
@@ -1415,7 +1415,7 @@ getStoredExpressionChoices <- function() {
 fetchDataset_annotations_tab <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)
@@ -1424,7 +1424,7 @@ fetchDataset_annotations_tab <- function(nid) {
 fetchDataset2_annotations_tab <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/",nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)
@@ -1466,7 +1466,7 @@ SelectedStoredExpress <- function() {
 fetchDatasetEx <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)

@@ -834,7 +834,7 @@ shinyServer(function(input, output, session) {
         
         tags$iframe(
           srcdoc = paste(readLines(
-            paste("output_convex_", Sys.getpid(), ".html", sep = "")
+            paste(USER_TEMP_FOLDER, "/output_convex_", Sys.getpid(), ".html", sep = "")
           ), collapse = '\n'),
           width = "100%",
           height = "850px"
@@ -909,7 +909,7 @@ shinyServer(function(input, output, session) {
         pie_charts()
         tags$iframe(
           srcdoc = paste(readLines(
-            paste("output_pies_", Sys.getpid(), ".html", sep = "")
+            paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
           ), collapse = '\n'),
           width = "100%",
           height = "850px"
@@ -1023,7 +1023,7 @@ shinyServer(function(input, output, session) {
         
         tags$iframe(
           srcdoc = paste(readLines(
-            paste("convex_3D_",Sys.getpid(),".html", sep="")
+            paste(USER_TEMP_FOLDER, "/convex_3D_",Sys.getpid(),".html", sep="")
           ), collapse = '\n'),
           width = "100%",
           height = "850px"
@@ -1187,7 +1187,7 @@ shinyServer(function(input, output, session) {
       paste("Convex_hulls_2D_", Sys.getpid(), ".html", sep = "")
     },
     content = function(file) {
-      HTML_convex <- paste(readLines(paste("output_convex_", Sys.getpid(), ".html", sep = "")
+      HTML_convex <- paste(readLines(paste(USER_TEMP_FOLDER, "/output_convex_", Sys.getpid(), ".html", sep = "")
       ), collapse = '\n')
       write.table(HTML_convex, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
@@ -1199,7 +1199,7 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       HTML_pies <- paste(readLines(
-        paste("output_pies_", Sys.getpid(), ".html", sep = "")
+        paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
       ), collapse = '\n')
       write.table(HTML_pies, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
@@ -1211,7 +1211,7 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       HTML_convex_3D <- paste(readLines(
-        paste("convex_3D_",Sys.getpid(),".html", sep="")
+        paste(USER_TEMP_FOLDER, "/convex_3D_",Sys.getpid(),".html", sep="")
       ), collapse = '\n')
       write.table(HTML_convex_3D, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
@@ -1430,17 +1430,17 @@ shinyServer(function(input, output, session) {
   session$onSessionEnded(function() {
     snets <- isolate(StoredNets())
     if (nrow(snets) > 0) {
-      unlink(c("*.rda", "*.zip"))
+      unlink(c(paste0(USER_TEMP_FOLDER, "/", "*.rda"), "*.zip"))
     }
     
     sannots <- isolate(StoredAnnots())
     if (nrow(sannots) > 0) {
-      unlink(c("*.rda", "*.zip"))
+      unlink(c(paste0(USER_TEMP_FOLDER, "/", "*.rda"), "*.zip"))
     }
     
     sexpress <- isolate(StoredExpress())
     if (nrow(sexpress) > 0) {
-      unlink(c("*.rda", "*.zip"))
+      unlink(c(paste0(USER_TEMP_FOLDER, "/", "*.rda"), "*.zip"))
     }
   })
   

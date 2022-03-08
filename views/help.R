@@ -161,20 +161,20 @@ EP300	CREBBP  2
       tags$li( "Louvain: This function implements a multi-level modularity optimization algorithm for finding community structures and is based on the modularity measure and a hierarchical approach."),
       tags$li( "Label-Propagation: This is a fast, nearly linear time algorithm for detecting community structures in a network by labeling the vertices with unique labels and then updating the labels by majority voting in the neighborhood of the vertex."),
       tags$li( "Walktrap: This function tries to find densely connected subgraphs in a graph via random walks. The idea is that short random walks tend to stay in the same community."),
-      tags$li( "Betweenness: Many networks consist of modules which are densely connected between themselves but sparsely connected to other modules. Clustering is made by ‘breaking’ the bridges which connect densely connected regions."),
+      tags$li( "Betweenness: Many networks consist of modules which are densely connected between themselves but sparsely connected to other modules. Clustering is made by 'breaking' the bridges which connect densely connected regions."),
     )),
     br(),
     tags$img(src = b64_6),
     br(),
     br(),
-    helpText( "Once a community detection method has been selected, users can see the results as interactive and searchable tables or as static plots for an at-a-glance view. In order for users to take advantage of NORMA’s advanced interactive visualization capabilities, the automatically generated annotations must be first exported and then imported as annotation input files.")
+    helpText( "Once a community detection method has been selected, users can see the results as interactive and searchable tables or as static plots for an at-a-glance view. In order for users to take advantage of NORMA's advanced interactive visualization capabilities, the automatically generated annotations must be first exported and then imported as annotation input files.")
     
   ), #Tabpanel Network
   
   tabPanel(
     "The Annotations Tab",
     br(),
-    strong( "This Tab is NORMA’s strongest feature and is used to visualize annotated networks in an easy and user-friendly way. Annotated, are the networks with (pre-)defined clusters, communities, subgraphs, marked regions or neighborhoods.
+    strong( "This Tab is NORMA's strongest feature and is used to visualize annotated networks in an easy and user-friendly way. Annotated, are the networks with (pre-)defined clusters, communities, subgraphs, marked regions or neighborhoods.
             Through the Annotation Tab, users can select between any of the uploaded networks or annotation files and visualize them in combination. Network and Annotation selections can be done by the offered dropdown selection lists.
             The Annotation Tab consists of three sub-tabs. These are the: (i) Convex Hull, (ii) Pie-chart nodes and (iii) Venn diagrams."
     ),
@@ -228,6 +228,41 @@ EP300	CREBBP  2
     tags$img(src = b64_12)
     
   ), #Tabpanel Annotations
+  
+  
+  
+  
+  tabPanel(
+    "Layout Strategies",
+    br(),
+    helpText(
+      "Users are allowed to choose between three different strategies to visually separate annotated areas of interest in a network in combination with established layout algorithms.
+       "
+    ),
+    br(),
+    br(),
+    strong("Strategy 1 - Virtual nodes:"),
+    helpText(
+      "As in the original version, NORMA-2.0 introduces one virtual node per group which behaves as a hub. Upon creation, edges with heavy weights are assigned to this node, linking it with all nodes from the same group. Then, any traditional layout algorithm can be utilized until it converges. The difference compared to directly applying a layout algorithm on the network is that the virtual nodes will attract the group-specific nodes as if they were parts of the network. After completing the layout execution, all virtual nodes are removed."
+    ),
+    tags$img(src = b64_strategy1),
+    br(),
+    br(),
+    strong("Strategy 2 - Gravity:"),
+    helpText(
+      "Here, NORMA-2.0 introduces intra-group edges where necessary to generate clique-like subnetworks (all-vs-all connections). As a second step, the intra-group edge weights are significantly increased whereas the inter-group edge weights are simultaneously decreased. Then, any of the offered layouts can be applied to adjust node coordinates. The introduced edges and weights only exist for the calculation of the layout coordinates, and do not carry over to the final visualized network.
+      "),
+    tags$img(src = b64_strategy2),
+    br(),
+    br(),
+    strong("Strategy 3 - Super nodes:"),
+    helpText(
+      "In this scenario, NORMA-2.0 introduces 'super-nodes' to represent each of the uploaded annotation groups. Then, it connects these groups with edges which correspond to the connections from the initial network. For example, if node A belonging to the annotation group 1 is connected to node B from group 2, then the group 1 super-node will also be connected to the group 2 super-node. Notably, the network becomes significantly smaller both in terms of node and connection numbers. In a second step, any of the available layouts can be applied on the 'super-network'. Upon layout convergence, all centroid coordinates of these super-nodes as well as the coordinates of no-group nodes can be further repelled according to a user-defined input. Then, all initial nodes will be placed around their respective super-nodes according to a second user-selected local layout choice. If a node belongs to more than one group, the average values for their (x, y) coordinates are used for the final visualization.
+      "),
+    tags$img(src = b64_strategy3),
+    br(), br()
+  ), #Tabpanel Layout Strategies
+  
   
   tabPanel(
     "The Topology Tab",

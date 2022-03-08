@@ -76,7 +76,7 @@ SelectedStoredNets_just_network <- function() {
 fetchDataset_just_network <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)

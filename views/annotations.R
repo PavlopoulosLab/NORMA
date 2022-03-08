@@ -417,7 +417,6 @@ annotationsPage <- div(id = "annotations_div",
                            br()
                          ),
                          
-                         # tags$a("Large window",target="_blank",href="output_convex_11188.html")
                          tabPanel("Venn Diagrams",
                                   br(),
                                   div(style = "display:inline-block",uiOutput("vennDiagram1")),

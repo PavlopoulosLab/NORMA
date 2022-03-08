@@ -29,7 +29,7 @@ addNetwork <- function(){
       reactiveVars$StoredNetworks_topology_tab <-
         reactiveVars$StoredNetworks
       
-      saveRDS(dataset, paste0(nid, ".rda"))
+      saveRDS(dataset, paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
       if (length(reactiveVars$SelectedStoredNetworksIds) == 0) {
         reactiveVars$SelectedStoredNetworksIds <- c(nid)
       }
@@ -116,7 +116,7 @@ addAnnotations <- function(){
       reactiveVars$StoredNetworks2_annotations_tab <-
         reactiveVars$StoredAnnotations
       
-      saveRDS(annotation, paste0(nid, ".rda"))
+      saveRDS(annotation, paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
       if (length(reactiveVars$SelectedStoredAnnotationIds) == 0) {
         reactiveVars$SelectedStoredAnnotationIds <- c(nid)
       }
@@ -177,7 +177,7 @@ addExpression <- function(){
     }
     reactiveVars$StoredExpressions <-
       rbind(reactiveVars$StoredExpressions, dtf)
-    saveRDS(expression, paste0(nid, ".rda"))
+    saveRDS(expression, paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     if (length(reactiveVars$SelectedStoredExpressionIds) == 0) {
       reactiveVars$SelectedStoredExpressionIds <- c(nid)
     }
@@ -220,7 +220,7 @@ SelectedStoredNets <- function() {
 fetchDataset <- function(nid) {
   retVal <- NULL
   if (length(nid) > 0) {
-    retVal <- readRDS(paste0(nid, ".rda"))
+    retVal <- readRDS(paste0(USER_TEMP_FOLDER, "/", nid, ".rda"))
     attr(retVal, "id") <- nid
   }
   return(retVal)
