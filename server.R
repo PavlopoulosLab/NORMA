@@ -899,22 +899,24 @@ shinyServer(function(input, output, session) {
   output$tabVizPie_charts <- renderUI({
     tryCatch({
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-      annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-      
-      withProgress(min = 0, max = 1, {
-        incProgress(message = "Plotting",
-                    detail = "This may take a while...",
-                    amount = .1)
+      if (!identical(g, NULL)){
+        annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
         
-        pie_charts()
-        tags$iframe(
-          srcdoc = paste(readLines(
-            paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
-          ), collapse = '\n'),
-          width = "100%",
-          height = "850px"
-        )
-      })
+        withProgress(min = 0, max = 1, {
+          incProgress(message = "Plotting",
+                      detail = "This may take a while...",
+                      amount = .1)
+          
+          pie_charts()
+          tags$iframe(
+            srcdoc = paste(readLines(
+              paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
+            ), collapse = '\n'),
+            width = "100%",
+            height = "850px"
+          )
+        })
+      }
     }, error = function(e) {
       print(paste("Annotations tab error: ", e))
       shinyalert("Error!", "Annotations tab error.", type = "error")
