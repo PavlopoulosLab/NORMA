@@ -1,11 +1,9 @@
 # main functions ####
-convex_hulls <- function(){
+
+# This function handles the Annotations - convex hulls tab
+convex_hulls <- function(g, annotation_graph){
   set.seed(123)
   
-  g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-  if (is.null(g))  return()
-  annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-  if (is.null(annotation_graph)) return()
   original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
   if (is.null(original_dataset_weighted)) return(NULL)
   
@@ -74,21 +72,21 @@ convex_hulls <- function(){
     lay <- layout_choices(g, input$layouts)
     node_name <- names(V(g))
   } else if(input$convex_layout_strategy == 'Virtual node per group'){
-    lay <- convexStrategy1(g, annotation_graph)
+    lay <- strategy1_virtualNodes(g, annotation_graph)
     node_name <- unique(members_with_NA_groups$id)
   } else if(input$convex_layout_strategy == 'Group gravity'){
-    result <- convexStrategy2(g, annotation_graph, input$layouts, input$repeling_force)
+    result <- strategy2_gravity(g, annotation_graph, input$layouts, input$repeling_force)
     lay <- result$lay
     node_name <- result$network_nodes
   } else if(input$convex_layout_strategy == 'Supernodes per group'){
-    result <- convexStrategy3(g, annotation_graph, input$layouts, input$local_layout, input$repeling_force)
+    result <- strategy3_superNodes(g, annotation_graph, input$layouts, input$local_layout, input$repeling_force)
     lay <- result$lay
     node_name <- result$network_nodes
   }
   node_name_links <- node_name
   
   # Opening out conn
-  fileConn <- file(paste(USER_TEMP_FOLDER, "/output_convex_",Sys.getpid(),".html", sep=""), "w")
+  fileConn <- file(paste(USER_TEMP_FOLDER, "/output_convex_", session$token,".html", sep=""), "w")
   
   s <- input$chooseGroups_rows_selected
   if (length(s)==0)
@@ -159,8 +157,6 @@ convex_hulls <- function(){
     .charge(-120)
     .linkDistance(30)
     .size([width, height]);
-
-var zoomFlag = 0;
 
 var zoomFlag = 0;
 		var svg = d3.select(\"body\").append(\"svg\")
@@ -500,354 +496,16 @@ force.on(\"tick\", function() {
   }#if (length(s)) 
 }#function
 
-# Function for Layouts with virtual nodes (per group) that pull all in-group nodes
-# @param g(igraph obj): the selected network
-# @param groups(dataframe): the selected annotation file -> names and respective nodes
-# @return lay: the layout coordinates
-convexStrategy1 <- function(g, groups){
-  if (is.null(g) || is.null(groups)) return()
-  set.seed(123)
-  
-  my_network<- as.data.frame(get.edgelist(g))
-  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
-  
-  groups<- data.frame(V1 = groups$Annotations, stri_split_fixed(groups$Nodes, ",",  simplify = TRUE))
-  groups<-mutate_all(groups, funs(na_if(.,"")))
-  number_of_groups<-dim(groups)[1]
-  
-  x <- list()
-  for (i in 1:number_of_groups) {
-    group_i<- groups[i,]
-    group_i<- group_i[,-1]
-    group_i <- group_i[!is.na(group_i)]
-    x[[i]]<- (group_i)
-  }
-  
-  GO <- list()
-  for (i in 1:number_of_groups) {
-    GO[[i]]<-rep(groups[i,1], length(x[[i]]))
-  }
-  
-  column1<-my_network$Source
-  column2<-my_network$Target
-  node_names<-unique(union(column1, column2))
-  tt<-unlist(x)
-  nodes_with_NA_groups<-setdiff(node_names,tt)
-  
-  members <- data_frame(id=unlist(x),group = unlist(GO))
-  members_with_NA_groups <- data_frame(id=unlist(x),group = unlist(GO))
-  
-  if(length(nodes_with_NA_groups)>0){
-    for (i in 1:length(nodes_with_NA_groups))
-    {
-      members_with_NA_groups[nrow(members_with_NA_groups)+1,1] <- nodes_with_NA_groups[i]
-    }
-    members_with_NA_groups<-unique(members_with_NA_groups)
-  }
-  
-  edge <- data_frame(Source = my_network$Source, Target = my_network$Target, group = NA) #edge --> not edges
-  
-  within_group_edges <- members %>%
-    split(.$group) %>%
-    map_dfr(function (grp) {
-      if(length(grp$id)>=2){
-        id2id <- combn(grp$id, 2)
-        data_frame(Source = id2id[1,],
-                   Target = id2id[2,],
-                   group = unique(grp$group))
-      }
-    })
-  
-  # sort by group as in file
-  group_order<-(as.list(unique(members_with_NA_groups$group)))
-  EE <- new.env(hash = TRUE)
-  EE_positions <- new.env(hash = TRUE)
-  for(i in 1: length(group_order))
-  {
-    group_name_as_key<-group_order[[i]]
-    EE[[ as.character(group_name_as_key) ]]<-i
-    EE_positions[[ as.character(i) ]]<-group_order[[i]]
-  }
-  for(i in 1: length(group_order))
-  {
-    group_name_as_key<-group_order[[i]]
-    index<-EE[[ as.character(group_name_as_key) ]]
-  }
-  
-  group_ids_tmp <- lapply(members_with_NA_groups %>% split(.$group), function(grp) { grp$id })
-  group_ids<-c()
-  for(i in 1: length(group_ids_tmp))
-  {
-    group_ids<-c(group_ids, group_ids_tmp[ EE_positions[[ as.character(i) ]]])
-  }
-  
-  virt_group_nodes <- length(members_with_NA_groups$id) + 1:number_of_groups
-  names(virt_group_nodes) <- unique(members$group) # altered from c(letters[1:number_of_groups])
-  edges_virt <- data_frame(Source = edge$Source, Target = edge$Target, weight = 5, group = edge$group)
-  
-  within_virt <- members %>% split(.$group) %>% map_dfr(function (grp) {
-    group_name <- unique(grp$group)
-    virt_from <- rep(virt_group_nodes[group_name], length(grp$id))
-    if(length(grp$id)>=2){
-      id2id <- combn(grp$id, 2)
-      data_frame(
-        Source = c(id2id[1,], virt_from),
-        Target = c(id2id[2,], grp$id),            # also connects from virtual_from node to each group node
-        weight = c(rep(0.1, ncol(id2id)),     # weight between group nodes
-                   rep(50, length(grp$id))),
-        to_be_deleted = c(rep(T, ncol(id2id)),     # weight between group nodes
-                          rep(T, length(grp$id))), # weight that 'ties together' the group (via the virtual group node)
-        group = group_name
-      )
-    }
-  })
-  
-  edges_virt <-bind_rows(mutate_all(edges_virt, as.character), mutate_all(within_virt, as.character)) # vgazei 38,39,40
-  virt_group_na <- virt_group_nodes[is.na(names(virt_group_nodes))]
-  non_group_nodes <- (members_with_NA_groups %>% filter(is.na(group)))$id
-  nodes_virt <- data_frame(id = 1:(length(members_with_NA_groups$id) + length(virt_group_nodes)),
-                           is_virt = c(rep(FALSE, length(members_with_NA_groups$id)),
-                                       rep(TRUE, length(virt_group_nodes))))
-  nodes_virt$id <- as.character(nodes_virt$id)
-  
-  #replace with the right names from our network
-  nodes_virt[1:length(members_with_NA_groups$id), ]$id <- members_with_NA_groups$id 
-  
-  nodes_virt <- unique(nodes_virt)
-  
-  edge_names <- unique(c(edges_virt$Source, edges_virt$Target))
-  nodes_virt <- nodes_virt[which(nodes_virt$id %in% edge_names), ]
-  g_virt <- graph_from_data_frame(edges_virt, directed = FALSE, vertices = nodes_virt)
-  
-  # use "auto layout"
-  # lay2 <- layout_nicely(g_virt)
-  lay <- layout_choices(g_virt, input$layouts)
-  
-  # remove virtual group nodes from graph
-  nodes_to_remove <- nodes_virt[which(nodes_virt$is_virt),]$id
-  nodes_to_remove <- nodes_to_remove[nodes_to_remove %in% V(g_virt)$name]
-  if (!identical(nodes_to_remove, character(0)))
-    g_virt <- delete_vertices(g_virt, nodes_to_remove)
-  
-  # remove virtual group nodes' positions from the layout matrix
-  tmp<-which(nodes_virt$is_virt == T )
-  
-  lay <- lay[-tmp, ]
-  return(lay)
-}
-
-# Function for Layouts with enhanced gravity for in-group nodes
-# @param g(igraph obj): the selected network
-# @param groups(dataframe): the selected annotation file -> names and respective nodes
-# @param layout(string): the user-selected layout choice
-# @param repeling_force(int): the user-selected repeling force
-# @return lay (2d double matrix): the layout coordinates
-# @return network_nodes (character vector): the proper order of nodes(names) to correctly attach to canvas
-convexStrategy2 <- function(g, groups, layout, repeling_force){
-  lay <- NULL
-  network_nodes <- NULL
-  if (!(is.null(g) || is.null(groups))){
-    set.seed(123)
-    
-    # network
-    my_network <- as.data.frame(get.edgelist(g))
-    my_network <- cbind(my_network, as.double(E(g)$Weight))
-    colnames(my_network) <- c('Source', 'Target', 'Weight')
-    network_nodes <- unique(c(my_network$Source, my_network$Target))
-    
-    # annotations
-    groups_expanded <- groups %>% separate_rows(Nodes, sep=",")
-    groups_expanded <- groups_expanded[which(groups_expanded$Nodes %in% network_nodes), ] # removing non-existing nodes
-    
-    # 1. create dataframe with extra edges (all against all in same groups that do not already exist in my_network)
-    extra_edges <- merge(groups_expanded, groups_expanded, by.x = "Annotations", by.y = "Annotations")
-    temp_g <- graph_from_data_frame(extra_edges[, c(2,3)], directed = F)
-    if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]) E(temp_g)$weight <- min(my_network$Weight)
-    else E(temp_g)$weight <- max(my_network$Weight) # * 1.0001 # invisible weight = max network value *2
-    temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "first")
-    extra_edges <- as.data.frame(cbind( get.edgelist(temp_g) , E(temp_g)$weight ))
-    colnames(extra_edges) <- c('Source', 'Target', 'Weight')
-    
-    # 2. check network edges one by one; if exist in same group, weight * 100, else weight/100
-    # This brings nodes ultra-close - unneeded
-    for (i in 1:nrow(my_network)){
-      source_groups <- groups_expanded[which( groups_expanded$Nodes %in%  my_network$Source[i]), ]$Annotations
-      target_groups <- groups_expanded[which( groups_expanded$Nodes %in%  my_network$Target[i]), ]$Annotations
-      if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]){
-        if (identical(source_groups, character(0)) ||
-            identical(target_groups, character(0)) ||
-            identical(intersect(source_groups, target_groups), character(0)))
-          my_network$Weight[i] <- my_network$Weight[i] * repeling_force # kamada-kawai swap
-        else my_network$Weight[i] <- my_network$Weight[i] / repeling_force
-      } else {
-        if (identical(source_groups, character(0)) ||
-            identical(target_groups, character(0)) ||
-            identical(intersect(source_groups, target_groups), character(0)))
-          my_network$Weight[i] <- my_network$Weight[i] / repeling_force # kamada-kawai swap
-        else my_network$Weight[i] <- my_network$Weight[i] * repeling_force
-      }
-    }
-    
-    # 3. append to my_network
-    my_network <- rbind(my_network, extra_edges)
-    
-    # 4. graph handling
-    out_g <- graph_from_data_frame(my_network, directed = F, vertices = network_nodes)
-    E(out_g)$weight <- as.numeric(my_network$Weight)
-    out_g <- igraph::simplify(out_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
-    lay <- layout_choices(out_g, layout)
-  }
-  
-  return(list(lay = lay, network_nodes = network_nodes, groups_expanded = groups_expanded))
-}
-
-# Function for Layouts with superNodes per Annotation Group
-# @param g(igraph obj): the selected network
-# @param groups(dataframe): the selected annotation file -> names and respective nodes
-# @param layout(string): the user-selected layout choice
-# @param local_layout(string): the user-selected layout choice for in-group layouts
-# @param repeling_force(int): the user-selected repeling force
-# @return lay (2d double matrix): the layout coordinates
-# @return network_nodes (character vector): the proper order of nodes(names) to correctly attach to canvas
-convexStrategy3 <- function(g, groups, layout, local_layout, repeling_force){
-  lay <- NULL
-  network_nodes <- NULL
-  if (!(is.null(g) || is.null(groups))){
-    set.seed(123)
-
-    # network
-    my_network <- as.data.frame(get.edgelist(g))
-    my_network <- cbind(my_network, as.double(E(g)$Weight))
-    colnames(my_network) <- c('Source', 'Target', 'Weight')
-    network_nodes <- unique(c(my_network$Source, my_network$Target))
-    
-    # annotations
-    groups_expanded <- groups %>% separate_rows(Nodes, sep=",")
-    groups_expanded <- groups_expanded[which(groups_expanded$Nodes %in% network_nodes), ] # removing non-existing nodes
-    
-    noGroupNodes <- network_nodes[!(network_nodes %in% groups_expanded$Nodes)]
-    
-    # 1. create dataframe of one supernode per group plus no-group nodes
-    # Source Target -> swap all nodes with their respective Group Name(s)
-    # if multiple groups per node, add the extra edges
-    # e.g. Group1+2Node - noGroupNode -> Group1 - noGroupNode, Group2 - noGroupNode
-    # merge my_network with groups_expanded two times ( Source - Nodes, Target - Nodes)
-    # where annotations not NA, swap Source or Target with respective Group Name
-    superFrame <- merge(my_network, groups_expanded, by.x = 'Source', by.y = 'Nodes', all.x = T)
-    superFrame <- merge(superFrame, groups_expanded, by.x = 'Target', by.y = 'Nodes', all.x = T)
-    graphFrame <- superFrame # keeping this for later on
-    graphFrame$Source[!is.na(graphFrame$Annotations.x)] <- graphFrame$Annotations.x[!is.na(graphFrame$Annotations.x)]
-    graphFrame$Target[!is.na(graphFrame$Annotations.y)] <- graphFrame$Annotations.y[!is.na(graphFrame$Annotations.y)]
-    graphFrame <- graphFrame[, c('Source', 'Target', 'Weight')]
-    
-    # 2. create graph and apply layout on this compound supernode network
-    temp_g <- graph_from_data_frame(graphFrame, directed = F)
-    E(temp_g)$weight <- as.numeric(graphFrame$Weight)
-    temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
-    lay_super <- layout_choices(temp_g, layout)
-    # lay_super <- layout_with_fr(temp_g)
-    lay_super <- cbind(lay_super, names(V(temp_g)))
-    # plot(temp_g, layout = lay_super)
-    
-    # 3. push all nodes above away from 0,0 // also check minx maxx for layout as alternative
-    # foreach node, calculate a = y/x
-    # then multiply x by an input number n (e.g.) and solve for y
-    # keep the (x, y) coords system in a matrix for all supernodes
-    lay_super <- as.data.frame(lay_super)
-    lay_super$V1 <- as.numeric(lay_super$V1)
-    lay_super$V2 <- as.numeric(lay_super$V2)
-    lay_super$a <- ifelse(lay_super$V1 != 0, lay_super$V2 / lay_super$V1, lay_super$V2 / 0.01)
-    lay_super$X <- repeling_force * lay_super$V1
-    lay_super$Y <- lay_super$a * lay_super$X
-    lay_super <- lay_super[, c('X', 'Y', 'V3')]
-    colnames(lay_super)[3] <- 'Node'
-    
-    # 4. foreach group, add low-weight within group edges and
-    # apply layout (2nd input choice) with the respective (x,y) coords system
-    # extra edges dataframe for all groups
-    extra_edges <- merge(groups_expanded, groups_expanded, by.x = "Annotations", by.y = "Annotations")
-    lay <- matrix(, nrow = 0, ncol = 3)
-    for (group in unique(groups_expanded$Annotations)){
-      tempFrame <- superFrame
-      tempFrame <- tempFrame[(tempFrame$Annotations.x == group & tempFrame$Annotations.y == group), ]
-      tempFrame <- tempFrame[!is.na(tempFrame$Source) & !is.na(tempFrame$Target), ]
-      if (nrow(tempFrame) > 0){
-        tempFrame <- tempFrame[, c('Source', 'Target', 'Weight')]
-        
-        # create any missing in-group edges with minimum weight
-        # (all against all in same groups that do not already exist in tempFrame)
-        temp_extra_edges <- extra_edges[extra_edges$Annotations == group, ]
-        temp_g <- graph_from_data_frame(temp_extra_edges[, c(2,3)], directed = F)
-        if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]) E(temp_g)$weight <- min(tempFrame$Weight) * repeling_force
-        else E(temp_g)$weight <- min(tempFrame$Weight) / repeling_force # * 1.0001 # invisible weight = max network value *2
-        temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "first")
-        temp_extra_edges <- as.data.frame(cbind( get.edgelist(temp_g) , E(temp_g)$weight ))
-        colnames(temp_extra_edges) <- c('Source', 'Target', 'Weight')
-        
-        tempFrame <- rbind(tempFrame, temp_extra_edges)
-        
-        # TODO check 1 and 2 node layout conditions
-        temp_g <- graph_from_data_frame(tempFrame, directed = F)
-        E(temp_g)$weight <- as.numeric(tempFrame$Weight)
-        temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
-        temp_lay <- layout_choices(temp_g, local_layout)
-        # temp_lay <- layout_with_fr(temp_g)
-        temp_lay <- cbind(temp_lay, names(V(temp_g)))
-        # plot(temp_g, layout = temp_lay)
-        
-        groupX <- lay_super[lay_super[,3] == group, 1]
-        groupY <- lay_super[lay_super[,3] == group, 2]
-        temp_lay[, 1] <- as.numeric(temp_lay[, 1]) + groupX
-        temp_lay[, 2] <- as.numeric(temp_lay[, 2]) + groupY
-        
-        lay <- rbind(lay, temp_lay)
-      } else{
-        lay <- rbind(lay, c(lay_super[lay_super[,3] == group, 1],
-                            lay_super[lay_super[,3] == group, 2],
-                            groups$Nodes[groups$Annotations == group]))
-      }
-    } # end for
-
-    # 5. calculate coordinates for duplicate nodes
-    dflay <- as.data.frame(lay)
-    dflay$V1 <- as.numeric(dflay$V1)
-    dflay$V2 <- as.numeric(dflay$V2)
-    meanX <- aggregate(dflay$V1, by=list(dflay$V3), FUN=mean)
-    colnames(meanX) <- c("Node", "X")
-    meanY <- aggregate(dflay$V2, by=list(dflay$V3), FUN=mean)
-    colnames(meanY) <- c("Node", "Y")
-    dflay <- merge(meanX, meanY)
-    dflay <- as.matrix(dflay[, c("X", "Y", "Node")])
-    
-    # 6. append non-group nodes from lay_super
-    lay_noGroupNodes <- lay_super[lay_super[,3] %in% noGroupNodes, ]
-    lay <- rbind(dflay, lay_noGroupNodes)
-    network_nodes <- lay[, 3]
-    
-    lay <- cbind(as.numeric(lay[, 1]), as.numeric(lay[, 2]))
-  }
-  
-  return(list(lay = lay, network_nodes = network_nodes, groups_expanded = groups_expanded))
-}
-
-pie_charts<- function(){
-  g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-  if (is.null(g)) 
-    return()
+# This function handles the Annotations - pie chart tab
+pie_charts<- function(g, annotation_graph){
   dataset1<- get.edgelist(g)
-  
-  original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
-  if (is.null(original_dataset_weighted))
-    return(NULL)
-  
-  
-  my_network<- as.data.frame(get.edgelist(g))
-  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
-  
-  annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-  if (is.null(annotation_graph)) return()
   annotation_graph <- as.data.frame(annotation_graph)
   groups<-annotation_graph
+  original_dataset_weighted <- fetchFirstSelectedStoredDataset_annotations_tab()
+  if (is.null(original_dataset_weighted)) return(NULL)
+  
+  my_network<- as.data.frame(get.edgelist(g))
+  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
   
   annotation1<- groups
   
@@ -898,7 +556,7 @@ pie_charts<- function(){
     group_color <- tmp_selected_colors
     group_color_fill <- adjustcolor(group_color, alpha.f = 0.2)
     
-    fileConn <- file(paste(USER_TEMP_FOLDER, "/output_pies_",Sys.getpid(),".html", sep=""), "w")
+    fileConn <- file(paste(USER_TEMP_FOLDER, "/output_pies_", session$token,".html", sep=""), "w")
     cat(sprintf(paste("<!DOCTYPE html>
 <head>
   <meta charset=\"utf-8\">
@@ -970,17 +628,18 @@ pie_charts<- function(){
       not_virtual_nodes <- groupss[order(match(groupss[,1],node_name)),]
       groupss_as_charachter<- as.character(not_virtual_nodes$V2)
     } else if(input$piechart_layout_strategy == 'Virtual node per group'){
-      lay <- convexStrategy1(g, annotation_graph)
+      lay <- strategy1_virtualNodes(g, annotation_graph)
       node_name <- unique(members_with_NA_groups$id)
       groupss_as_charachter<- as.character(groupss$V2)
     } else if(input$piechart_layout_strategy == 'Group gravity'){
-      result <- convexStrategy2(g, annotation_graph, input$layouts2, input$repeling_force2)
+      result <- strategy2_gravity(g, annotation_graph, input$layouts2, input$repeling_force2)
       lay <- result$lay
       node_name <- result$network_nodes
       groups_expanded <- result$groups_expanded
-
+      
       groupss_as_charachter <- merge(as.matrix(node_name), groups_expanded, by.x = "V1", by.y ='Nodes', all.x = T, sort = F)
-      groupss_as_charachter[which(is.na(groupss_as_charachter$Annotations)), ]$Annotations <- 0
+      if (!identical(which(is.na(groupss_as_charachter$Annotations)), integer(0)))
+        groupss_as_charachter[which(is.na(groupss_as_charachter$Annotations)), ]$Annotations <- 0
       groupss_as_charachter <- groupss_as_charachter %>%
         group_by(V1) %>%
         summarize(annot = str_c(Annotations, collapse = ","))
@@ -988,16 +647,14 @@ pie_charts<- function(){
       groupss_as_charachter <- merge(as.matrix(node_name), groupss_as_charachter, by.x = "V1", by.y ='V1', all.x = T, sort = F)
       groupss_as_charachter<- groupss_as_charachter$annot
     } else if(input$piechart_layout_strategy == 'Supernodes per group'){
-      result <- convexStrategy3(g, annotation_graph, input$layouts2, input$local_layout2, input$repeling_force2)
+      result <- strategy3_superNodes(g, annotation_graph, input$layouts2, input$local_layout2, input$repeling_force2)
       lay <- result$lay
       node_name <- result$network_nodes
       groups_expanded <- result$groups_expanded
       
-      # saveRDS(node_name, "node_name.RDS")
-      # saveRDS(groups_expanded, "groups_expanded.RDS")
-
       groupss_as_charachter <- merge(as.matrix(node_name), groups_expanded, by.x = "V1", by.y ='Nodes', all.x = T, sort = F)
-      groupss_as_charachter[which(is.na(groupss_as_charachter$Annotations)), ]$Annotations <- 0
+      if (!identical(which(is.na(groupss_as_charachter$Annotations)), integer(0)))
+        groupss_as_charachter[which(is.na(groupss_as_charachter$Annotations)), ]$Annotations <- 0
       groupss_as_charachter <- groupss_as_charachter %>%
         group_by(V1) %>%
         summarize(annot = str_c(Annotations, collapse = ","))
@@ -1005,14 +662,10 @@ pie_charts<- function(){
       groupss_as_charachter <- merge(as.matrix(node_name), groupss_as_charachter, by.x = "V1", by.y ='V1', all.x = T, sort = F)
       groupss_as_charachter<- groupss_as_charachter$annot
     }
-    # saveRDS(node_name, "node_name.RDS")
-    # saveRDS(annotation_graph, "annotation_graph.RDS")
     node_name_links <- node_name
     Groupss <- strsplit(groupss_as_charachter, ",")
     
-    
     #--------------------------------#
-    
     
     # Expressions
     
@@ -1332,6 +985,336 @@ pie_charts<- function(){
     close(fileConn)
   }#if (length(s)) 
 }#function 
+
+# Function for Layouts with virtual nodes (per group) that pull all in-group nodes
+# @param g(igraph obj): the selected network
+# @param groups(dataframe): the selected annotation file -> names and respective nodes
+# @return lay: the layout coordinates
+strategy1_virtualNodes <- function(g, groups){
+  if (is.null(g) || is.null(groups)) return()
+  set.seed(123)
+  
+  my_network<- as.data.frame(get.edgelist(g))
+  my_network<- data.frame(Source = my_network$V1, Target = my_network$V2)
+  
+  groups<- data.frame(V1 = groups$Annotations, stri_split_fixed(groups$Nodes, ",",  simplify = TRUE))
+  groups<-mutate_all(groups, funs(na_if(.,"")))
+  number_of_groups<-dim(groups)[1]
+  
+  x <- list()
+  for (i in 1:number_of_groups) {
+    group_i<- groups[i,]
+    group_i<- group_i[,-1]
+    group_i <- group_i[!is.na(group_i)]
+    x[[i]]<- (group_i)
+  }
+  
+  GO <- list()
+  for (i in 1:number_of_groups) {
+    GO[[i]]<-rep(groups[i,1], length(x[[i]]))
+  }
+  
+  column1<-my_network$Source
+  column2<-my_network$Target
+  node_names<-unique(union(column1, column2))
+  tt<-unlist(x)
+  nodes_with_NA_groups<-setdiff(node_names,tt)
+  
+  members <- data_frame(id=unlist(x),group = unlist(GO))
+  members_with_NA_groups <- data_frame(id=unlist(x),group = unlist(GO))
+  
+  if(length(nodes_with_NA_groups)>0){
+    for (i in 1:length(nodes_with_NA_groups))
+    {
+      members_with_NA_groups[nrow(members_with_NA_groups)+1,1] <- nodes_with_NA_groups[i]
+    }
+    members_with_NA_groups<-unique(members_with_NA_groups)
+  }
+  
+  edge <- data_frame(Source = my_network$Source, Target = my_network$Target, group = NA) #edge --> not edges
+  
+  within_group_edges <- members %>%
+    split(.$group) %>%
+    map_dfr(function (grp) {
+      if(length(grp$id)>=2){
+        id2id <- combn(grp$id, 2)
+        data_frame(Source = id2id[1,],
+                   Target = id2id[2,],
+                   group = unique(grp$group))
+      }
+    })
+  
+  # sort by group as in file
+  group_order<-(as.list(unique(members_with_NA_groups$group)))
+  EE <- new.env(hash = TRUE)
+  EE_positions <- new.env(hash = TRUE)
+  for(i in 1: length(group_order))
+  {
+    group_name_as_key<-group_order[[i]]
+    EE[[ as.character(group_name_as_key) ]]<-i
+    EE_positions[[ as.character(i) ]]<-group_order[[i]]
+  }
+  for(i in 1: length(group_order))
+  {
+    group_name_as_key<-group_order[[i]]
+    index<-EE[[ as.character(group_name_as_key) ]]
+  }
+  
+  group_ids_tmp <- lapply(members_with_NA_groups %>% split(.$group), function(grp) { grp$id })
+  group_ids<-c()
+  for(i in 1: length(group_ids_tmp))
+  {
+    group_ids<-c(group_ids, group_ids_tmp[ EE_positions[[ as.character(i) ]]])
+  }
+  
+  virt_group_nodes <- length(members_with_NA_groups$id) + 1:number_of_groups
+  names(virt_group_nodes) <- unique(members$group) # altered from c(letters[1:number_of_groups])
+  edges_virt <- data_frame(Source = edge$Source, Target = edge$Target, weight = 5, group = edge$group)
+  
+  within_virt <- members %>% split(.$group) %>% map_dfr(function (grp) {
+    group_name <- unique(grp$group)
+    virt_from <- rep(virt_group_nodes[group_name], length(grp$id))
+    if(length(grp$id)>=2){
+      id2id <- combn(grp$id, 2)
+      data_frame(
+        Source = c(id2id[1,], virt_from),
+        Target = c(id2id[2,], grp$id),            # also connects from virtual_from node to each group node
+        weight = c(rep(0.1, ncol(id2id)),     # weight between group nodes
+                   rep(50, length(grp$id))),
+        to_be_deleted = c(rep(T, ncol(id2id)),     # weight between group nodes
+                          rep(T, length(grp$id))), # weight that 'ties together' the group (via the virtual group node)
+        group = group_name
+      )
+    }
+  })
+  
+  edges_virt <-bind_rows(mutate_all(edges_virt, as.character), mutate_all(within_virt, as.character)) # vgazei 38,39,40
+  virt_group_na <- virt_group_nodes[is.na(names(virt_group_nodes))]
+  non_group_nodes <- (members_with_NA_groups %>% filter(is.na(group)))$id
+  nodes_virt <- data_frame(id = 1:(length(members_with_NA_groups$id) + length(virt_group_nodes)),
+                           is_virt = c(rep(FALSE, length(members_with_NA_groups$id)),
+                                       rep(TRUE, length(virt_group_nodes))))
+  nodes_virt$id <- as.character(nodes_virt$id)
+  
+  #replace with the right names from our network
+  nodes_virt[1:length(members_with_NA_groups$id), ]$id <- members_with_NA_groups$id 
+  
+  nodes_virt <- unique(nodes_virt)
+  
+  edge_names <- unique(c(edges_virt$Source, edges_virt$Target))
+  nodes_virt <- nodes_virt[which(nodes_virt$id %in% edge_names), ]
+  g_virt <- graph_from_data_frame(edges_virt, directed = FALSE, vertices = nodes_virt)
+  
+  # use "auto layout"
+  # lay2 <- layout_nicely(g_virt)
+  lay <- layout_choices(g_virt, input$layouts)
+  
+  # remove virtual group nodes from graph
+  nodes_to_remove <- nodes_virt[which(nodes_virt$is_virt),]$id
+  nodes_to_remove <- nodes_to_remove[nodes_to_remove %in% V(g_virt)$name]
+  if (!identical(nodes_to_remove, character(0)))
+    g_virt <- delete_vertices(g_virt, nodes_to_remove)
+  
+  # remove virtual group nodes' positions from the layout matrix
+  tmp<-which(nodes_virt$is_virt == T )
+  
+  lay <- lay[-tmp, ]
+  return(lay)
+}
+
+# Function for Layouts with enhanced gravity for in-group nodes
+# @param g(igraph obj): the selected network
+# @param groups(dataframe): the selected annotation file -> names and respective nodes
+# @param layout(string): the user-selected layout choice
+# @param repeling_force(int): the user-selected repeling force
+# @return lay (2d double matrix): the layout coordinates
+# @return network_nodes (character vector): the proper order of nodes(names) to correctly attach to canvas
+strategy2_gravity <- function(g, groups, layout, repeling_force){
+  lay <- NULL
+  network_nodes <- NULL
+  if (!(is.null(g) || is.null(groups))){
+    set.seed(123)
+    
+    # network
+    my_network <- as.data.frame(get.edgelist(g))
+    my_network <- cbind(my_network, as.double(E(g)$Weight))
+    colnames(my_network) <- c('Source', 'Target', 'Weight')
+    network_nodes <- unique(c(my_network$Source, my_network$Target))
+    
+    # annotations
+    groups_expanded <- groups %>% separate_rows(Nodes, sep=",")
+    groups_expanded <- groups_expanded[which(groups_expanded$Nodes %in% network_nodes), ] # removing non-existing nodes
+    
+    # 1. create dataframe with extra edges (all against all in same groups that do not already exist in my_network)
+    extra_edges <- merge(groups_expanded, groups_expanded, by.x = "Annotations", by.y = "Annotations")
+    temp_g <- graph_from_data_frame(extra_edges[, c(2,3)], directed = F)
+    if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]) E(temp_g)$weight <- min(my_network$Weight)
+    else E(temp_g)$weight <- max(my_network$Weight) # * 1.0001 # invisible weight = max network value *2
+    temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "first")
+    extra_edges <- as.data.frame(cbind( get.edgelist(temp_g) , E(temp_g)$weight ))
+    colnames(extra_edges) <- c('Source', 'Target', 'Weight')
+    
+    # 2. check network edges one by one; if exist in same group, weight * 100, else weight/100
+    # This brings nodes ultra-close - unneeded
+    for (i in 1:nrow(my_network)){
+      source_groups <- groups_expanded[which( groups_expanded$Nodes %in%  my_network$Source[i]), ]$Annotations
+      target_groups <- groups_expanded[which( groups_expanded$Nodes %in%  my_network$Target[i]), ]$Annotations
+      if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]){
+        if (identical(source_groups, character(0)) ||
+            identical(target_groups, character(0)) ||
+            identical(intersect(source_groups, target_groups), character(0)))
+          my_network$Weight[i] <- my_network$Weight[i] * repeling_force # kamada-kawai swap
+        else my_network$Weight[i] <- my_network$Weight[i] / repeling_force
+      } else {
+        if (identical(source_groups, character(0)) ||
+            identical(target_groups, character(0)) ||
+            identical(intersect(source_groups, target_groups), character(0)))
+          my_network$Weight[i] <- my_network$Weight[i] / repeling_force # kamada-kawai swap
+        else my_network$Weight[i] <- my_network$Weight[i] * repeling_force
+      }
+    }
+    
+    # 3. append to my_network
+    my_network <- rbind(my_network, extra_edges)
+    
+    # 4. graph handling
+    out_g <- graph_from_data_frame(my_network, directed = F, vertices = network_nodes)
+    E(out_g)$weight <- as.numeric(my_network$Weight)
+    out_g <- igraph::simplify(out_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
+    lay <- layout_choices(out_g, layout)
+  }
+  
+  return(list(lay = lay, network_nodes = network_nodes, groups_expanded = groups_expanded))
+}
+
+# Function for Layouts with superNodes per Annotation Group
+# @param g(igraph obj): the selected network
+# @param groups(dataframe): the selected annotation file -> names and respective nodes
+# @param layout(string): the user-selected layout choice
+# @param local_layout(string): the user-selected layout choice for in-group layouts
+# @param repeling_force(int): the user-selected repeling force
+# @return lay (2d double matrix): the layout coordinates
+# @return network_nodes (character vector): the proper order of nodes(names) to correctly attach to canvas
+strategy3_superNodes <- function(g, groups, layout, local_layout, repeling_force){
+  lay <- NULL
+  network_nodes <- NULL
+  if (!(is.null(g) || is.null(groups))){
+    set.seed(123)
+    
+    # network
+    my_network <- as.data.frame(get.edgelist(g))
+    my_network <- cbind(my_network, as.double(E(g)$Weight))
+    colnames(my_network) <- c('Source', 'Target', 'Weight')
+    network_nodes <- unique(c(my_network$Source, my_network$Target))
+    
+    # annotations
+    groups_expanded <- groups %>% separate_rows(Nodes, sep=",")
+    groups_expanded <- groups_expanded[which(groups_expanded$Nodes %in% network_nodes), ] # removing non-existing nodes
+    
+    noGroupNodes <- network_nodes[!(network_nodes %in% groups_expanded$Nodes)]
+    
+    # 1. create dataframe of one supernode per group plus no-group nodes
+    # Source Target -> swap all nodes with their respective Group Name(s)
+    # if multiple groups per node, add the extra edges
+    # e.g. Group1+2Node - noGroupNode -> Group1 - noGroupNode, Group2 - noGroupNode
+    # merge my_network with groups_expanded two times ( Source - Nodes, Target - Nodes)
+    # where annotations not NA, swap Source or Target with respective Group Name
+    superFrame <- merge(my_network, groups_expanded, by.x = 'Source', by.y = 'Nodes', all.x = T)
+    superFrame <- merge(superFrame, groups_expanded, by.x = 'Target', by.y = 'Nodes', all.x = T)
+    graphFrame <- superFrame # keeping this for later on
+    graphFrame$Source[!is.na(graphFrame$Annotations.x)] <- graphFrame$Annotations.x[!is.na(graphFrame$Annotations.x)]
+    graphFrame$Target[!is.na(graphFrame$Annotations.y)] <- graphFrame$Annotations.y[!is.na(graphFrame$Annotations.y)]
+    graphFrame <- graphFrame[, c('Source', 'Target', 'Weight')]
+    
+    # 2. create graph and apply layout on this compound supernode network
+    temp_g <- graph_from_data_frame(graphFrame, directed = F)
+    E(temp_g)$weight <- as.numeric(graphFrame$Weight)
+    temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
+    lay_super <- layout_choices(temp_g, layout)
+    # lay_super <- layout_with_fr(temp_g)
+    lay_super <- cbind(lay_super, names(V(temp_g)))
+    # plot(temp_g, layout = lay_super)
+    
+    # 3. push all nodes above away from 0,0 // also check minx maxx for layout as alternative
+    # foreach node, calculate a = y/x
+    # then multiply x by an input number n (e.g.) and solve for y
+    # keep the (x, y) coords system in a matrix for all supernodes
+    lay_super <- as.data.frame(lay_super)
+    lay_super$V1 <- as.numeric(lay_super$V1)
+    lay_super$V2 <- as.numeric(lay_super$V2)
+    lay_super$a <- ifelse(lay_super$V1 != 0, lay_super$V2 / lay_super$V1, lay_super$V2 / 0.01)
+    lay_super$X <- repeling_force * lay_super$V1
+    lay_super$Y <- lay_super$a * lay_super$X
+    lay_super <- lay_super[, c('X', 'Y', 'V3')]
+    colnames(lay_super)[3] <- 'Node'
+    
+    # 4. foreach group, add low-weight within group edges and
+    # apply layout (2nd input choice) with the respective (x,y) coords system
+    # extra edges dataframe for all groups
+    extra_edges <- merge(groups_expanded, groups_expanded, by.x = "Annotations", by.y = "Annotations")
+    lay <- matrix(, nrow = 0, ncol = 3)
+    for (group in unique(groups_expanded$Annotations)){
+      tempFrame <- superFrame
+      tempFrame <- tempFrame[(tempFrame$Annotations.x == group & tempFrame$Annotations.y == group), ]
+      tempFrame <- tempFrame[!is.na(tempFrame$Source) & !is.na(tempFrame$Target), ]
+      tempFrame <- tempFrame[, c('Source', 'Target', 'Weight')]
+      
+      # create any missing in-group edges with minimum weight
+      # (all against all in same groups that do not already exist in tempFrame)
+      temp_extra_edges <- extra_edges[extra_edges$Annotations == group, ]
+      temp_g <- graph_from_data_frame(temp_extra_edges[, c(2,3)], directed = F)
+      min_weight <- ifelse(identical(min(tempFrame$Weight), Inf), 1, min(tempFrame$Weight))
+      if ('Kamada-Kawai' == str_split(layout, "\t")[[1]][1]) E(temp_g)$weight <- min_weight * repeling_force
+      else E(temp_g)$weight <- min_weight / repeling_force # * 1.0001 # invisible weight = max network value *2
+      temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "first")
+      temp_extra_edges <- as.data.frame(cbind( get.edgelist(temp_g) , E(temp_g)$weight ))
+      colnames(temp_extra_edges) <- c('Source', 'Target', 'Weight')
+      
+      tempFrame <- rbind(tempFrame, temp_extra_edges)
+      
+      if (nrow(tempFrame) > 0){
+        temp_g <- graph_from_data_frame(tempFrame, directed = F)
+        E(temp_g)$weight <- as.numeric(tempFrame$Weight)
+        temp_g <- igraph::simplify(temp_g, remove.multiple = T, remove.loops = T, edge.attr.comb = "max")
+        temp_lay <- layout_choices(temp_g, local_layout)
+        # temp_lay <- layout_with_fr(temp_g)
+        temp_lay <- cbind(temp_lay, names(V(temp_g)))
+        # plot(temp_g, layout = temp_lay)
+        
+        groupX <- lay_super[lay_super[,3] == group, 1]
+        groupY <- lay_super[lay_super[,3] == group, 2]
+        temp_lay[, 1] <- as.numeric(temp_lay[, 1]) + groupX
+        temp_lay[, 2] <- as.numeric(temp_lay[, 2]) + groupY
+        
+        lay <- rbind(lay, temp_lay)
+      } else{
+        lay <- rbind(lay, c(lay_super[lay_super[,3] == group, 1],
+                            lay_super[lay_super[,3] == group, 2],
+                            groups$Nodes[groups$Annotations == group]))
+      }
+    } # end for
+
+    # 5. calculate coordinates for duplicate nodes
+    dflay <- as.data.frame(lay)
+    dflay$V1 <- as.numeric(dflay$V1)
+    dflay$V2 <- as.numeric(dflay$V2)
+    meanX <- aggregate(dflay$V1, by=list(dflay$V3), FUN=mean)
+    colnames(meanX) <- c("Node", "X")
+    meanY <- aggregate(dflay$V2, by=list(dflay$V3), FUN=mean)
+    colnames(meanY) <- c("Node", "Y")
+    dflay <- merge(meanX, meanY)
+    dflay <- as.matrix(dflay[, c("X", "Y", "Node")])
+    
+    # 6. append non-group nodes from lay_super
+    lay_noGroupNodes <- lay_super[lay_super[,3] %in% noGroupNodes, ]
+    lay <- rbind(dflay, lay_noGroupNodes)
+    network_nodes <- lay[, 3]
+    
+    lay <- cbind(as.numeric(lay[, 1]), as.numeric(lay[, 2]))
+  }
+  
+  return(list(lay = lay, network_nodes = network_nodes, groups_expanded = groups_expanded))
+}
 
 vennDiagrams <- function(){
   g <- fetchFirstSelectedStoredIgraph_annotations_tab()

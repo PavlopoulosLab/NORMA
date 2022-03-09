@@ -26,7 +26,7 @@ options(shiny.maxRequestSize = 30*1024^2) # 30 MB for uploaded networks
 # options(shiny.error = browser) # debugging
 
 # Global variables ####
-PRINT_TIMES <- T # true, to benchmark some function speeds
+PRINT_TIMES <- F # true, to benchmark some function speeds
 USER_TEMP_FOLDER <- 'user_temp'
   
 ui_options <- c(ui_table_font_sz = "80%")

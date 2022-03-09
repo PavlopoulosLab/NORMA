@@ -212,7 +212,7 @@ convex_hull_3D <- function() {
   # z <- paste(z,  collapse=" ")
   
   #--------------------------------------------------------------------#  
-  fileConn <- file(paste(USER_TEMP_FOLDER, "/convex_3D_",Sys.getpid(),".html", sep=""), "w")
+  fileConn <- file(paste(USER_TEMP_FOLDER, "/convex_3D_", session$token,".html", sep=""), "w")
   #--------------------------------------------------------------------#
   
   cat(sprintf("<!DOCTYPE html>

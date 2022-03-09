@@ -819,8 +819,7 @@ shinyServer(function(input, output, session) {
     tryCatch({
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
       annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
-      if (is.null(g) | is.null(annotation_graph))
-        return(NULL)
+      if (is.null(g) | is.null(annotation_graph)) return(NULL)
       
       withProgress(min = 0, max = 1, {
         incProgress(message = "Plotting",
@@ -828,13 +827,13 @@ shinyServer(function(input, output, session) {
                     amount = .1)
         
         start_time <- Sys.time()
-        convex_hulls()
+        convex_hulls(g, annotation_graph)
         end_time <- Sys.time()
         if (PRINT_TIMES) print(paste("### TIME:", input$convex_layout_strategy, ": ", end_time - start_time, " seconds."))
         
         tags$iframe(
           srcdoc = paste(readLines(
-            paste(USER_TEMP_FOLDER, "/output_convex_", Sys.getpid(), ".html", sep = "")
+            paste(USER_TEMP_FOLDER, "/output_convex_", session$token, ".html", sep = "")
           ), collapse = '\n'),
           width = "100%",
           height = "850px"
@@ -899,24 +898,23 @@ shinyServer(function(input, output, session) {
   output$tabVizPie_charts <- renderUI({
     tryCatch({
       g <- fetchFirstSelectedStoredIgraph_annotations_tab()
-      if (!identical(g, NULL)){
-        annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
+      annotation_graph <- fetchFirstSelectedStoredGroups2_annotations_tab()
+      if (is.null(g) | is.null(annotation_graph)) return(NULL)
+      
+      withProgress(min = 0, max = 1, {
+        incProgress(message = "Plotting",
+                    detail = "This may take a while...",
+                    amount = .1)
         
-        withProgress(min = 0, max = 1, {
-          incProgress(message = "Plotting",
-                      detail = "This may take a while...",
-                      amount = .1)
-          
-          pie_charts()
-          tags$iframe(
-            srcdoc = paste(readLines(
-              paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
-            ), collapse = '\n'),
-            width = "100%",
-            height = "850px"
-          )
-        })
-      }
+        pie_charts(g, annotation_graph)
+        tags$iframe(
+          srcdoc = paste(readLines(
+            paste(USER_TEMP_FOLDER, "/output_pies_", session$token, ".html", sep = "")
+          ), collapse = '\n'),
+          width = "100%",
+          height = "850px"
+        )
+      })
     }, error = function(e) {
       print(paste("Annotations tab error: ", e))
       shinyalert("Error!", "Annotations tab error.", type = "error")
@@ -1025,7 +1023,7 @@ shinyServer(function(input, output, session) {
         
         tags$iframe(
           srcdoc = paste(readLines(
-            paste(USER_TEMP_FOLDER, "/convex_3D_",Sys.getpid(),".html", sep="")
+            paste(USER_TEMP_FOLDER, "/convex_3D_", session$token,".html", sep="")
           ), collapse = '\n'),
           width = "100%",
           height = "850px"
@@ -1186,10 +1184,10 @@ shinyServer(function(input, output, session) {
   # downloadHandlers ####
   output$HTML_convex <- downloadHandler(
     filename = function() {
-      paste("Convex_hulls_2D_", Sys.getpid(), ".html", sep = "")
+      paste("Convex_hulls_2D_", session$token, ".html", sep = "")
     },
     content = function(file) {
-      HTML_convex <- paste(readLines(paste(USER_TEMP_FOLDER, "/output_convex_", Sys.getpid(), ".html", sep = "")
+      HTML_convex <- paste(readLines(paste(USER_TEMP_FOLDER, "/output_convex_", session$token, ".html", sep = "")
       ), collapse = '\n')
       write.table(HTML_convex, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
@@ -1197,11 +1195,11 @@ shinyServer(function(input, output, session) {
   
   output$HTML_pies <- downloadHandler(
     filename = function() {
-      paste("Pie_charts_", Sys.getpid(), ".html", sep = "")
+      paste("Pie_charts_", session$token, ".html", sep = "")
     },
     content = function(file) {
       HTML_pies <- paste(readLines(
-        paste(USER_TEMP_FOLDER, "/output_pies_", Sys.getpid(), ".html", sep = "")
+        paste(USER_TEMP_FOLDER, "/output_pies_", session$token, ".html", sep = "")
       ), collapse = '\n')
       write.table(HTML_pies, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
@@ -1209,11 +1207,11 @@ shinyServer(function(input, output, session) {
   
   output$HTML_convex_3D <- downloadHandler(
     filename = function() {
-      paste("Convex_hulls_3D_", Sys.getpid(), ".html", sep = "")
+      paste("Convex_hulls_3D_", session$token, ".html", sep = "")
     },
     content = function(file) {
       HTML_convex_3D <- paste(readLines(
-        paste(USER_TEMP_FOLDER, "/convex_3D_",Sys.getpid(),".html", sep="")
+        paste(USER_TEMP_FOLDER, "/convex_3D_", session$token, ".html", sep="")
       ), collapse = '\n')
       write.table(HTML_convex_3D, file, row.names = F,col.names = F, sep = "\t", quote = F)
     }
