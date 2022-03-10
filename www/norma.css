@@ -73,6 +73,12 @@ td {
   background: #2C8160 !important;
 }
 
+.layout_strat_img{
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
 #introButton{
   width: 100%;
   margin-top: 15px;

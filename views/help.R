@@ -245,21 +245,21 @@ EP300	CREBBP  2
     helpText(
       "As in the original version, NORMA-2.0 introduces one virtual node per group which behaves as a hub. Upon creation, edges with heavy weights are assigned to this node, linking it with all nodes from the same group. Then, any traditional layout algorithm can be utilized until it converges. The difference compared to directly applying a layout algorithm on the network is that the virtual nodes will attract the group-specific nodes as if they were parts of the network. After completing the layout execution, all virtual nodes are removed."
     ),
-    tags$img(src = b64_strategy1),
+    tags$img(src = b64_strategy1, class="layout_strat_img"),
     br(),
     br(),
     strong("Strategy 2 - Gravity:"),
     helpText(
       "Here, NORMA-2.0 introduces intra-group edges where necessary to generate clique-like subnetworks (all-vs-all connections). As a second step, the intra-group edge weights are significantly increased whereas the inter-group edge weights are simultaneously decreased. Then, any of the offered layouts can be applied to adjust node coordinates. The introduced edges and weights only exist for the calculation of the layout coordinates, and do not carry over to the final visualized network.
       "),
-    tags$img(src = b64_strategy2),
+    tags$img(src = b64_strategy2, class="layout_strat_img"),
     br(),
     br(),
     strong("Strategy 3 - Super nodes:"),
     helpText(
       "In this scenario, NORMA-2.0 introduces 'super-nodes' to represent each of the uploaded annotation groups. Then, it connects these groups with edges which correspond to the connections from the initial network. For example, if node A belonging to the annotation group 1 is connected to node B from group 2, then the group 1 super-node will also be connected to the group 2 super-node. Notably, the network becomes significantly smaller both in terms of node and connection numbers. In a second step, any of the available layouts can be applied on the 'super-network'. Upon layout convergence, all centroid coordinates of these super-nodes as well as the coordinates of no-group nodes can be further repelled according to a user-defined input. Then, all initial nodes will be placed around their respective super-nodes according to a second user-selected local layout choice. If a node belongs to more than one group, the average values for their (x, y) coordinates are used for the final visualization.
       "),
-    tags$img(src = b64_strategy3),
+    tags$img(src = b64_strategy3, class="layout_strat_img"),
     br(), br()
   ), #Tabpanel Layout Strategies
   
