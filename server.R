@@ -239,7 +239,19 @@ shinyServer(function(input, output, session) {
                         paste("Drosophila TAU KEGG pathways")
                       } else if (input$uiLoadGraphOptionsInput_annotations == "oR_Drosophila_Luvain"){
                         paste("Drosophila TAU Louvain")
-                      } else if (input$uiLoadExpressionsInput == "oR_Expression_file_Drosophila"){
+                      }))
+    }, error = function(e) {
+      print(paste("Upload tab error: ", e))
+      shinyalert("Error!", "Upload tab error.", type = "error")
+    })
+  })
+  
+  # Change Expression Name based on input choices
+  dochangeExpressionName <- observe({
+    tryCatch({
+      updateTextInput(session,
+                      inputId = "expressionName",
+                      value = (if (input$uiLoadExpressionsInput == "oR_Expression_file_Drosophila"){
                         paste("Drosophila TAU node - coloring file")
                       }))
     }, error = function(e) {
