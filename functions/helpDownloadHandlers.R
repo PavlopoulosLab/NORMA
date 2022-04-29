@@ -159,7 +159,7 @@ output$covid_19_interpro <- downloadHandler(
     paste('HomoSapiens Protein Domains - INTERPRO file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_interpro, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_interpro, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 output$covid_19_bp <- downloadHandler(
@@ -167,7 +167,7 @@ output$covid_19_bp <- downloadHandler(
     paste('HomoSapiens GO Annotation - Biological Process file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_bp, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_bp, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 output$covid_19_mf <- downloadHandler(
@@ -175,7 +175,7 @@ output$covid_19_mf <- downloadHandler(
     paste('HomoSapiens GO Annotation - Molecular Function file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_mf, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_mf, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 output$covid_19_cc <- downloadHandler(
@@ -183,7 +183,7 @@ output$covid_19_cc <- downloadHandler(
     paste('HomoSapiens Protein Domains GO Annotation - Cellular Components file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_cc, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_cc, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 output$covid_19_kegg <- downloadHandler(
@@ -191,7 +191,7 @@ output$covid_19_kegg <- downloadHandler(
     paste('HomoSapiens Protein Domains KEGG pathways file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_kegg, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_kegg, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 output$covid_19_smart <- downloadHandler(
@@ -199,7 +199,7 @@ output$covid_19_smart <- downloadHandler(
     paste('HomoSapiens Protein Domains SMART file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(covid_19_smart, file,row.names = F, quote = F, sep = "\t")
+    write.table(covid_19_smart, file, row.names = F, col.names= F, quote = F, sep = "\t")
   }
 )
 
@@ -218,7 +218,7 @@ output$Gallus_gallus_kegg <- downloadHandler(
     paste('BioGrid Chicken Gallus KEGG pathways file', '.txt', sep = '')
   },
   content = function(file) {
-    write.table(Gallus_gallus_kegg, file,row.names = F, quote = F, sep = "\t")
+    write.table(Gallus_gallus_kegg, file,row.names = F, col.names = F, quote = F, sep = "\t")
   }
 )
 

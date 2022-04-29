@@ -157,7 +157,7 @@ EP300	CREBBP  2
       "This Tab is used for the automatic calculation of communities whereas the exported file(s) can be used as input annotation file(s). Users can assign nodes to communities (not necessarily uniquely), using various options. These are:"
     ),
     helpText(tags$ul(
-      tags$li( "Fast-Greedy: This function tries to find densely connected subgraphs (also called communities) via directly optimizing a modularity score."),
+      # tags$li( "Fast-Greedy: This function tries to find densely connected subgraphs (also called communities) via directly optimizing a modularity score."),
       tags$li( "Louvain: This function implements a multi-level modularity optimization algorithm for finding community structures and is based on the modularity measure and a hierarchical approach."),
       tags$li( "Label-Propagation: This is a fast, nearly linear time algorithm for detecting community structures in a network by labeling the vertices with unique labels and then updating the labels by majority voting in the neighborhood of the vertex."),
       tags$li( "Walktrap: This function tries to find densely connected subgraphs in a graph via random walks. The idea is that short random walks tend to stay in the same community."),

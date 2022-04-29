@@ -63,13 +63,13 @@ layouts_3D<-c(
 )
 selected_layouts_3d <- c( "Fructerman\tlayout_with_fr(igraph, dim=3)" )
 automated_annotations_ui <- c(
-  "Fast-Greedy"="Fast-Greedy\tcluster_fast_greedy(igraph)",
+  # "Fast-Greedy"="Fast-Greedy\tcluster_fast_greedy(igraph)",
   "Louvain"="Louvain\tcluster_louvain(igraph)",
   "Label-Propagation"="Label-Propagation\tcluster_label_prop(igraph)",
   "Walktrap"="Walktrap\tcluster_walktrap(igraph)",
   "Betweenness"="Betweenness\tcluster_edge_betweenness(igraph)"
 )
-selected_automated_annotations <- c( "Fast-Greedy\tcluster_fast_greedy(igraph)" )
+selected_automated_annotations <- c( "Louvain\tcluster_louvain(igraph)" )
 statistics <- c(
   "Number of Edges" = "Number of Edges\tecount(igraph)",
   "Number of Nodes" = "Number of Nodes\tvcount(igraph)",
