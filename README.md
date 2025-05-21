@@ -20,7 +20,7 @@ Finally, NORMA offers basic topological analysis and direct topological comparis
 
 *How does it work?*
 
-Try the tool online at http://bib.fleming.gr:3838/NORMA/ or clone this repository and run it locally. 
+Try the tool online at https://pavlopoulos-lab-services.org/shiny/app/norma or clone this repository and run it locally. 
 
 *What is the input file format?*
 
