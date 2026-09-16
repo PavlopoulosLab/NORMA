@@ -12,8 +12,8 @@ import urllib.request
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import server  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # backend/
+from norma import api, config, handler, relays, static  # noqa: E402
 
 
 class _Echo(http.server.BaseHTTPRequestHandler):
@@ -48,18 +48,29 @@ class _Echo(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def _serve(handler):
-    httpd = server.ThreadingServer(("127.0.0.1", 0), handler)
+def _serve(cls):
+    httpd = handler.ThreadingServer(("127.0.0.1", 0), cls)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, "http://127.0.0.1:%d" % httpd.server_address[1]
+    return httpd, f"http://127.0.0.1:{httpd.server_address[1]}"
 
 
 def make_args(**kw):
     """argparse namespace with every server.py option, as `main()` would build it."""
     base = dict(
-        config=None, mode=None, host=None, port=None, public_url=None, tls_cert=None, tls_key=None,
-        http_redirect_port=None, access_log=None, no_api=False, no_relays=False, open=False,
-        no_open=False, print_config=False,
+        config=None,
+        mode=None,
+        host=None,
+        port=None,
+        public_url=None,
+        tls_cert=None,
+        tls_key=None,
+        http_redirect_port=None,
+        access_log=None,
+        no_api=False,
+        no_relays=False,
+        open=False,
+        no_open=False,
+        print_config=False,
     )
     base.update(kw)
     return argparse.Namespace(**base)
@@ -75,14 +86,14 @@ def upstream():
 @pytest.fixture
 def norma(upstream, tmp_path, monkeypatch):
     """A running NORMA server; returns a small client. Config is reset per test."""
-    monkeypatch.setattr(server, "CONFIG", copy.deepcopy(server.DEFAULTS))
-    server.CONFIG["server"]["accessLog"] = "off"
-    monkeypatch.setattr(server, "TEST_UPSTREAM", upstream)
-    monkeypatch.setattr(server, "TEST_ARENA", upstream)
-    monkeypatch.setattr(server, "TEST_DB", upstream + "/db/")
-    monkeypatch.setattr(server, "MIN_GAP", 0.0)
-    monkeypatch.setattr(server, "_api_store", {})
-    monkeypatch.setattr(server, "APP_DIR", str(tmp_path))
+    monkeypatch.setattr(config, "CONFIG", copy.deepcopy(config.DEFAULTS))
+    config.CONFIG["server"]["accessLog"] = "off"
+    monkeypatch.setattr(relays, "TEST_UPSTREAM", upstream)
+    monkeypatch.setattr(relays, "TEST_ARENA", upstream)
+    monkeypatch.setattr(relays, "TEST_DB", upstream + "/db/")
+    monkeypatch.setattr(relays, "MIN_GAP", 0.0)
+    monkeypatch.setattr(api, "_store", {})
+    monkeypatch.setattr(static, "STATIC_DIR", str(tmp_path))
     (tmp_path / "norma.html").write_text("<html>NORMA</html>")
     (tmp_path / "Dockerfile").write_text("FROM x")
     (tmp_path / ".secret").write_text("x")
@@ -90,7 +101,7 @@ def norma(upstream, tmp_path, monkeypatch):
     (tmp_path / "deploy" / "norma.service").write_text("x")
     (tmp_path / "assets").mkdir()
     (tmp_path / "assets" / "logo.svg").write_text("<svg/>")
-    httpd, url = _serve(server.NormaHandler)
+    httpd, url = _serve(handler.NormaHandler)
     yield Client(url)
     httpd.shutdown()
 

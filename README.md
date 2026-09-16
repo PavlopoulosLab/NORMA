@@ -9,11 +9,11 @@ the MIT License; no login, no cookies, no tracking.
 
 | | |
 |---|---|
-| On your computer | double-click `run_local.sh` (macOS/Linux) or `run_local.bat` (Windows), or `python3 server.py` |
+| On your computer | double-click `run_local.sh` (macOS/Linux) or `run_local.bat` (Windows), or `python3 backend/server.py` |
 | Without Python | open `norma.html` in a browser (no REST API or relays) |
-| Public server | `python3 server.py --mode hosted --config norma.config.hosted.json` behind HTTPS (`deploy/nginx.conf`) |
+| Public server | `python3 backend/server.py --mode hosted --config norma.config.hosted.json` behind HTTPS (`deploy/nginx.conf`) |
 | Docker | `docker compose up -d` |
-| All options | `python3 server.py --help`, `python3 server.py --print-config` |
+| All options | `python3 backend/server.py --help`, `python3 backend/server.py --print-config` |
 
 ## Settings
 

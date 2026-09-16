@@ -8,7 +8,7 @@ Items marked **deploy** depend on how the public server is set up.
 | Requirement | How NORMA meets it |
 |---|---|
 | Broad audience, simple to use | Works on any network plus any grouping; Welcome page with one-click examples |
-| Functional at proposal time | **deploy**: run `python3 server.py --mode hosted` behind HTTPS (see below) |
+| Functional at proposal time | **deploy**: run `python3 backend/server.py --mode hosted` behind HTTPS (see below) |
 | Simple way to try sample data | *Open an example* (Welcome page) and the Examples list; `?example=NAME` links |
 | Help/tutorial with links to sample output | Help tab: *Getting started*, *Sample data and sample output* (live example links) |
 | Help explains how to interpret results | Help → *Interpreting the results* |

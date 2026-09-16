@@ -1,4 +1,4 @@
-import server
+from norma import config, static
 
 
 def test_root_redirects_to_norma_html_with_query(norma):
@@ -18,7 +18,7 @@ def test_security_headers(norma):
 
 
 def test_hsts_behind_trusted_proxy(norma):
-    server.CONFIG["server"]["trustProxy"] = True
+    config.CONFIG["server"]["trustProxy"] = True
     _, h, _ = norma.request("/norma.html", headers={"X-Forwarded-Proto": "https"})
     assert h["Strict-Transport-Security"] == "max-age=31536000"
 
@@ -34,19 +34,23 @@ def test_blocked_static_paths(norma):
 
 
 def test_static_blocked_helper():
-    assert server._static_blocked("/docker-compose.yaml")
-    assert server._static_blocked("/x/y/.git/config")
-    assert server._static_blocked("/deploy/nginx.conf")
-    assert server._static_blocked("/anything.service?x=1")
-    assert not server._static_blocked("/vendor/cytoscape.min.js")
-    assert not server._static_blocked("/norma.html?session=abc")
+    assert static.blocked("/docker-compose.yaml")
+    assert static.blocked("/x/y/.git/config")
+    assert static.blocked("/deploy/nginx.conf")
+    assert static.blocked("/anything.service?x=1")
+    assert not static.blocked("/vendor/cytoscape.min.js")
+    assert not static.blocked("/norma.html?session=abc")
 
 
 def test_client_config_js_and_json(norma):
-    server.CONFIG["site"]["notice"] = "hello"
+    config.CONFIG["site"]["notice"] = "hello"
     status, h, body = norma.request("/norma-config.js")
     assert status == 200 and h["Content-Type"].startswith("text/javascript")
-    assert body.startswith(b"// generated") and b"window.NORMA_CONFIG = {" in body and b'"notice": "hello"' in body
+    assert (
+        body.startswith(b"// generated")
+        and b"window.NORMA_CONFIG = {" in body
+        and b'"notice": "hello"' in body
+    )
     status, h, obj = norma.json("/norma-config.json")
     assert h["Content-Type"].startswith("application/json")
     assert obj["site"]["notice"] == "hello" and "server" not in obj
