@@ -40,3 +40,16 @@ vignettes/*.pdf
 
 user_temp/*.html
 user_temp/*.rda
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
