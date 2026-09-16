@@ -892,10 +892,22 @@ export function applyEdgeOpacity() {
   setStyle('edge.dimmed', { opacity: Math.min(0.04, o) })
 }
 
-/* spread: push nodes apart / pull them together around the centre.
-   The slider is logarithmic (value v scales distances by 2^v) and
-   relative to the positions the last layout produced. */
+/* spread: nodes repel (right) or attract (left) each other.
+   The slider sets the strength of repulsion (which acts between all nearby
+   nodes) against the pull of the links, from a quarter to four times the
+   current arrangement (the "base"). Each pair of nearby nodes, plus a few
+   distant anchors, gets a target distance from the base: pushed apart,
+   unlinked neighbours separate most and links resist, so linked groups
+   stay together and move apart; drawn together, links shorten most and
+   nodes stop before they overlap. Stress majorization moves the nodes
+   toward those distances, keeping the arrangement. At 1x the targets are
+   the base distances, and returning to 1x restores the base exactly.
+   Dragging nodes, undo and layouts start a new base. */
 let spreadApplied = 0
+
+export let spreadBase = null
+// { v0, ids, pos, out }
+let spreadFrame = 0
 
 function spreadFactor(v) {
   return Math.pow(2, v)
@@ -906,27 +918,277 @@ export function updateSpreadReadout() {
   document.getElementById('spreadValue').textContent = spreadFactor(v).toFixed(2) + '×'
 }
 
+// The positions the slider last produced, if the nodes are still there.
+function spreadBaseValid(nodes) {
+  const b = spreadBase
+  if (!b || b.ids.length !== nodes.length) return false
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i]
+    if (n.id() !== b.ids[i]) return false
+    const p = n.position()
+    if (Math.abs(p.x - b.out[2 * i]) > 1e-6 || Math.abs(p.y - b.out[2 * i + 1]) > 1e-6) return false
+  }
+  return true
+}
+
+// Nodes may come as close as they were in the base, but not overlap more.
+function spreadSeparate(X, B, n, radii, passes) {
+  const gap = 4
+  const maxR = radii.reduce((a, r) => Math.max(a, r), 0)
+  if (!(maxR > 0)) return
+  const size = 2 * maxR + gap
+  for (let pass = 0; pass < passes; pass++) {
+    const grid = new Map()
+    for (let i = 0; i < n; i++) {
+      const key =
+        (Math.floor(X[2 * i] / size) + 50000) * 100003 + Math.floor(X[2 * i + 1] / size) + 50000
+      let c = grid.get(key)
+      if (!c) grid.set(key, (c = []))
+      c.push(i)
+    }
+    let moved = false
+    grid.forEach((list, key) => {
+      for (let ox = -1; ox <= 1; ox++)
+        for (let oy = -1; oy <= 1; oy++) {
+          const other = grid.get(key + ox * 100003 + oy)
+          if (!other) continue
+          for (const i of list)
+            for (const j of other) {
+              if (i >= j) continue
+              let dx = X[2 * i] - X[2 * j],
+                dy = X[2 * i + 1] - X[2 * j + 1]
+              const d = Math.hypot(dx, dy)
+              const want = Math.min(
+                radii[i] + radii[j] + gap,
+                Math.hypot(B[2 * i] - B[2 * j], B[2 * i + 1] - B[2 * j + 1])
+              )
+              if (d >= want - 1e-6) continue
+              let len = d
+              if (d < 1e-9) {
+                dx = (i + j) % 2 ? 1 : -1
+                dy = 0
+                len = 1
+              }
+              const push = (want - d) / 2 / len
+              X[2 * i] += dx * push
+              X[2 * i + 1] += dy * push
+              X[2 * j] -= dx * push
+              X[2 * j + 1] -= dy * push
+              moved = true
+            }
+        }
+    })
+    if (!moved) break
+  }
+}
+
+// Target distances from the base: repulsion acts on every pair of nearby
+// nodes and attraction only along links, so pushing apart stretches unlinked
+// pairs most (links resist) and drawing together shortens links most
+// (unlinked pairs follow less). Crowded pairs change most, distant pairs
+// least. Stress majorization then moves the nodes toward those distances.
+function spreadRelax(base, n, edges, radii, rel) {
+  const B = base.pos
+  if (n < 2) return B.slice()
+  const dist = (i, j) => Math.hypot(B[2 * i] - B[2 * j], B[2 * i + 1] - B[2 * j + 1])
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity
+  for (let i = 0; i < n; i++) {
+    minX = Math.min(minX, B[2 * i])
+    maxX = Math.max(maxX, B[2 * i])
+    minY = Math.min(minY, B[2 * i + 1])
+    maxY = Math.max(maxY, B[2 * i + 1])
+  }
+  const cell = Math.max(Math.sqrt(Math.max((maxX - minX) * (maxY - minY), 1) / n) * 2, 1e-6)
+  const cellOf = (i) => [
+    Math.floor((B[2 * i] - minX) / cell),
+    Math.floor((B[2 * i + 1] - minY) / cell),
+  ]
+  const cells = new Map()
+  for (let i = 0; i < n; i++) {
+    const [gx, gy] = cellOf(i),
+      key = gx * 100003 + gy
+    let c = cells.get(key)
+    if (!c) cells.set(key, (c = []))
+    c.push(i)
+  }
+  const NN = 12,
+    FAR = 12
+  const pairs = new Map()
+  const addPair = (i, j, linked) => {
+    if (i === j) return
+    const a = Math.min(i, j),
+      b = Math.max(i, j),
+      key = a * n + b
+    const had = pairs.get(key)
+    if (had) {
+      if (linked) had[2] = true
+      return
+    }
+    pairs.set(key, [a, b, linked])
+  }
+  for (let e = 0; e < edges.length; e += 2) addPair(edges[e], edges[e + 1], true)
+  const nnDist = []
+  for (let i = 0; i < n; i++) {
+    const [gx, gy] = cellOf(i)
+    let cand = []
+    for (let r = 1; r <= 4 && cand.length < NN; r++) {
+      cand = []
+      for (let ox = -r; ox <= r; ox++)
+        for (let oy = -r; oy <= r; oy++) {
+          const c = cells.get((gx + ox) * 100003 + gy + oy)
+          if (c) for (const j of c) if (j !== i) cand.push(j)
+        }
+    }
+    cand.sort((a, b) => dist(i, a) - dist(i, b))
+    cand.slice(0, NN).forEach((j) => addPair(i, j, false))
+    if (cand.length && dist(i, cand[0]) > 1e-9) nnDist.push(dist(i, cand[0]))
+    let seed = (i * 2654435761) >>> 0
+    for (let f = 0; f < FAR; f++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0
+      addPair(i, seed % n, false)
+    }
+  }
+  nnDist.sort((a, b) => a - b)
+  const k = nnDist.length ? nnDist[nnDist.length >> 1] * 2 : 50
+
+  const lr = Math.log(rel)
+  const P = []
+  pairs.forEach(([i, j, linked]) => {
+    const d0 = dist(i, j)
+    if (d0 < 1e-9) return
+    const ratio = d0 / k
+    const near = ratio <= 1 ? 1 : ratio >= 12 ? 0.08 : 1 - (0.92 * Math.log(ratio)) / Math.log(12)
+    const follows = rel >= 1 ? (linked ? 0.6 : 1) : linked ? 1 : 0.6
+    let t = d0 * Math.exp(lr * near * follows)
+    if (rel < 1) t = Math.max(t, Math.min(d0, radii[i] + radii[j] + 4))
+    P.push(i, j, t)
+  })
+  const X = B.slice()
+  const iters = n > 2500 ? 30 : n > 800 ? 45 : 70
+  const nx = new Float64Array(2 * n),
+    ws = new Float64Array(n)
+  let cx = 0,
+    cyy = 0
+  for (let i = 0; i < n; i++) {
+    cx += B[2 * i]
+    cyy += B[2 * i + 1]
+  }
+  cx /= n
+  cyy /= n
+  for (let it = 0; it < iters; it++) {
+    nx.fill(0)
+    ws.fill(0)
+    for (let p = 0; p < P.length; p += 3) {
+      const i = P[p],
+        j = P[p + 1],
+        t = P[p + 2]
+      let dx = X[2 * i] - X[2 * j],
+        dy = X[2 * i + 1] - X[2 * j + 1]
+      let d = Math.hypot(dx, dy)
+      if (d < 1e-9) {
+        dx = 1e-3
+        dy = 0
+        d = 1e-3
+      }
+      const w = 1 / t
+      const ux = (dx / d) * t,
+        uy = (dy / d) * t
+      nx[2 * i] += w * (X[2 * j] + ux)
+      nx[2 * i + 1] += w * (X[2 * j + 1] + uy)
+      ws[i] += w
+      nx[2 * j] += w * (X[2 * i] - ux)
+      nx[2 * j + 1] += w * (X[2 * i + 1] - uy)
+      ws[j] += w
+    }
+    for (let i = 0; i < n; i++) {
+      if (ws[i] > 0) {
+        X[2 * i] = nx[2 * i] / ws[i]
+        X[2 * i + 1] = nx[2 * i + 1] / ws[i]
+      }
+    }
+    spreadSeparate(X, B, n, radii, 6)
+  }
+  spreadSeparate(X, B, n, radii, 150)
+  let mx = 0,
+    my = 0
+  for (let i = 0; i < n; i++) {
+    mx += X[2 * i]
+    my += X[2 * i + 1]
+  }
+  mx = mx / n - cx
+  my = my / n - cyy
+  for (let i = 0; i < n; i++) {
+    X[2 * i] -= mx
+    X[2 * i + 1] -= my
+  }
+  return X
+}
+
 function applySpread() {
   const v = parseFloat(document.getElementById('spreadSlider').value) || 0
-  const ratio = spreadFactor(v - spreadApplied)
-  spreadApplied = v
   updateSpreadReadout()
   const nodes = cy.nodes()
-  if (!nodes.length || ratio === 1) return
-  const bb = nodes.boundingBox({ includeLabels: false })
-  const cx = (bb.x1 + bb.x2) / 2,
-    cyc = (bb.y1 + bb.y2) / 2
-  cy.batch(() => {
-    nodes.forEach((n) => {
-      const p = n.position()
-      n.position({ x: cx + (p.x - cx) * ratio, y: cyc + (p.y - cyc) * ratio })
+  if (!nodes.length) {
+    spreadApplied = v
+    return
+  }
+  if (!spreadBaseValid(nodes)) {
+    const ids = nodes.map((nd) => nd.id())
+    const pos = new Float64Array(2 * nodes.length)
+    nodes.forEach((nd, i) => {
+      const p = nd.position()
+      pos[2 * i] = p.x
+      pos[2 * i + 1] = p.y
     })
+    spreadBase = { v0: spreadApplied, ids, pos, out: pos }
+  }
+  spreadApplied = v
+  const b = spreadBase
+  const rel = spreadFactor(v - b.v0)
+  let out
+  if (Math.abs(v - b.v0) < 1e-9) out = b.pos
+  else {
+    const index = new Map(b.ids.map((id, i) => [id, i]))
+    const seen = new Set(),
+      edges = []
+    cy.edges().forEach((e) => {
+      const i = index.get(e.source().id()),
+        j = index.get(e.target().id())
+      if (i === undefined || j === undefined || i === j) return
+      const key = i < j ? i * nodes.length + j : j * nodes.length + i
+      if (seen.has(key)) return
+      seen.add(key)
+      edges.push(i, j)
+    })
+    const radii = nodes.map((nd) => (nd.width() || 0) / 2)
+    out = spreadRelax(b, nodes.length, edges, radii, rel)
+  }
+  b.out = out
+  cy.batch(() => {
+    nodes.forEach((nd, i) => nd.position({ x: out[2 * i], y: out[2 * i + 1] }))
   })
   drawGroupHulls()
 }
 
+// Large networks take a moment per step, so they follow the slider when it
+// is released rather than while it is dragged.
+const SPREAD_LIVE_MAX = 1500
+
+function queueSpread() {
+  updateSpreadReadout()
+  if (spreadFrame || cy.nodes().length > SPREAD_LIVE_MAX) return
+  spreadFrame = requestAnimationFrame(() => {
+    spreadFrame = 0
+    applySpread()
+  })
+}
+
 function resetSpread() {
   spreadApplied = 0
+  spreadBase = null
   document.getElementById('spreadSlider').value = 0
   updateSpreadReadout()
 }
@@ -1163,7 +1425,7 @@ const VIEW_MARGIN = 40
 
 var viewBoxCache = null
 
-let clampingViewport = false
+var clampingViewport = false
 
 export function invalidateViewBox() {
   viewBoxCache = null
@@ -1246,9 +1508,9 @@ export function fitView(eles, padding = 40) {
    may be written plainly (^Rp[LS]\d+$) or with slashes and flags
    (/^rp[ls]/i). Enter zooms to the matches; Escape clears.
    ============================================================ */
-let searchMatches = null
+var searchMatches = null
 
-let searchTimer = null
+var searchTimer = null
 
 function attrValueStrings(attrs) {
   const out = []
@@ -1827,6 +2089,7 @@ export function restoreView(v, { reuseData = false } = {}) {
   }
   restore3d(st.view3d)
   spreadApplied = st.spread || 0
+  spreadBase = st.spreadBase ? { ...st.spreadBase } : null
   document.getElementById('spreadSlider').value = spreadApplied
   updateSpreadReadout()
 
@@ -1996,9 +2259,17 @@ export function init() {
 
   document.getElementById('edgeOpacity').addEventListener('input', applyEdgeOpacity)
 
-  document.getElementById('spreadSlider').addEventListener('input', applySpread)
+  document.getElementById('spreadSlider').addEventListener('input', queueSpread)
 
-  document.getElementById('spreadSlider').addEventListener('change', () => scheduleBundling())
+  document.getElementById('spreadSlider').addEventListener('change', () => {
+    const v = parseFloat(document.getElementById('spreadSlider').value) || 0
+    if (spreadFrame) {
+      cancelAnimationFrame(spreadFrame)
+      spreadFrame = 0
+    }
+    if (v !== spreadApplied || cy.nodes().length > SPREAD_LIVE_MAX) applySpread()
+    scheduleBundling()
+  })
 
   document.getElementById('spreadSlider').addEventListener('dblclick', () => {
     document.getElementById('spreadSlider').value = 0

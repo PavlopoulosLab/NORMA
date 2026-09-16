@@ -65,6 +65,8 @@
     </div>
   </div>
 
+  <div id="sideResizer" role="separator" aria-orientation="vertical" aria-controls="sidebar" aria-label="Resize the side panel" tabindex="0" title="Drag to resize the side panel; double-click for the default width"></div>
+  <button type="button" id="sideToggle" aria-controls="sidebar" aria-expanded="true" aria-label="Collapse the side panel" title="Collapse the side panel"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <nav id="sideTabs" role="tablist" aria-label="Sidebar">
     <button type="button" role="tab" id="sideTabData" data-side="data" aria-controls="panelData" aria-selected="true">Upload Data</button>
     <button type="button" role="tab" id="sideTabDb" data-side="db" aria-controls="panelDb" aria-selected="false" tabindex="-1">Database importers</button>
@@ -721,7 +723,7 @@
         <div id="layoutStatus" class="status" role="status" aria-live="polite"></div>
         <label class="slider-label" for="spreadSlider"><span>Spread</span><span id="spreadValue">1.00×</span></label>
         <input type="range" id="spreadSlider" min="-2" max="2" step="0.02" value="0" aria-describedby="spreadHint">
-        <div class="hint-line" id="spreadHint">Drag left to pull nodes together, right to push them apart. Running a layout resets it.</div>
+        <div class="hint-line" id="spreadHint">Drag right to make nodes repel each other, left to let their links pull them together. Running a layout resets it.</div>
         <div class="sep-box" id="sepBox">
           <div class="sep-head">Group separation <button type="button" class="helplink" data-help="help-separation" aria-label="Help: group separation">?</button></div>
           <div id="sepValues"></div>
@@ -2339,7 +2341,7 @@ TP53&#9;NA&#9;NA</pre>
             Strategies 1 and 2 place every node themselves. With them, <b>Layout inside each group</b> can also be <b>Keep the strategy's arrangement</b>; any other choice rearranges each group around where the strategy put it and keeps groups from overlapping.</li>
         </ul>
         <p><b>Group size</b> scales each group's local layout. Force strength runs from 1 to 20 (NORMA's default is 10). <b>Use checked channels only</b> applies to both sides. A group with more than 400 nodes gets 60 random partner links per node instead of links to every other member, to keep the layout fast. While <b>By groups</b> is active, it is also used when a network loads and when you switch annotations.</p>
-        <p><b>Fit to screen</b> zooms to show the whole network. <b>Spread</b> pushes nodes apart (right) or pulls them together (left) around the middle of the network, from a quarter to four times the current distances, without changing the arrangement. Double-click the slider to go back to 1×. Running a layout resets it.</p>
+        <p><b>Fit to screen</b> zooms to show the whole network. <b>Spread</b> changes how strongly nodes repel each other compared with the pull of their links, from a quarter to four times the strength of the current arrangement. To the right, dense clusters open up and loosely linked parts move apart; to the left, linked nodes are drawn together while nodes are kept from overlapping. It starts from the current positions and keeps the overall arrangement, and going back to 1× restores them. Double-click the slider to go back to 1×. Moving nodes by hand starts again from their new positions, and running a layout resets it.</p>
 
         <h2 id="help-groups">Node groups</h2>
         <p>Groups are listed <b>A–Z</b> (numbers in numeric order, so Group-2 comes before Group-10). The <b>Order</b> menu under the filter also sorts them by their number of nodes (the count shown on each row), <b>Most nodes first</b> or <b>Fewest nodes first</b> (groups of equal size stay A–Z), or keeps the <b>File order</b> of the annotation file. Nodes in no group always come last. The legend follows the same order, each view remembers the choice, and group colors don't change. Node names in the details panels, and the files in <b>Files</b> and in every file menu (Grouping, Network Profiler, Network Comparison, enrichment) are always listed A–Z.</p>

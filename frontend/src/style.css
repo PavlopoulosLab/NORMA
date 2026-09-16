@@ -87,7 +87,9 @@ body {
 }
 #app {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  --side-w: 300px;
+  position: relative;
+  grid-template-columns: var(--side-w) minmax(0, 1fr);
   grid-template-rows: 52px 42px 36px minmax(0, 1fr);
   grid-template-areas:
     'brand viewhead'
@@ -3222,6 +3224,93 @@ button.danger:hover {
 }
 #sidebar {
   padding-top: 14px;
+}
+
+/* ---------- resizable / collapsible sidebar ---------- */
+#brand,
+#sideTabs,
+#sidebar {
+  min-width: 0;
+}
+#brand {
+  overflow: hidden;
+}
+#sideResizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--side-w) - 4px);
+  width: 8px;
+  cursor: col-resize;
+  z-index: 30;
+  touch-action: none;
+  outline: none;
+}
+#sideResizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s;
+}
+#sideResizer:hover::after,
+#sideResizer:focus-visible::after,
+#app.side-resizing #sideResizer::after {
+  background: var(--accent);
+}
+#sideToggle {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--side-w) - 1px);
+  z-index: 31;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  background: var(--panel);
+  color: var(--muted);
+}
+#sideToggle:hover {
+  color: var(--text);
+  border-color: var(--accent-dim);
+  background: var(--panel-2-hover);
+}
+#sideToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#sideToggle svg {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.15s;
+}
+#app.side-collapsed #brand,
+#app.side-collapsed #sideTabs,
+#app.side-collapsed #sidebar {
+  display: none;
+}
+#app.side-collapsed #sideResizer {
+  display: none;
+}
+#app.side-collapsed #sideToggle {
+  left: 0;
+}
+#app.side-collapsed #sideToggle svg {
+  transform: rotate(180deg);
+}
+#app.side-resizing,
+#app.side-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 /* ---------- what the current view shows ---------- */

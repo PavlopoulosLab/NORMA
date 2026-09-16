@@ -85,6 +85,7 @@ import './group_network'
 import { init as initEnrichment } from './enrichment'
 import { init as initApiWiring } from './api/wiring'
 import { init as initApiTester } from './api/tester'
+import { init as initSidePanel } from './side_panel'
 
 initHulls()
 initLayoutsControls()
@@ -143,6 +144,7 @@ applyEdgeWidth()
 applyEdgeOpacity()
 applyEdgeDirection()
 updateSpreadReadout()
+initSidePanel()
 resizeHullCanvas()
 updateStrategyUI()
 updateZoomReadout()

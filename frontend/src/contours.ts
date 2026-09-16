@@ -16,7 +16,7 @@ import { buildCompareArena3dModel } from './enrichment'
 import { cy } from './cy'
 import { dataVersion } from './demo_downloads'
 import { downloadText, fileStem, plural, setStatus } from './layouts/controls'
-import { drawGroupHulls, hexToRgba } from './hulls'
+import { drawGroupHulls, hexToRgba, hullCanvasCss } from './hulls'
 import { edgeIsDirected } from './export/dialog'
 import { resolveStringRoute } from './string/requests'
 import { rgbOf } from './view3d/state'
@@ -60,12 +60,15 @@ export function bubblePathsModel(force) {
   const sameData = bubbleCache.key.split('|')[0] === String(dataVersion)
   if (!force && bubbleCache.key && sameData && (big || now - bubbleCache.computedAt < 120)) {
     clearTimeout(bubbleCache.timer)
+    // redraw inside an animation frame: a canvas drawn from a bare timer is
+    // not always shown until something else repaints (seen in Chrome on macOS)
     bubbleCache.timer = setTimeout(
-      () => {
-        bubbleCache.computedAt = 0
-        bubbleCache.settled = true
-        drawGroupHulls()
-      },
+      () =>
+        requestAnimationFrame(() => {
+          bubbleCache.computedAt = 0
+          bubbleCache.settled = true
+          drawGroupHulls()
+        }),
       big ? 300 : 140
     )
     if (!(big && bubbleCache.settled)) return bubbleCache.paths
@@ -100,7 +103,9 @@ export function drawBubbleSets(ctx, opacity) {
   const paths = bubblePathsModel(false)
   const z = cy.zoom(),
     pan = cy.pan()
-  const dpr = window.devicePixelRatio || 1
+  // the scale the canvas was actually sized with, not a pixel ratio that
+  // may have changed since
+  const dpr = hullCanvasCss.dpr || 1
   ctx.save()
   ctx.setTransform(z * dpr, 0, 0, z * dpr, pan.x * dpr, pan.y * dpr)
   paths.forEach((d, g) => {

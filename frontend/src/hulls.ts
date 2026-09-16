@@ -73,14 +73,31 @@ const hullCanvas = document.getElementById('groupHullCanvas')
 
 const hullCtx = hullCanvas.getContext('2d')
 
+// The shading canvas must match Cytoscape's drawing area and the current
+// pixel ratio. The pixel ratio can change without a 'resize' event (a window
+// dragged between a Retina and a standard display on macOS), and the canvas
+// area can change size without one too, so drawGroupHulls() re-checks both.
+export let hullCanvasCss = { w: 0, h: 0, dpr: 0 }
+
 export function resizeHullCanvas() {
   const rect = document.getElementById('canvas').getBoundingClientRect()
+  const w = rect.width || cy.width(),
+    h = rect.height || cy.height()
   const dpr = window.devicePixelRatio || 1
-  hullCanvas.width = Math.max(1, Math.round(rect.width * dpr))
-  hullCanvas.height = Math.max(1, Math.round(rect.height * dpr))
-  hullCanvas.style.width = rect.width + 'px'
-  hullCanvas.style.height = rect.height + 'px'
+  hullCanvas.width = Math.max(1, Math.round(w * dpr))
+  hullCanvas.height = Math.max(1, Math.round(h * dpr))
+  hullCanvas.style.width = w + 'px'
+  hullCanvas.style.height = h + 'px'
+  hullCanvasCss = { w, h, dpr }
   hullCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+function hullCanvasStale() {
+  return (
+    hullCanvasCss.dpr !== (window.devicePixelRatio || 1) ||
+    Math.abs(hullCanvasCss.w - cy.width()) > 0.5 ||
+    Math.abs(hullCanvasCss.h - cy.height()) > 0.5
+  )
 }
 
 // Andrew's monotone chain convex hull.
@@ -148,7 +165,9 @@ let hullMarginScale = 1
 export function drawGroupHulls() {
   hullMarginScale = Math.max(0.15, Math.min(1, cy.zoom()))
   if (!hullCtx) return
-  hullCtx.clearRect(0, 0, hullCanvas.width, hullCanvas.height)
+  if (hullCanvasStale()) resizeHullCanvas()
+  hullCtx.setTransform(hullCanvasCss.dpr, 0, 0, hullCanvasCss.dpr, 0, 0)
+  hullCtx.clearRect(0, 0, hullCanvasCss.w, hullCanvasCss.h)
   if (!document.getElementById('showGroupHulls').checked) return
 
   const style = document.getElementById('hullStyle').value
@@ -758,4 +777,11 @@ export function init() {
     resizeHullCanvas()
     drawGroupHulls()
   })
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      resizeHullCanvas()
+      drawGroupHulls()
+    }).observe(document.getElementById('canvas'))
+  }
 }

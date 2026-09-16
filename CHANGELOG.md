@@ -12,9 +12,15 @@
 - Tooling: `uv` + ruff + mypy (strict) for the server; Vite, TypeScript, ESLint, Prettier for the
   page; GitHub Actions CI and pre-commit hooks.
 - MIT `LICENSE` file, `AGENTS.md` / `CLAUDE.md` for coding agents, this changelog.
+- The side panel can be dragged to a different width, collapsed with the arrow on its edge and
+  resized from the keyboard; the choice is remembered in the browser.
 
 ### Changed
 
+- **Spread** now makes nodes repel (right) or attract (left) each other relative to the current
+  arrangement, using stress majorization over nearby pairs, instead of scaling distances around the
+  centre; links hold groups together and nodes stop before overlapping. Returning to 1x restores the
+  base positions exactly; undo keeps them.
 - Repository layout: the single `server.py` is now the `backend/norma` package (`config`, `api`,
   `relays`, `static`, `handler`, `main`; entry `backend/server.py`) and the single `norma.html` is
   a Vite/TypeScript project in `frontend/` split into modules by feature (`layouts/`, `export/`,
@@ -25,6 +31,12 @@
 - NORMA 3 is a rewrite of the R/Shiny NORMA 2 as a browser application (Cytoscape.js) served by a
   dependency-free Python server with a REST API and relays for STRING, Arena3D and the database
   importers. Runs on a computer, as a public server or opened straight from disk.
+
+### Fixed
+
+- Group shading (hulls, fog, Bubble Sets) drawn at the wrong scale or not shown after a window moved
+  between displays with different pixel ratios or a canvas resize without a resize event; the
+  shading canvas now re-checks its size and pixel ratio and redraws inside an animation frame.
 
 ## [2.0.0] - 2022
 

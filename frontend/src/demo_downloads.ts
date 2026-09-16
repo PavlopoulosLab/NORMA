@@ -3,7 +3,7 @@
 import { EDGE_TYPES } from './palette'
 import { S } from './state'
 import { SAMPLE_GENERATORS } from './sample_data'
-import { activeView, restoreView, snapshotData, viewSettings } from './profiler'
+import { activeView, restoreView, snapshotData, spreadBase, viewSettings } from './profiler'
 import { cy } from './cy'
 import { downloadText, libSelection } from './layouts/controls'
 import { escapeHtml } from './network_state'
@@ -165,6 +165,8 @@ function captureHistoryState() {
       typeColors,
       libView: S.currentLibView ? { ...S.currentLibView } : null,
       spread: parseFloat(document.getElementById('spreadSlider').value) || 0,
+      // kept in memory only: lets Spread return to the exact positions after undo
+      spreadBase: spreadBase ? { ...spreadBase } : null,
       groupFilter: document.getElementById('groupFilter').value,
     },
   }
@@ -181,7 +183,8 @@ function sameHistoryState(a, b) {
       q = pb[id]
     if (!q || Math.abs(p.x - q.x) > 0.01 || Math.abs(p.y - q.y) > 0.01) return false
   }
-  const strip = (e) => JSON.stringify({ ...e.state, positions: null, sel: e.selection })
+  const strip = (e) =>
+    JSON.stringify({ ...e.state, positions: null, spreadBase: null, sel: e.selection })
   return strip(a) === strip(b)
 }
 
