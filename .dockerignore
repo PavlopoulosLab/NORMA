@@ -1,0 +1,15 @@
+# Keep the image to what server.py actually needs to run and serve.
+# (Docker's build context ignores .gitignore, so this has to be separate.)
+.git
+.gitignore
+.Rproj.user
+.Rhistory
+*.Rproj
+__pycache__
+*.pyc
+.DS_Store
+
+# deployment/build files: useful on the host, not inside the running container
+Dockerfile
+docker-compose.yml
+deploy/

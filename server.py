@@ -304,6 +304,25 @@ def _api_expire(now):
         del _api_store[k]
 
 
+# Static files are served straight out of APP_DIR (see NormaHandler.__init__),
+# which is also where deployment/VCS files live (.git, Dockerfile, deploy/, ...).
+# Keep those from being handed out over HTTP regardless of what a given
+# deployment happens to have sitting next to server.py.
+_BLOCKED_STATIC_NAMES = {"dockerfile", "docker-compose.yml", "docker-compose.yaml"}
+_BLOCKED_STATIC_DIRS = {"deploy"}
+
+
+def _static_blocked(path):
+    parts = [p for p in path.split("?", 1)[0].split("/") if p]
+    if any(p.startswith(".") for p in parts):
+        return True
+    if parts and parts[0].lower() in _BLOCKED_STATIC_DIRS:
+        return True
+    if parts and (parts[-1].lower() in _BLOCKED_STATIC_NAMES or parts[-1].endswith(".service")):
+        return True
+    return False
+
+
 class NormaHandler(http.server.SimpleHTTPRequestHandler):
     server_version = "NORMA3"
 
@@ -368,11 +387,15 @@ class NormaHandler(http.server.SimpleHTTPRequestHandler):
             return self._relay_db("GET")
         if self.path.startswith("/api/"):
             return self._api_get()
+        if _static_blocked(self.path):
+            return self._json(404, {"message": "Not found."})
         return super().do_GET()
 
     def do_HEAD(self):
         if self.path.startswith("/string-api/"):
             return self._json(405, {"message": "Use GET or POST."})
+        if _static_blocked(self.path):
+            return self._json(404, {"message": "Not found."})
         return super().do_HEAD()
 
     def do_POST(self):

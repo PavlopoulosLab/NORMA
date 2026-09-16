@@ -1,10 +1,10 @@
 {
-  "_comment": "Example settings for a public NORMA server behind an HTTPS reverse proxy (see deploy/nginx.conf). Copy to norma.config.json or pass with --config.",
+  "_comment": "Settings for the normaviz.org public server, behind an HTTPS reverse proxy (see deploy/apache-normaviz.conf). Copy to norma.config.json or pass with --config.",
   "mode": "hosted",
   "server": {
     "host": "127.0.0.1",
     "port": 8000,
-    "publicUrl": "https://norma.example.org/",
+    "publicUrl": "https://normaviz.org/",
     "trustProxy": true,
     "hsts": true,
     "accessLog": "anonymous",
@@ -14,9 +14,9 @@
   "relays": { "string": true, "arena3d": true, "databases": true },
   "site": {
     "name": "NORMA",
-    "institution": "Your institute, City, Country",
+    "institution": "TODO: your institute, City, Country",
     "contactName": "The NORMA team",
-    "contactEmail": "norma@example.org",
+    "contactEmail": "admin@normaviz.org",
     "contactUrl": "https://github.com/PavlopoulosLab/NORMA/issues",
     "sourceUrl": "https://github.com/PavlopoulosLab/NORMA",
     "licenceName": "MIT License",

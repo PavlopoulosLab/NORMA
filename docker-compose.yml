@@ -1,14 +1,28 @@
-# docker compose up -d   ->  NORMA on http://127.0.0.1:8000 (put an HTTPS proxy in front, see deploy/nginx.conf)
+# docker compose up -d   ->  NORMA on http://127.0.0.1:8000
+# Put an HTTPS proxy in front (Apache: see deploy/apache-normaviz.conf; nginx: see deploy/nginx.conf).
 services:
   norma:
+    container_name: norma
     build: .
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
     environment:
       NORMA_MODE: hosted
-      NORMA_PUBLIC_URL: https://norma.example.org/
+      NORMA_PUBLIC_URL: https://normaviz.org/
       NORMA_TRUST_PROXY: "true"
       NORMA_ACCESS_LOG: anonymous
     volumes:
       - ./norma.config.hosted.json:/srv/norma/norma.config.json:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
