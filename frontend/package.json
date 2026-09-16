@@ -1,0 +1,14 @@
+{
+  "name": "norma-frontend",
+  "private": true,
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^22.19.0",
+    "typescript": "^6.0.3"
+  }
+}

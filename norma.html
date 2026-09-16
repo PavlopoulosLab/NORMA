@@ -19412,6 +19412,8 @@ apiFromLocation();
 apiAnnounceReady();
 setHistoryBaseline();
 updateUndoButtons();
+// test hook: the canvas is opaque to the DOM, so end-to-end tests read state here
+window.__norma = { cy, net3d, views, get currentTab(){ return currentTab; } };
 </script>
 <script type="text/plain" id="apiClientTemplate">#!/usr/bin/env python3
 """
