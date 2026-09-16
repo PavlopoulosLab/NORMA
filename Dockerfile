@@ -1,7 +1,18 @@
-# NORMA 3.0 — public server image (standard library Python only)
+# NORMA 3 — public server image. Stage 1 builds the page, stage 2 serves it
+# with the standard-library Python server (no Python dependencies).
+FROM node:22-slim AS build
+WORKDIR /build
+COPY frontend/package.json frontend/package-lock.json frontend/
+RUN cd frontend && npm ci --no-audit --no-fund
+COPY frontend frontend
+COPY norma_api_client.py .
+RUN cd frontend && npm run build
+
 FROM python:3.12-slim
 WORKDIR /srv/norma
-COPY . /srv/norma
+COPY backend backend
+COPY norma_api_client.py norma.config.json norma.config.hosted.json ./
+COPY --from=build /build/frontend/dist frontend/dist
 RUN useradd --system --home /srv/norma norma && chown -R norma /srv/norma
 USER norma
 ENV NORMA_MODE=hosted \

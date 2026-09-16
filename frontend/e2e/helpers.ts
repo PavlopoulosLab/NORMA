@@ -30,7 +30,10 @@ declare global {
   interface Window {
     __norma: {
       cy: {
-        nodes(): { length: number; map<T>(f: (n: { id(): string; position(k: 'x' | 'y'): number }) => T): T[] }
+        nodes(): {
+          length: number
+          map<T>(f: (n: { id(): string; position(k: 'x' | 'y'): number }) => T): T[]
+        }
         edges(): { length: number }
       }
       net3d: { active: boolean }

@@ -20,7 +20,9 @@ test('example opens with nodes, edges and groups', async ({ page }) => {
 
 test('every built-in example loads', async ({ page }) => {
   await page.goto('/')
-  const keys = await page.locator('#sampleSelect option').evaluateAll((o) => o.map((e) => (e as HTMLOptionElement).value))
+  const keys = await page
+    .locator('#sampleSelect option')
+    .evaluateAll((o) => o.map((e) => (e as HTMLOptionElement).value))
   for (const key of keys.filter((k) => k.startsWith('norma:'))) {
     await openExample(page, key)
   }
@@ -34,11 +36,15 @@ test('layouts move the nodes', async ({ page }) => {
   await expect(page.locator('#btnRunLayout')).toBeVisible()
   await selectValue(page, '#layoutSelect', 'circle')
   await page.locator('#btnRunLayout').click()
-  await expect.poll(async () => JSON.stringify(await positions(page)) !== JSON.stringify(before)).toBe(true)
+  await expect
+    .poll(async () => JSON.stringify(await positions(page)) !== JSON.stringify(before))
+    .toBe(true)
   const circle = await positions(page)
   await selectValue(page, '#layoutSelect', 'grid')
   await page.locator('#btnRunLayout').click()
-  await expect.poll(async () => JSON.stringify(await positions(page)) !== JSON.stringify(circle)).toBe(true)
+  await expect
+    .poll(async () => JSON.stringify(await positions(page)) !== JSON.stringify(circle))
+    .toBe(true)
 })
 
 test('tabs switch views, 3D view activates', async ({ page }) => {
@@ -107,10 +113,17 @@ test('API tab: server round trip and json link both open the payload', async ({ 
 
 test('REST API payload via curl-style POST opens in the page', async ({ page, request }) => {
   const r = await request.post('/api/external', {
-    data: { name: 'Demo', edges: [{ source: 'A', target: 'B' }, { source: 'B', target: 'C' }], groups: { G1: ['A', 'B'] } },
+    data: {
+      name: 'Demo',
+      edges: [
+        { source: 'A', target: 'B' },
+        { source: 'B', target: 'C' },
+      ],
+      groups: { G1: ['A', 'B'] },
+    },
   })
   expect(r.ok()).toBe(true)
-  const { url } = await r.json()
+  const { url } = (await r.json()) as { url: string }
   await page.goto(url)
   await expect.poll(() => nodeCount(page)).toBe(3)
   await expect(page.locator('#statGroups')).toHaveText('1')

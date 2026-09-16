@@ -13,7 +13,8 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'python3 ../backend/server.py --port 8765 --no-open --no-relays --access-log off',
+    command:
+      'npm run build && python3 ../backend/server.py --port 8765 --no-open --no-relays --access-log off',
     url: 'http://127.0.0.1:8765/api/health',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
