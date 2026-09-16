@@ -4,6 +4,7 @@ import tseslint from 'typescript-eslint'
 // (`@ts-nocheck`), so the type-aware rules only report `any` noise there. Type-checked
 // rules apply to every typed module; add a file to TYPED as its @ts-nocheck is removed.
 const LEGACY = ['src/**/*.ts']
+// tests import the untyped modules, so they inherit the LEGACY rules for now
 const TYPED = ['src/state.ts']
 
 export default tseslint.config(
