@@ -16535,8 +16535,9 @@ function bubblePathsModel(force){
 function drawBubbleSets(ctx, opacity){
   const paths = bubblePathsModel(false);
   const z = cy.zoom(), pan = cy.pan();
+  const dpr = window.devicePixelRatio || 1;
   ctx.save();
-  ctx.setTransform(z, 0, 0, z, pan.x, pan.y);
+  ctx.setTransform(z * dpr, 0, 0, z * dpr, pan.x * dpr, pan.y * dpr);
   paths.forEach((d, g)=>{
     if(!d) return;
     const color = nodeColorMap[g] || '#888888';
