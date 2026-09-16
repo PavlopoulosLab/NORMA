@@ -5493,7 +5493,19 @@ function drawGroupHulls(){
       const maxR = Math.max(...points.map(p => p.r || 0));
       const hull = inflateHull(convexHull(points), 30 * hullMarginScale + maxR);
       hullCtx.beginPath();
-      tracePolygonSmooth(hullCtx, hull);
+      if(style === 'fog'){
+        // rounding the corners is fine here: the blur already softens the
+        // outline, and this style makes no promise to enclose every node.
+        tracePolygonSmooth(hullCtx, hull);
+      } else {
+        // "hull" must actually contain every member node: rounding the
+        // corners (as tracePolygonSmooth does) cuts them short of the
+        // padded vertex, which excludes far-flung nodes from the shape.
+        // Trace the true polygon through the inflated hull points instead.
+        hullCtx.moveTo(hull[0].x, hull[0].y);
+        for(let i = 1; i < hull.length; i++) hullCtx.lineTo(hull[i].x, hull[i].y);
+        hullCtx.closePath();
+      }
       paintHullPath(hullCtx, color, opacity, style);
     }
     hullCtx.restore();
