@@ -161,7 +161,7 @@ DEFAULTS = {
         "notice": "",
         "testedBrowsers": [],
     },
-    "app": {"maxNodes": 5000, "theme": "white", "startTab": "welcome", "cdnFallback": True},
+    "app": {"maxNodes": 10000, "theme": "white", "startTab": "welcome", "cdnFallback": True},
 }
 ENV_MAP = {
     "NORMA_MODE": ("mode",), "NORMA_HOST": ("server", "host"), "NORMA_PORT": ("server", "port"),

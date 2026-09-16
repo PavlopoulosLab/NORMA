@@ -466,6 +466,18 @@
   .status .note.error{ border-left-color:var(--warn); color:var(--warn); font-weight:600; }
   .status .note button{ display:block; margin-top:6px; }
   .status .note.busy{ border-left-color:var(--muted); color:var(--muted); }
+  .status .note .progress-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .status .note .progress{ position:relative; flex:1; height:6px; border-radius:3px; overflow:hidden;
+    background:color-mix(in srgb, var(--muted) 22%, transparent); }
+  .status .note .progress > span{ position:absolute; top:0; bottom:0; left:0; width:0; border-radius:3px;
+    background:var(--accent); transition:width .25s ease; }
+  .status .note .progress.indeterminate > span{ width:35%; animation:progress-slide 1.3s ease-in-out infinite; }
+  .status .note .progress-pct{ font-family:var(--mono); font-size:11px; min-width:3.2em; text-align:right; color:var(--text); }
+  @keyframes progress-slide{ from{ transform:translateX(-100%); } to{ transform:translateX(290%); } }
+  @media (prefers-reduced-motion: reduce){
+    .status .note .progress.indeterminate > span{ animation:none; width:100%; opacity:.45; }
+    .status .note .progress > span{ transition:none; }
+  }
 
   /* sidebar structure */
   .section h3{ display:flex; align-items:center; justify-content:space-between; }
@@ -2793,7 +2805,7 @@
             <button type="button" id="btnEmptyHelp"><span class="ico" data-icon="help"></span>Help</button>
           </div>
           <p class="site-footer" id="siteFooter"></p>
-        <p class="welcome-foot">NORMA 3.0 runs in your browser: your files stay on this computer, except what you send to online databases or Arena3D yourself. Networks of up to 5,000 nodes.</p>
+        <p class="welcome-foot">NORMA 3.0 runs in your browser: your files stay on this computer, except what you send to online databases or Arena3D yourself. Networks of up to 10,000 nodes.</p>
         </div>
     </div>
   </section>
@@ -2875,7 +2887,7 @@
         <p class="sub">Times the main steps on random networks of growing size (generated from fixed seeds; the table lists their edges), in this browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. The view is not changed.</p>
         <div class="bench-controls">
           <label class="inline-num">Up to
-            <select id="runtimeMax"><option value="1000">1,000 nodes</option><option value="2500">2,500 nodes</option><option value="5000" selected>5,000 nodes (the largest NORMA shows)</option></select>
+            <select id="runtimeMax"><option value="1000">1,000 nodes</option><option value="2500">2,500 nodes</option><option value="5000" selected>5,000 nodes</option><option value="10000">10,000 nodes (the largest NORMA shows)</option></select>
           </label>
           <button class="primary" id="btnRuntime">Time the main steps</button>
           <button id="btnRuntimeTsv" disabled>Download table</button>
@@ -2961,7 +2973,7 @@
           <tr><td><code>format</code> / <code>views</code></td><td>—</td><td>A whole <b>session file</b> (<code>"format": "norma3-session"</code>) can be sent as the payload too.</td></tr>
         </tbody>
       </table>
-      <p>With <code>edges</code> or <code>files</code>, NORMA adds the network, groupings and values to <b>Files</b> like uploaded files and opens them in a new view, so everything in NORMA works on them. Networks larger than 5,000 nodes are cut to their first 5,000. The example in <a href="#api-try">Try it</a> shows all common fields.</p>
+      <p>With <code>edges</code> or <code>files</code>, NORMA adds the network, groupings and values to <b>Files</b> like uploaded files and opens them in a new view, so everything in NORMA works on them. Networks larger than 10,000 nodes are cut to their first 10,000. The example in <a href="#api-try">Try it</a> shows all common fields.</p>
 
       <h2 id="api-rest">REST</h2>
       <p>When NORMA runs with <code>server.py</code> (see <a href="#help-hosting">Running NORMA locally or on a server</a>), the server offers:</p>
@@ -3075,7 +3087,7 @@ window.addEventListener("message", (e) =&gt; {
 
       <h2 id="api-limits">Limits and privacy</h2>
       <ul>
-        <li>Payloads up to 50 MB; networks up to 5,000 nodes are shown in full.</li>
+        <li>Payloads up to 50 MB; networks up to 10,000 nodes are shown in full.</li>
         <li>Data sent with <b>postMessage</b> or <b>#json</b> links stays in the browser. With <b>REST</b>, the payload is kept only in the memory of the server you sent it to, for the time set there, and anyone with the link can open it until then; don't use it for confidential data on a shared server.</li>
         <li>NORMA only displays what it receives: payloads cannot run code, and NORMA sends nothing back except the <code>norma:loaded</code> summary to the page that asked.</li>
       </ul>
@@ -3220,7 +3232,7 @@ window.addEventListener("message", (e) =&gt; {
         <div id="helpDemoFiles"></div>
 
         <h2 id="help-files">Files and formats</h2>
-        <p>Upload one or many files at once with <b>Upload files…</b>, or drop them on the upload box. <b>Detect file type</b> recognizes networks by their header and expression files by their colors; anything else is read as an annotation. Pick a type yourself if detection guesses wrong. Networks with more than 5,000 nodes are cut to their first 5,000 nodes, with a note in the list. <b>Arena3D network files</b> (columns SourceNode, SourceLayer, TargetNode, TargetLayer, Weight, Channel) are recognized too: each becomes a network and an annotation with one group per layer. The list below it chooses whether network rows without a Direction value are read as undirected or directed. The name box names a single upload; with several files, each keeps its file name. Every file appears in one of three lists (Networks, Annotations, Expressions), in A–Z order, and stays there until you delete it (see <a href="#help-delete">Deleting files</a>). Files live only in this browser tab.</p>
+        <p>Upload one or many files at once with <b>Upload files…</b>, or drop them on the upload box. <b>Detect file type</b> recognizes networks by their header and expression files by their colors; anything else is read as an annotation. Pick a type yourself if detection guesses wrong. Networks with more than 10,000 nodes are cut to their first 10,000 nodes, with a note in the list. <b>Arena3D network files</b> (columns SourceNode, SourceLayer, TargetNode, TargetLayer, Weight, Channel) are recognized too: each becomes a network and an annotation with one group per layer. The list below it chooses whether network rows without a Direction value are read as undirected or directed. The name box names a single upload; with several files, each keeps its file name. Every file appears in one of three lists (Networks, Annotations, Expressions), in A–Z order, and stays there until you delete it (see <a href="#help-delete">Deleting files</a>). Files live only in this browser tab.</p>
         <h3 id="help-delete">Deleting files</h3>
         <p>There are four ways to remove things completely:</p>
         <ul>
@@ -3318,7 +3330,7 @@ TP53&#9;NA&#9;NA</pre>
         <p>Search, group shading, shapes, bundling and edge labels work the same for directed and undirected edges.</p>
 
         <h2 id="help-db">Database importers</h2>
-        <p>The <b>Database importers</b> tab fetches networks and groupings from public databases; no account is needed. Every import is added to <b>Files</b> (a network plus one annotation per grouping) and opens in a new view, where the <b>Grouping</b> list switches between its groupings. Nodes keep useful identifiers as attributes, in particular <code>uniprot</code>, which the Gene Ontology importer uses. Networks with directed edges open with arrows. Very large results are cut to 5,000 nodes, and every importer has a <b>Cancel</b> button. When NORMA runs with <code>server.py</code>, all requests go through the server (see <a href="#help-hosting">Running NORMA locally or on a server</a>); otherwise the browser calls the services directly, which some browsers block. STRING is described in <a href="#help-string">Importing from STRING</a>.</p>
+        <p>The <b>Database importers</b> tab fetches networks and groupings from public databases; no account is needed. Every import is added to <b>Files</b> (a network plus one annotation per grouping) and opens in a new view, where the <b>Grouping</b> list switches between its groupings. Nodes keep useful identifiers as attributes, in particular <code>uniprot</code>, which the Gene Ontology importer uses. Networks with directed edges open with arrows. Very large results are cut to 10,000 nodes, and every importer has a <b>Cancel</b> button. When NORMA runs with <code>server.py</code>, all requests go through the server (see <a href="#help-hosting">Running NORMA locally or on a server</a>); otherwise the browser calls the services directly, which some browsers block. STRING is described in <a href="#help-string">Importing from STRING</a>.</p>
         <h3>Reactome</h3>
         <p>Curated pathways from <a href="https://reactome.org" target="_blank" rel="noopener">Reactome</a>. Type a pathway name (choose the species) or a stable identifier such as <code>R-HSA-69278</code>, choose <b>Search pathways</b>, pick one, and choose <b>Fetch pathway network</b>. NORMA reads the pathway's reactions (up to <b>Most reactions</b>) and their participating molecules: nodes are the proteins (and, if ticked, small molecules), and two nodes are linked when they take part in the same reaction, weighted by how many reactions they share. Reactions with more than the chosen number of molecules are left out, since they would link everything to everything. Groupings: the pathway's <b>sub-pathways</b> (the proteins of the reactions each contains) and, optionally, the 40 largest <b>reactions</b>.</p>
         <h3>OmniPath</h3>
@@ -3711,7 +3723,7 @@ TP53&#9;NA&#9;NA</pre>
             <tr><td><code>api.enabled</code>, <code>ttlHours</code>, <code>maxMB</code>, <code>maxSessions</code></td><td><code>--no-api</code>, <code>NORMA_API</code>, <code>NORMA_API_TTL_HOURS</code>, <code>NORMA_API_MAX_MB</code></td><td>The REST API and how long, how large and how many payloads it keeps</td></tr>
             <tr><td><code>relays.string</code>, <code>arena3d</code>, <code>databases</code></td><td><code>--no-relays</code>, <code>NORMA_RELAYS</code></td><td>Turn the relays on or off; without them the page calls the services directly</td></tr>
             <tr><td><code>site.*</code></td><td><code>NORMA_CONTACT_EMAIL</code>, <code>NORMA_INSTITUTION</code>, <code>NORMA_NOTICE</code></td><td>Name, institution, contact e-mail and page, source code, licence name and link, privacy policy and imprint links, maintenance statement, tested browsers, and a notice shown at the top of the page (e.g. planned maintenance)</td></tr>
-            <tr><td><code>app.maxNodes</code>, <code>theme</code>, <code>startTab</code>, <code>cdnFallback</code></td><td><code>NORMA_MAX_NODES</code></td><td>Largest network shown (default 5,000), starting theme and page, and whether Cytoscape.js may be downloaded if the bundled copy is missing</td></tr>
+            <tr><td><code>app.maxNodes</code>, <code>theme</code>, <code>startTab</code>, <code>cdnFallback</code></td><td><code>NORMA_MAX_NODES</code></td><td>Largest network shown (default 10,000), starting theme and page, and whether Cytoscape.js may be downloaded if the bundled copy is missing</td></tr>
           </tbody>
         </table>
         <h3>What the server offers</h3>
@@ -3727,8 +3739,8 @@ TP53&#9;NA&#9;NA</pre>
         <h2 id="help-performance">Performance</h2>
         <ul>
           <li><b>Display → Performance → Draw with WebGL</b> uses Cytoscape.js's WebGL renderer, which draws large networks much faster. It is experimental: the choice is made when the page starts, so NORMA asks to reload the page (save the session first to keep your views). Adding <code>?webgl=1</code> or <code>?webgl=0</code> to the address sets it for one visit. Exported images, group shading, the 3D page and everything else work the same.</li>
-          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 5,000 nodes in your browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
-          <li><b>Network size:</b> NORMA shows networks of up to <b>5,000 nodes</b>. A network file, JSON file, session or combination of networks with more nodes is cut to its first 5,000 nodes (in the order they first appear) and the edges among them, and a message says how much was left out. To study part of a bigger network, filter it first (for example to a pathway, a STRING neighbourhood or a community).</li>
+          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 10,000 nodes in your browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
+          <li><b>Network size:</b> NORMA shows networks of up to <b>10,000 nodes</b>. A network file, JSON file, session or combination of networks with more nodes is cut to its first 10,000 nodes (in the order they first appear) and the edges among them, and a message says how much was left out. To study part of a bigger network, filter it first (for example to a pathway, a STRING neighbourhood or a community).</li>
           <li>Networks of a few thousand nodes are comfortable; beyond that, turn on WebGL drawing, turn off labels, curved edges and edge bundling, and use the grid or weighted force-directed layout.</li>
         </ul>
 
@@ -3754,7 +3766,7 @@ TP53&#9;NA&#9;NA</pre>
 
         <h2 id="help-trouble">Troubleshooting</h2>
         <ul>
-          <li><b>Only part of my network appears</b>: NORMA shows up to 5,000 nodes and keeps the first 5,000 of a larger network (see <a href="#help-performance">Performance</a>).</li>
+          <li><b>Only part of my network appears</b>: NORMA shows up to 10,000 nodes and keeps the first 10,000 of a larger network (see <a href="#help-performance">Performance</a>).</li>
           <li><b>A network file is rejected</b>: its first line must be the header <code>Source</code>, <code>Target</code> (optionally <code>Weight</code> and <code>Type</code>), separated by tabs.</li>
           <li><b>Groups are missing</b>: node names in the annotation must match the network exactly, including capitalization. Names that don't match are discarded when the annotation is uploaded and when it is shown; the status notes list them, and <b>Download corrected annotation</b> saves the cleaned file.</li>
           <li><b>An annotation was not kept</b>: none of its names matched the networks it was checked against. Upload it together with its network, or tick the right network before uploading it.</li>
@@ -4350,7 +4362,7 @@ const NORMA_CFG = (()=>{
       licenceName: 'MIT License', licenceUrl: 'https://opensource.org/licenses/MIT',
       privacyUrl: '', imprintUrl: '', maintainedUntil: '', notice: '', testedBrowsers: [],
     },
-    app: { maxNodes: 5000, theme: 'white', startTab: 'welcome', cdnFallback: true },
+    app: { maxNodes: 10000, theme: 'white', startTab: 'welcome', cdnFallback: true },
   };
   const c = (typeof window.NORMA_CONFIG === 'object' && window.NORMA_CONFIG) || {};
   const merge = (a, b) => { Object.keys(b || {}).forEach(k => { if(b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') merge(a[k], b[k]); else if(b[k] !== undefined && b[k] !== null) a[k] = b[k]; }); return a; };
@@ -5130,7 +5142,7 @@ let groupAttrs = {};
    ============================================================ */
 // NORMA shows networks of up to this many nodes; larger ones are cut to
 // their first nodes (in file order) with a message.
-const MAX_NETWORK_NODES = Math.max(100, Math.min(50000, parseInt(NORMA_CFG.app.maxNodes, 10) || 5000));
+const MAX_NETWORK_NODES = Math.max(100, Math.min(50000, parseInt(NORMA_CFG.app.maxNodes, 10) || 10000));
 const RESERVED_NODE_KEYS  = new Set(['id', 'group', 'groups', 'size', 'color', 'values', 'attrs']);
 const RESERVED_EDGE_KEYS  = new Set(['id', 'source', 'target', 'type', 'color', 'weight', 'directed', 'attrs']);
 const RESERVED_GROUP_KEYS = new Set(['label', 'description', 'color', 'attrs']);
@@ -6330,6 +6342,18 @@ const LARGE_NETWORK_NODES = 700;
    Input: [{sx, sy, tx, ty}] in model coordinates. Output: for each edge,
    a flat array [x1, y1, x2, y2, ...] of its inner points, or null.
    ============================================================ */
+// Progress of long computations (layouts, edge bundling), reported from
+// inside their loops as a fraction of the part in workRange. In the worker,
+// workSink posts it to the page; on the page itself it is not used.
+var workRange = [0, 1], workSink = null, workLast = 0;
+function workStep(f){
+  if(!workSink) return;
+  const now = Date.now();
+  if(now - workLast < 80) return;
+  workLast = now;
+  workSink(workRange[0] + (workRange[1] - workRange[0]) * Math.max(0, Math.min(1, f)));
+}
+
 function fdebBundle(segs, opts){
   const E = segs.length;
   const threshold = opts.threshold;
@@ -6366,6 +6390,7 @@ function fdebBundle(segs, opts){
   // compatible partners per edge; `flip` marks partners running the other way
   const partners = Array.from({ length: E }, () => []);
   for(let p = 0; p < E; p++){
+    if((p & 31) === 0) workStep(0.2 * (1 - (E - p) * (E - p) / (E * E)));
     if(len[p] < EPS) continue;
     for(let q = p + 1; q < E; q++){
       if(len[q] < EPS) continue;
@@ -6422,6 +6447,9 @@ function fdebBundle(segs, opts){
     return out;
   }
 
+  // work per iteration grows with the points per edge (2, 4, 8, 16)
+  let planned = 0, spent = 0;
+  for(let c = 0, its = opts.iterations; c < cycles; c++){ if(c > 0) its = Math.max(3, Math.round(its * 2 / 3)); planned += its * (2 ** c); }
   for(let cycle = 0; cycle < cycles; cycle++){
     if(cycle > 0){
       P *= 2;
@@ -6431,6 +6459,8 @@ function fdebBundle(segs, opts){
     }
     const nPts = P + 2; // including endpoints
     for(let it = 0; it < iterations; it++){
+      workStep(0.2 + 0.8 * spent / planned);
+      spent += 2 ** cycle;
       const next = pts.map(line => Float64Array.from(line));
       for(let e = 0; e < E; e++){
         const line = pts[e];
@@ -6500,6 +6530,7 @@ function frComponent(n, edges, rand){
   const CELL = 2; // FR's grid variant: repulsion only within 2k
 
   for(let it = 0; it < iterations; it++){
+    if((it & 3) === 0) workStep(it / iterations);
     DX.fill(0); DY.fill(0);
     if(!useGrid){
       for(let i = 0; i < n; i++){
@@ -6596,7 +6627,13 @@ function frLayout(ids, edges){
   comps.forEach((members, c) => members.forEach((g, i) => { compOf[g] = c; localIdx[g] = i; }));
   const compEdges = comps.map(() => []);
   all.forEach(e => compEdges[compOf[e.s]].push({ s: localIdx[e.s], t: localIdx[e.t], w: e.w }));
-  const parts = comps.map((members, c) => ({ members, ...frComponent(members.length, compEdges[c], rand) }));
+  let laidOut = 0;
+  const parts = comps.map((members, c) => {
+    workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length];
+    laidOut += members.length;
+    return { members, ...frComponent(members.length, compEdges[c], rand) };
+  });
+  workRange = [0, 1];
   packComponents(parts);
   const out = {};
   parts.forEach(p => p.members.forEach((g, i) => {
@@ -6736,6 +6773,7 @@ function kkComponent(n, adj){
   const maxIter = Math.min(50 * n, 40000);
   const eps = 1e-4;
   for(let it = 0; it < maxIter; it++){
+    if((it & 63) === 0) workStep(it / maxIter);
     let m = -1, best = eps;
     for(let i = 0; i < n; i++){
       const g = gx[i] * gx[i] + gy[i] * gy[i];
@@ -6794,6 +6832,7 @@ function stressComponent(n, adj){
   const iters = Math.max(20, Math.min(300, Math.floor(4e7 / (n * n))));
   let prev = Infinity;
   for(let it = 0; it < iters; it++){
+    workStep(it / iters);
     let stress = 0;
     for(let i = 0; i < n; i++){
       let sx = 0, sy = 0, sw = 0;
@@ -6834,24 +6873,28 @@ function distanceLayout(ids, edges, kind){
     adjs[c][localIdx[e.s]].push(localIdx[e.t]);
     adjs[c][localIdx[e.t]].push(localIdx[e.s]);
   });
+  let laidOut = 0;
   const parts = comps.map((members, c)=>{
+    workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length];
+    laidOut += members.length;
     if(members.length > DIST_LAYOUT_LIMIT) throw new Error(`${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${DIST_LAYOUT_LIMIT.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`);
     const lay = kind === 'kk' ? kkComponent(members.length, adjs[c]) : stressComponent(members.length, adjs[c]);
     // hop units -> FR-like units so packing gaps look alike
     return { members, x: lay.x, y: lay.y };
   });
+  workRange = [0, 1];
   packComponents(parts);
   const out = {};
   parts.forEach(p => p.members.forEach((g, i) => { out[ids[g]] = { x: p.x[i] + p.ox, y: p.y[i] + p.oy }; }));
   return out;
 }
 
-function distanceLayoutAsync(ids, edges, kind){
+function distanceLayoutAsync(ids, edges, kind, onProgress){
   const worker = ids.length > 60 ? getFrWorker() : null;
   if(!worker) return Promise.resolve(distanceLayout(ids, edges, kind));
   const id = ++frRequestSeq;
   return new Promise((resolve, reject)=>{
-    frPending.set(id, { resolve, reject, local: () => distanceLayout(ids, edges, kind) });
+    frPending.set(id, { resolve, reject, onProgress, local: () => distanceLayout(ids, edges, kind) });
     worker.postMessage({ id, kind, ids, edges });
   });
 }
@@ -6868,15 +6911,19 @@ function getFrWorker(){
   if(frWorker || frWorkerFailed) return frWorker;
   try{
     const src = [mulberry32, connectedComponents, frComponent, packComponents, frLayout, fdebBundle, fr3dLayout,
-                 componentDistances, pivotMDS, kkComponent, stressComponent, distanceLayout]
+                 componentDistances, pivotMDS, kkComponent, stressComponent, distanceLayout, workStep]
       .map(f => f.toString()).join('\n') +
-      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\n` +
-      'onmessage = e => { const m = e.data; let result; try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };';
+      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\nvar workRange = [0, 1], workSink = null, workLast = 0;\n` +
+      'onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };';
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
     frWorker = new Worker(url);
     frWorker.onmessage = e => {
       const job = frPending.get(e.data.id);
       if(!job) return;
+      if(e.data.progress !== undefined){
+        if(job.onProgress) job.onProgress(e.data.progress);
+        return;
+      }
       frPending.delete(e.data.id);
       if(e.data.error){
         if(job.reject) job.reject(new Error(e.data.error));
@@ -6906,22 +6953,22 @@ function cancelFrJobs(){
   frPending.forEach(job => job.resolve(null));
   frPending.clear();
 }
-function frLayoutAsync(ids, edges){
+function frLayoutAsync(ids, edges, onProgress){
   const worker = ids.length > 60 ? getFrWorker() : null; // small graphs: not worth the round trip
   if(!worker) return Promise.resolve(frLayout(ids, edges));
   const id = ++frRequestSeq;
   return new Promise(resolve=>{
-    frPending.set(id, { resolve, local: () => frLayout(ids, edges) });
+    frPending.set(id, { resolve, onProgress, local: () => frLayout(ids, edges) });
     worker.postMessage({ id, kind: 'fr', ids, edges });
   });
 }
 
-function bundleAsync(segs, opts){
+function bundleAsync(segs, opts, onProgress){
   const worker = segs.length > 150 ? getFrWorker() : null;
   if(!worker) return Promise.resolve(fdebBundle(segs, opts));
   const id = ++frRequestSeq;
   return new Promise(resolve=>{
-    frPending.set(id, { resolve, local: () => fdebBundle(segs, opts) });
+    frPending.set(id, { resolve, onProgress, local: () => fdebBundle(segs, opts) });
     worker.postMessage({ id, kind: 'fdeb', segs, opts });
   });
 }
@@ -6935,9 +6982,23 @@ const EDGE_BLIND_LAYOUTS = new Set(['circle', 'grid', 'random']);
 // arbitrary units; callers rescale. Edge weights are honored by 'fr'
 // (attraction x weight) and by 'cose' (shorter, stiffer springs).
 async function computeSubLayoutAsync(nodeIds, edgeDefs, layoutName){
-  if(layoutName === 'fr' && nodeIds.length > 1) return frLayoutAsync(nodeIds, edgeDefs);
-  if((layoutName === 'kk' || layoutName === 'stress') && nodeIds.length > 1) return distanceLayoutAsync(nodeIds, edgeDefs, layoutName);
+  const onProgress = layoutProgress ? f => layoutProgress && layoutProgress.report(f) : null;
+  if(layoutName === 'fr' && nodeIds.length > 1) return frLayoutAsync(nodeIds, edgeDefs, onProgress);
+  if((layoutName === 'kk' || layoutName === 'stress') && nodeIds.length > 1) return distanceLayoutAsync(nodeIds, edgeDefs, layoutName, onProgress);
   return computeSubLayout(nodeIds, edgeDefs, layoutName);
+}
+
+/* Progress of the layout being computed. A layout made of several parts
+   (one per group) sets the total work with begin() and each part's share
+   with part(); the worker reports progress within the current part. */
+var layoutProgress = null;
+function makeLayoutProgress(show){
+  return {
+    total: 1, done: 0, current: 1,
+    begin(total){ this.total = Math.max(1e-9, total); this.done = 0; this.current = 0; },
+    part(weight){ this.done += this.current; this.current = weight; this.report(0); },
+    report(f){ show(Math.min(1, (this.done + this.current * Math.max(0, Math.min(1, f))) / this.total)); },
+  };
 }
 function computeSubLayout(nodeIds, edgeDefs, layoutName){
   if(nodeIds.length === 1){
@@ -7146,7 +7207,12 @@ function localGroupRadius(k, localName, spacing, clusterScale){
 async function placeGroupsLocally(graph, groups, centers, radii, localName, force){
   const rand = mulberry32(FR_SEED);
   const candidates = {};
+  const lp0 = layoutProgress;
+  if(lp0) lp0.begin([...groups].reduce((a, [, m]) => a + m.length, 0));
+  let lastPaint = performance.now();
   for(const [g, members] of groups){
+    if(lp0) lp0.part(members.length);
+    if(performance.now() - lastPaint > 60){ await nextPaint(); lastPaint = performance.now(); }
     const center = centers[g];
     const radius = radii[g];
     if(members.length === 1){
@@ -7496,13 +7562,16 @@ function groupArrangement(){
 let layoutRunSeq = 0;
 function setLayoutBusy(busy){
   document.getElementById('btnRunLayout').disabled = busy;
-  setStatus('layoutStatus', busy ? [{ level:'busy', text:'Computing layout…' }] : []);
+  setStatus('layoutStatus', busy ? [{ level:'busy', text:'Computing layout…', progress: null }] : []);
 }
 async function runComputedLayout(compute){
   cancelFrJobs();
   const run = ++layoutRunSeq;
   const nodeCount = cy.nodes().length;
   setLayoutBusy(true);
+  layoutProgress = makeLayoutProgress(f=>{
+    if(run === layoutRunSeq) setStatus('layoutStatus', [{ level:'busy', text:'Computing layout…', progress: f }]);
+  });
   // let the busy note paint before any work on the page starts
   await new Promise(r => setTimeout(r, 0));
   try{
@@ -7513,7 +7582,10 @@ async function runComputedLayout(compute){
     if(run === layoutRunSeq) setStatus('layoutStatus', [{ level:'error', text:`The layout couldn't be computed: ${err.message}` }]);
     return;
   }finally{
-    if(run === layoutRunSeq) document.getElementById('btnRunLayout').disabled = false;
+    if(run === layoutRunSeq){
+      document.getElementById('btnRunLayout').disabled = false;
+      layoutProgress = null;
+    }
   }
   if(run === layoutRunSeq) setStatus('layoutStatus', []);
 }
@@ -7545,7 +7617,22 @@ function runLayout(name){
   // part (repulsion only).
   const channelOnly = document.getElementById('layoutOnActiveOnly').checked;
   if(!nodes.length) return;
-  nodes.union(shownEdges(channelOnly)).layout(opts).run();
+  const eles = nodes.union(shownEdges(channelOnly));
+  if(animate !== 'end'){ eles.layout(opts).run(); return; }
+  // computed in one go before it animates: show that work is going on
+  const run = layoutRunSeq;
+  document.getElementById('btnRunLayout').disabled = true;
+  setStatus('layoutStatus', [{ level:'busy', text:'Computing layout…', progress: null }]);
+  nextPaint().then(()=>{
+    if(run !== layoutRunSeq) return;
+    try{ eles.layout(opts).run(); }
+    finally{
+      if(run === layoutRunSeq){
+        document.getElementById('btnRunLayout').disabled = false;
+        setStatus('layoutStatus', []);
+      }
+    }
+  });
 }
 
 // Layout by groups: block arrangements or a NORMA-2.0 strategy, each
@@ -8212,15 +8299,48 @@ function revealSection(el){
   if(h) h.setAttribute('aria-expanded', 'true');
 }
 
+// A busy item may carry `progress`: a fraction from 0 to 1, or null while
+// the amount of work is unknown (an animated bar). Repeated progress updates
+// change the bar in place, so it moves smoothly and screen readers are not
+// sent every percentage.
 function setStatus(elId, items){
   const el = document.getElementById(elId);
   if(!el) return;
+  const withProgress = items.length === 1 && items[0].progress !== undefined;
+  if(!withProgress && progressTasks && progressTasks.has(elId)) progressTasks.get(elId).stop();
+  if(withProgress){
+    const note = el.children.length === 1 ? el.firstElementChild : null;
+    if(note && note.classList.contains('busy') && note._progress){
+      updateProgressNote(note, items[0]);
+      return;
+    }
+  }
   // sections start folded: an error opens the section so it is seen
   if(items.some(i => i.level === 'error')) revealSection(el);
   el.innerHTML = '';
   items.forEach(item=>{
     const note = document.createElement('div');
     note.className = 'note ' + (item.level || 'ok');
+    if(item.progress !== undefined){
+      const label = document.createElement('span');
+      const row = document.createElement('div');
+      row.className = 'progress-row';
+      const bar = document.createElement('div');
+      bar.className = 'progress';
+      bar.setAttribute('role', 'progressbar');
+      bar.setAttribute('aria-valuemin', '0');
+      bar.setAttribute('aria-valuemax', '100');
+      bar.appendChild(document.createElement('span'));
+      const pct = document.createElement('span');
+      pct.className = 'progress-pct';
+      pct.setAttribute('aria-hidden', 'true');
+      row.append(bar, pct);
+      note.append(label, row);
+      note._progress = { label, bar, pct };
+      updateProgressNote(note, item);
+      el.appendChild(note);
+      return;
+    }
     note.textContent = item.text;
     if(item.action){
       const btn = document.createElement('button');
@@ -8231,6 +8351,121 @@ function setStatus(elId, items){
     }
     el.appendChild(note);
   });
+}
+
+function updateProgressNote(note, item){
+  const { label, bar, pct } = note._progress;
+  if(label.textContent !== item.text){
+    label.textContent = item.text;
+    bar.setAttribute('aria-label', item.text);
+  }
+  const f = item.progress;
+  if(typeof f === 'number' && Number.isFinite(f)){
+    const v = Math.max(0, Math.min(1, f));
+    bar.classList.remove('indeterminate');
+    bar.firstElementChild.style.width = (v * 100).toFixed(1) + '%';
+    bar.setAttribute('aria-valuenow', String(Math.round(v * 100)));
+    pct.textContent = Math.floor(v * 100) + '%';
+  } else {
+    bar.classList.add('indeterminate');
+    bar.firstElementChild.style.width = '';
+    bar.removeAttribute('aria-valuenow');
+    pct.textContent = '';
+  }
+}
+
+/* ---------- progress of a task made of weighted steps ----------
+   const task = startProgress('stringStatus', [1, 2, 5]);
+   task.step(0, 'Checking the version…');   // moves to a step
+   task.sub(0.4);                           // measured progress in the step
+   task.say('Reading 3 of 8…');             // new text, same step
+   task.bytes(received, total);             // download progress in the step
+   Until a step reports measured progress, its bar creeps slowly toward the
+   end of the step (never reaching it), so a long single request still shows
+   that work goes on. Any status that is not a progress update, such as the
+   result or an error, ends the task. */
+var progressTasks = new Map();
+function formatBytes(n){
+  if(n < 1024) return `${n} B`;
+  if(n < 1048576) return `${(n / 1024).toFixed(0)} kB`;
+  return `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
+}
+function startProgress(elId, weights){
+  const old = progressTasks.get(elId);
+  if(old) old.stop();
+  const w = weights.map(x => Math.max(0, +x || 0));
+  const total = w.reduce((a, b) => a + b, 0) || 1;
+  const starts = w.map((_, i) => w.slice(0, i).reduce((a, b) => a + b, 0));
+  const task = {
+    index: 0, text: '', measured: null, stepStart: performance.now(), received: 0, active: true, timer: null, last: 0,
+    fraction(){
+      const i = Math.min(this.index, w.length - 1);
+      let sub = this.measured;
+      if(sub === null){
+        // creep: about half of the step after ~6 s, never more than 85%
+        const t = (performance.now() - this.stepStart) / 1000;
+        sub = 0.85 * (1 - Math.exp(-t / 8));
+      }
+      return (starts[i] + w[i] * Math.max(0, Math.min(1, sub))) / total;
+    },
+    render(force){
+      if(!this.active) return;
+      const now = performance.now();
+      if(!force && now - this.last < 100) return;
+      this.last = now;
+      const extra = this.received ? ` (${formatBytes(this.received)} received)` : '';
+      setStatus(elId, [{ level: 'busy', text: this.text + extra, progress: this.fraction() }]);
+    },
+    step(i, text){
+      this.index = i; this.text = text; this.measured = null; this.received = 0;
+      this.stepStart = performance.now();
+      this.render(true);
+    },
+    say(text){ this.text = text; this.render(true); },
+    sub(f){ this.measured = Math.max(0, Math.min(1, f)); this.render(); },
+    bytes(received, totalBytes){
+      this.received = received;
+      if(totalBytes > 0 && received <= totalBytes) this.measured = received / totalBytes;
+      this.render();
+    },
+    stop(){
+      this.active = false;
+      clearInterval(this.timer);
+      if(progressTasks.get(elId) === this) progressTasks.delete(elId);
+    },
+  };
+  progressTasks.set(elId, task);
+  task.timer = setInterval(()=> task.render(true), 400);
+  return task;
+}
+
+// Resolves once the browser has had a chance to paint (for example a
+// progress note) before synchronous work; does not wait in a hidden tab.
+function nextPaint(){
+  return new Promise(resolve=>{
+    let done = false;
+    const finish = () => { if(!done){ done = true; resolve(); } };
+    requestAnimationFrame(() => setTimeout(finish, 0));
+    setTimeout(finish, 60);
+  });
+}
+
+// Reads a response body as text, reporting the bytes received so far and,
+// when the server gives it, the total.
+async function readTextWithProgress(response, onBytes){
+  if(!onBytes || !response.body || typeof response.body.getReader !== 'function') return response.text();
+  const total = Number(response.headers.get('Content-Length')) || 0;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let received = 0, out = '';
+  for(;;){
+    const { done, value } = await reader.read();
+    if(done) break;
+    received += value.length;
+    out += decoder.decode(value, { stream: true });
+    onBytes(received, total);
+  }
+  return out + decoder.decode();
 }
 
 function downloadText(fileName, text){
@@ -9377,18 +9612,30 @@ function runProfiler(){
     setStatus('profStatus', [{ level:'error', text:'The current view is empty. Load a network first, or untick "Current view".' }]);
     return;
   }
-  setStatus('profStatus', [{ level:'busy', text:'Computing statistics…' }]);
+  const profText = i => chosen.length > 1 ? `Computing statistics: network ${i + 1} of ${chosen.length}…` : 'Computing statistics…';
+  setStatus('profStatus', [{ level:'busy', text: profText(0), progress: chosen.length > 1 ? 0 : null }]);
   document.getElementById('btnProfile').disabled = true;
-  // let the status paint before the (synchronous) computation starts
-  setTimeout(()=>{
+  // one network at a time, letting the progress paint in between
+  (async ()=>{
+    await nextPaint();
     try{
       const started = performance.now();
       const useDir = document.getElementById('profDirected').checked;
-      const results = chosen.map(value => { const g = graphForSource(value); return g && { ...g, sourceValue: value }; }).filter(Boolean).map(src => ({
-        ...src,
-        stats: profileGraph(src.graph),
-        directed: useDir && src.dirEdges.some(d => d[2]) ? profileDirected(src.ids, src.dirEdges) : null,
-      }));
+      const results = [];
+      for(const [i, value] of chosen.entries()){
+        if(i > 0){
+          setStatus('profStatus', [{ level:'busy', text: profText(i), progress: i / chosen.length }]);
+          await nextPaint();
+        }
+        const g = graphForSource(value);
+        if(!g) continue;
+        const src = { ...g, sourceValue: value };
+        results.push({
+          ...src,
+          stats: profileGraph(src.graph),
+          directed: useDir && src.dirEdges.some(d => d[2]) ? profileDirected(src.ids, src.dirEdges) : null,
+        });
+      }
       profilerState.results = results;
       renderProfilerResults(results);
       const secs = ((performance.now() - started) / 1000).toFixed(2);
@@ -9401,7 +9648,7 @@ function runProfiler(){
     }finally{
       document.getElementById('btnProfile').disabled = false;
     }
-  }, 30);
+  })();
 }
 
 function renderProfilerResults(results){
@@ -9590,9 +9837,15 @@ function renderProfilerResults(results){
     profilerState.cmAlgo = a;
     profilerState.cmParams = { ...(profilerState.cmParams || {}), [a]: v };
     const params = a === 'walktrap' ? { steps: Math.round(v) } : a === 'mcl' ? { inflation: v } : { resolution: v };
-    setStatus('profStatus', [{ level:'busy', text:`Finding communities with ${COMMUNITY_ALGORITHMS[a].label}…` }]);
-    setTimeout(()=>{
-      results.forEach(r=>{
+    const cmText = `Finding communities with ${COMMUNITY_ALGORITHMS[a].label}…`;
+    setStatus('profStatus', [{ level:'busy', text: cmText, progress: results.length > 1 ? 0 : null }]);
+    (async ()=>{
+      await nextPaint();
+      for(const [i, r] of results.entries()){
+        if(i > 0){
+          setStatus('profStatus', [{ level:'busy', text: cmText, progress: i / results.length }]);
+          await nextPaint();
+        }
         const t0 = performance.now();
         try{
           r.cmResult = runCommunityAlgorithm(r.graph, a, params);
@@ -9604,10 +9857,10 @@ function renderProfilerResults(results){
         r.cmMs = performance.now() - t0;
         r.cmAlgo = a;
         r.cmLabel = `${COMMUNITY_ALGORITHMS[a].label}${name ? ` (${name.toLowerCase()} ${a === 'walktrap' ? Math.round(v) : v})` : ''}`;
-      });
+      }
       drawCommunities();
       setStatus('profStatus', [{ level:'ok', text:`Found communities with ${COMMUNITY_ALGORITHMS[a].label}.` }]);
-    }, 30);
+    })();
   });
   syncParam();
   drawCommunities();
@@ -10249,7 +10502,7 @@ async function runBundling(){
     return;
   }
   const run = ++bundleSeq;
-  setStatus('bundleStatus', edges.length > 300 ? [{ level:'busy', text:'Bundling edges…' }] : []);
+  setStatus('bundleStatus', edges.length > 300 ? [{ level:'busy', text:`Bundling ${edges.length.toLocaleString()} edges…`, progress: 0 }] : []);
   const list = edges.toArray();
   const segs = list.map(e=>{
     const a = e.source().position(), b = e.target().position();
@@ -10258,6 +10511,8 @@ async function runBundling(){
   const result = await bundleAsync(segs, {
     threshold: 0.85 - 0.5 * strength,
     iterations: Math.round(30 + 60 * strength),
+  }, f=>{
+    if(run === bundleSeq && edges.length > 300) setStatus('bundleStatus', [{ level:'busy', text:`Bundling ${edges.length.toLocaleString()} edges…`, progress: f }]);
   });
   if(run !== bundleSeq || !result || !bundlingOn()) return;
   bundleSignature = signature;
@@ -12188,14 +12443,19 @@ function runComparison(){
     setStatus('cmpStatus', [{ level:'error', text:'Choose at least two networks to compare.' }]);
     return;
   }
-  setStatus('cmpStatus', [{ level:'busy', text:'Comparing networks…' }]);
+  // steps: one per network, then the overlaps and drawing
+  const cmpShow = (text, f) => setStatus('cmpStatus', [{ level:'busy', text, progress: f }]);
+  cmpShow('Comparing networks…', 0);
   document.getElementById('btnCompare').disabled = true;
-  setTimeout(()=>{
+  (async ()=>{
+    await nextPaint();
     try{
       const started = performance.now();
       const nets = chosen.map(value => { const n = compareSource(value); if(n) n.sourceValue = value; return n; }).filter(Boolean);
       const useDir = document.getElementById('cmpDirected').checked;
-      nets.forEach((net, i)=>{
+      for(const [i, net] of nets.entries()){
+        cmpShow(`Profiling network ${i + 1} of ${nets.length}…`, i / (nets.length + 1));
+        await nextPaint();
         net.color = COMPARE_COLORS[i];
         net.nodeSet = new Set(net.ids);
         net.edgeSet = new Set();
@@ -12204,7 +12464,9 @@ function runComparison(){
         net.stats = profileGraph(net.graph);
         net.directed = useDir && net.pairs.some(p => p[2]) ? profileDirected(net.ids, net.pairs) : null;
         net.degreeOf = new Map(net.ids.map((id, k) => [id, net.stats.degree[k]]));
-      });
+      }
+      cmpShow('Computing overlaps and drawing…', nets.length / (nets.length + 1));
+      await nextPaint();
       compareState.results = nets;
       renderComparison(nets);
       const secs = ((performance.now() - started) / 1000).toFixed(2);
@@ -12217,7 +12479,7 @@ function runComparison(){
     }finally{
       updateCompareLimit();
     }
-  }, 30);
+  })();
 }
 
 /* ---------- drawing ---------- */
@@ -12982,8 +13244,8 @@ async function saveExportImage(){
   const info = EXPORT_FORMATS[o.format];
   const btn = document.getElementById('btnImgSave');
   btn.disabled = true;
-  setStatus('imgStatus', [{ level:'busy', text:'Drawing the image…' }]);
-  await new Promise(r => setTimeout(r, 30));
+  setStatus('imgStatus', [{ level:'busy', text:'Drawing the image…', progress: null }]);
+  await nextPaint();
   // optionally hide selection and search/click highlighting while drawing
   let restore = null;
   if(o.clean){
@@ -13197,6 +13459,7 @@ function fr3dLayout(ids, edges, opts){
     let temp = R0 * 0.5;
     const cool = temp / (iters + 1);
     for(let it = 0; it < iters; it++){
+      if((it & 3) === 0) workStep(it / iters);
       DX.fill(0); DY.fill(0); DZ.fill(0);
       if(!useGrid){
         for(let i = 0; i < N; i++){
@@ -13263,7 +13526,13 @@ function fr3dLayout(ids, edges, opts){
     return { X, Y, Z, R: R + K * 0.5 };
   }
 
-  const parts = comps.map((m, c) => layoutComponent(m.length, compEdges[c]));
+  let laidOut = 0;
+  const parts = comps.map((m, c) => {
+    workRange = [laidOut / n, (laidOut + m.length) / n];
+    laidOut += m.length;
+    return layoutComponent(m.length, compEdges[c]);
+  });
+  workRange = [0, 1];
   // pack: the largest piece in the middle, the others on a shell around it
   const centers = [[0, 0, 0]];
   if(parts.length > 1){
@@ -13287,12 +13556,12 @@ function fr3dLayout(ids, edges, opts){
   return out;
 }
 
-function fr3dAsync(ids, edges, opts){
+function fr3dAsync(ids, edges, opts, onProgress){
   const worker = ids.length > 150 ? getFrWorker() : null;
   if(!worker) return Promise.resolve(fr3dLayout(ids, edges, opts));
   const id = ++frRequestSeq;
   return new Promise(resolve=>{
-    frPending.set(id, { resolve, local: () => fr3dLayout(ids, edges, opts) });
+    frPending.set(id, { resolve, onProgress, local: () => fr3dLayout(ids, edges, opts) });
     worker.postMessage({ id, kind: 'fr3d', ids, edges, opts });
   });
 }
@@ -14039,7 +14308,7 @@ async function computeLayout3d(algo){
 
   if(algo === 'fr3d'){
     const init = {};
-    const r = await fr3dAsync(ids, edges.map(e => ({ s: e.data('source'), t: e.data('target'), w: e.data('weight') })), { spacing, seed: 123 });
+    const r = await fr3dAsync(ids, edges.map(e => ({ s: e.data('source'), t: e.data('target'), w: e.data('weight') })), { spacing, seed: 123 }, net3d.onLayoutProgress);
     return r;
   }
   if(algo === 'flat'){
@@ -14185,7 +14454,9 @@ async function runLayout3d(algo){
   algo = algo || el3('layout3d').value;
   const seq = ++net3d.layoutSeq;
   el3('btnRun3d').disabled = true;
-  setLayoutStatus3d(shownNodes().length > 300 ? [{ level:'busy', text:'Computing the 3D layout…' }] : []);
+  const big3d = shownNodes().length > 300;
+  setLayoutStatus3d(big3d ? [{ level:'busy', text:'Computing the 3D layout…', progress: null }] : []);
+  net3d.onLayoutProgress = f => { if(big3d && seq === net3d.layoutSeq) setLayoutStatus3d([{ level:'busy', text:'Computing the 3D layout…', progress: f }]); };
   await new Promise(r => setTimeout(r, 20));
   try{
     const result = await computeLayout3d(algo);
@@ -14726,7 +14997,7 @@ function stringBase(){
   return /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
 }
 
-async function stringCall(method, params){
+async function stringCall(method, params, { onBytes = null } = {}){
   // one second between calls, as STRING asks
   const wait = stringState.lastCall + 1050 - Date.now();
   if(wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -14758,7 +15029,7 @@ async function stringCall(method, params){
   }finally{
     clearTimeout(timer);
   }
-  const text = await response.text();
+  const text = await readTextWithProgress(response, onBytes);
   if(!response.ok){
     if(route === 'proxy'){
       if(response.status === 502 && /could not be reached from this server/.test(text)) throw new Error(`${text.slice(0, 200)} Check the server's internet connection.`);
@@ -14864,9 +15135,6 @@ function stringNetworkInView(){
 }
 
 /* ---------- import ---------- */
-function stringProgress(text){
-  setStatus('stringStatus', [{ level: 'busy', text }]);
-}
 
 async function runStringImport(){
   const st = stringSettings();
@@ -14877,12 +15145,16 @@ async function runStringImport(){
   stringState.busy = true; stringState.cancelled = false;
   updateStringUI();
   const notes = [];
+  const withGroupings = !!(st.categories.length || st.otherCategories);
+  // steps: version, names, network, descriptions, groupings, opening
+  const task = startProgress('stringStatus', [1, 2, 6, st.descriptions ? 2 : 0, withGroupings ? 4 : 0, 1]);
+  const onBytes = (got, total) => task.bytes(got, total);
   try{
-    stringProgress('Checking the STRING version…');
+    task.step(0, 'Checking the STRING version…');
     const ver = await stringVersion();
 
-    stringProgress(`Looking up ${plural(st.names.length, 'name')} in ${st.speciesLabel}…`);
-    const mapped = await stringCall('get_string_ids', { identifiers: st.names.join('\r'), species: st.taxon, echo_query: 1 });
+    task.step(1, `Looking up ${plural(st.names.length, 'name')} in ${st.speciesLabel}…`);
+    const mapped = await stringCall('get_string_ids', { identifiers: st.names.join('\r'), species: st.taxon, echo_query: 1 }, { onBytes });
     const byQuery = new Map();
     (mapped || []).forEach(r => { const q = r.queryItem ?? st.names[r.queryIndex]; if(q !== undefined && !byQuery.has(q)) byQuery.set(q, r); });
     const found = st.names.filter(n => byQuery.has(n));
@@ -14894,7 +15166,7 @@ async function runStringImport(){
     const queryIds = [...new Set(found.map(n => byQuery.get(n).stringId))];
     const taxonName = byQuery.get(found[0]).taxonName || st.speciesLabel;
 
-    stringProgress(st.addNodes ? `Fetching the network with up to ${st.addNodes} interactors…` : 'Fetching the network…');
+    task.step(2, st.addNodes ? `Fetching the network with up to ${st.addNodes} interactors…` : 'Fetching the network…');
     const params = {
       identifiers: queryIds.join('\r'),
       species: st.taxon,
@@ -14902,16 +15174,16 @@ async function runStringImport(){
       network_type: st.networkType,
     };
     if(st.addNodes > 0) params.add_nodes = st.addNodes;
-    const rows = await stringCall('network', params);
+    const rows = await stringCall('network', params, { onBytes });
     const built = buildStringNetwork(rows || [], queryIds, byQuery, st);
     if(!built.edges.length) throw new Error(`No ${st.networkType} connections pass a confidence of ${st.threshold.toFixed(2)} with the ticked channels. Lower the confidence, tick more channels or add interactors.`);
     notes.push(...built.notes);
 
     // descriptions for every protein
     if(st.descriptions){
-      stringProgress(`Fetching descriptions for ${plural(built.nodeIds.length, 'protein')}…`);
+      task.step(3, `Fetching descriptions for ${plural(built.nodeIds.length, 'protein')}…`);
       try{
-        const info = await stringCall('get_string_ids', { identifiers: built.stringIds.join('\r'), species: st.taxon });
+        const info = await stringCall('get_string_ids', { identifiers: built.stringIds.join('\r'), species: st.taxon }, { onBytes });
         (info || []).forEach(r=>{
           const name = built.nameOf.get(r.stringId);
           if(name && r.annotation) built.nodeAttrs[name].description = r.annotation;
@@ -14932,9 +15204,10 @@ async function runStringImport(){
 
     // groupings
     let annEntries = [];
-    if(st.categories.length || st.otherCategories){
-      annEntries = await fetchStringGroupings(netEntry, st, notes);
+    if(withGroupings){
+      annEntries = await fetchStringGroupings(netEntry, st, notes, task, 4);
     }
+    task.step(5, 'Opening the network…');
 
     // show it
     const preferred = STRING_PREFERRED_GROUPING.map(k => annEntries.find(e => e.stringCategory === k)).find(Boolean) || annEntries[0];
@@ -14954,6 +15227,7 @@ async function runStringImport(){
   }catch(err){
     setStatus('stringStatus', [{ level:'error', text: err.message }, ...notes]);
   }finally{
+    task.stop();
     stringState.busy = false;
     stringState.abort = null;
     updateStringUI();
@@ -15026,22 +15300,27 @@ function buildStringNetwork(rows, queryIds, byQuery, st){
 }
 
 /* ---------- groupings ---------- */
-async function fetchStringGroupings(netEntry, st, notes){
+// task/step: the import's progress; on its own, it shows a progress of its own.
+async function fetchStringGroupings(netEntry, st, notes, task = null, step = 0){
   const meta = netEntry.stringMeta;
   const nameOf = new Map(Object.entries(meta.nameOf));
   const byPreferred = new Map([...nameOf.values()].map(n => [n.toLowerCase(), n]));
   const ids = meta.stringIds;
   const enrichment = st.annotMode === 'enrichment';
-  stringProgress(enrichment
+  const own = !task;
+  if(own){ task = startProgress('stringStatus', [1]); step = 0; }
+  task.step(step, enrichment
     ? `Running functional enrichment for ${plural(ids.length, 'protein')}…`
     : `Fetching functional annotations for ${plural(ids.length, 'protein')}…`);
   let rows;
   try{
-    rows = await stringCall(enrichment ? 'enrichment' : 'functional_annotation', { identifiers: ids.join('\r'), species: meta.taxon });
+    rows = await stringCall(enrichment ? 'enrichment' : 'functional_annotation', { identifiers: ids.join('\r'), species: meta.taxon }, { onBytes: (got, total) => task.bytes(got, total) });
   }catch(err){
     notes.push({ level:'warn', text:`Groupings couldn't be fetched: ${err.message}` });
+    if(own) task.stop();
     return [];
   }
+  if(own) task.stop();
   const wanted = new Set(st.categories);
   const byCat = new Map();
   const seenCats = new Map();
@@ -16378,16 +16657,22 @@ async function runLayoutBenchmark(){
   const rows = [];
   const started = performance.now();
   try{
-    for(const [kind, name, label] of BENCH_LAYOUTS){
+    for(const [li, [kind, name, label]] of BENCH_LAYOUTS.entries()){
       if(benchState.cancel) break;
-      setStatus('benchStatus', [{ level:'busy', text:`Running ${label} (${rows.length + 1} of ${BENCH_LAYOUTS.length})…` }]);
-      await new Promise(r => setTimeout(r, 20));
+      const text = `Running ${label} (${li + 1} of ${BENCH_LAYOUTS.length})…`;
+      const show = f => setStatus('benchStatus', [{ level:'busy', text, progress: f }]);
+      show(li / BENCH_LAYOUTS.length);
+      await nextPaint();
       const runs = [];
       for(let k = 0; k < repeats; k++){
         const t0 = performance.now();
         let pos;
+        layoutProgress = makeLayoutProgress(f => show((li + (k + f) / repeats) / BENCH_LAYOUTS.length));
         try{ pos = await benchmarkPositions(kind, name, graph); }
         catch(err){ pos = null; }
+        finally{ layoutProgress = null; }
+        show((li + (k + 1) / repeats) / BENCH_LAYOUTS.length);
+        await nextPaint();
         const ms = performance.now() - t0;
         if(!pos) continue;
         runs.push({ ms, ...groupSeparation(pos, graph.groupsOf) });
@@ -16982,7 +17267,7 @@ const ARENA3D_SOURCES = {
 async function exportArena3d(kind, src = 'view'){
   const S = ARENA3D_SOURCES[src];
   try{
-    setStatus(S.status, [{ level:'busy', text:'Preparing the Arena3D network…' }]);
+    setStatus(S.status, [{ level:'busy', text:'Preparing the Arena3D network…', progress: null }]);
     const model = await S.build();
     const stem = S.stem();
     if(kind === 'json'){
@@ -17016,7 +17301,7 @@ async function openInArena3d(src = 'view'){
     setStatus(S.status, [{ level:'error', text: err.message }]);
     return;
   }
-  setStatus(S.status, [{ level:'busy', text:`Sending ${arena3dSummary(model.stats)} to Arena3D…` }]);
+  setStatus(S.status, [{ level:'busy', text:`Sending ${arena3dSummary(model.stats)} to Arena3D…`, progress: null }]);
   try{
     const route = NORMA_CFG.features.relays.arena3d === false ? 'direct' : await resolveStringRoute();
     const body = JSON.stringify(model.json);
@@ -18007,7 +18292,7 @@ function webglPreference(){
    weighted layout, edge bundling, profiling, Louvain and the group
    separation score. Nothing on screen changes.
    ============================================================ */
-const RUNTIME_SIZES = [100, 500, 1000, 2500, 5000];
+const RUNTIME_SIZES = [100, 500, 1000, 2500, 5000, 10000];
 const runtimeState = { rows: [], running: false, cancel: false };
 
 async function runRuntimeTable(){
@@ -18019,10 +18304,16 @@ async function runRuntimeTable(){
   runtimeState.rows = [];
   const time = async fn => { const t = performance.now(); const r = await fn(); return [performance.now() - t, r]; };
   try{
+    // larger networks take much longer: weigh each size by n^1.5
+    const weightOf = n => Math.pow(n, 1.5);
+    const totalWeight = sizes.reduce((a, n) => a + weightOf(n), 0);
+    let doneWeight = 0;
     for(const n of sizes){
       if(runtimeState.cancel) break;
-      setStatus('runtimeStatus', [{ level:'busy', text:`Timing a network of ${n.toLocaleString()} nodes…` }]);
-      await new Promise(r => setTimeout(r, 30));
+      const text = `Timing a network of ${n.toLocaleString()} nodes…`;
+      const show = f => setStatus('runtimeStatus', [{ level:'busy', text, progress: (doneWeight + weightOf(n) * f) / totalWeight }]);
+      show(0);
+      await nextPaint();
       const demo = generateRandomNetwork(n, { seed: n + 3 });
       const texts = demoToNormaTexts(demo);
       const row = { nodes: n };
@@ -18037,14 +18328,17 @@ async function runRuntimeTable(){
       headless.destroy();
       const edges = demo.edges.map(e => ({ source: e.source, target: e.target, weight: 1 }));
       const ids = demo.nodes.map(x => x.id);
-      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges));
+      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges, f => show(0.1 + 0.4 * f)));
       row.layout = tLayout;
       if(runtimeState.cancel) break;
       const segs = demo.edges.map(e => ({ sx: pos[e.source].x * 40, sy: pos[e.source].y * 40, tx: pos[e.target].x * 40, ty: pos[e.target].y * 40 }));
       if(segs.length <= BUNDLE_MAX_EDGES){
-        const [tBundle] = await time(() => bundleAsync(segs, { threshold: 0.6, iterations: 60 }));
+        show(0.5);
+        const [tBundle] = await time(() => bundleAsync(segs, { threshold: 0.6, iterations: 60 }, f => show(0.5 + 0.4 * f)));
         row.bundle = tBundle;
       } else row.bundle = NaN;
+      show(0.9);
+      await nextPaint();
       const g = simpleGraph(ids, demo.edges.map(e => [e.source, e.target]));
       const [tProfile] = await time(() => profileGraph(g));
       row.profile = tProfile;
@@ -18055,6 +18349,7 @@ async function runRuntimeTable(){
       row.separation = tSep;
       runtimeState.rows.push(row);
       renderRuntimeTable();
+      doneWeight += weightOf(n);
       await new Promise(r => setTimeout(r, 30));
     }
     setStatus('runtimeStatus', [{ level: runtimeState.cancel ? 'warn' : 'ok', text: `${runtimeState.cancel ? 'Stopped' : 'Done'}: timed ${plural(runtimeState.rows.length, 'network size')} in this browser (${navigator.hardwareConcurrency || '?'} logical processors). Rendering time depends on the screen and is not included.` }]);
@@ -18223,7 +18518,7 @@ const DB_URLS = {
   goapi: 'https://api.geneontology.org/api',
 };
 const DB_LABELS = { reactome: 'Reactome', omnipath: 'OmniPath', ndex: 'NDEx', intact: 'IntAct', go: 'Gene Ontology' };
-const dbState = { busy: {}, abort: {} };
+const dbState = { busy: {}, abort: {}, task: {}, mapping: {} };
 
 async function dbFetch(key, url, { method = 'GET', body = null, contentType = null, accept = 'application/json', text = false } = {}){
   const route = NORMA_CFG.features.relays.databases === false ? 'direct' : await resolveStringRoute();
@@ -18244,7 +18539,9 @@ async function dbFetch(key, url, { method = 'GET', body = null, contentType = nu
   }finally{
     clearTimeout(timer);
   }
-  const body2 = await response.text();
+  // download progress, except for the many small requests of dbMap (counted there)
+  const task = dbState.task[key];
+  const body2 = await readTextWithProgress(response, task && !dbState.mapping[key] ? (got, total) => task.bytes(got, total) : null);
   if(!response.ok){
     if(route === 'proxy' && !response.headers.get('X-Norma-Relay')) throw new Error('This server has no database relay. Start NORMA with server.py, or choose Connect: Directly under Import from STRING → STRING server.');
     let detail = body2.slice(0, 200).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -18260,6 +18557,7 @@ async function dbFetch(key, url, { method = 'GET', body = null, contentType = nu
 async function dbMap(key, items, limit, fn, progress){
   const out = new Array(items.length);
   let next = 0, done = 0;
+  dbState.mapping[key] = (dbState.mapping[key] || 0) + 1;
   const worker = async ()=>{
     while(next < items.length){
       if(dbState.cancelled[key]) throw new Error('Cancelled.');
@@ -18268,15 +18566,33 @@ async function dbMap(key, items, limit, fn, progress){
       catch(err){ if(/Cancelled/.test(err.message)) throw err; out[i] = { error: err }; }
       done++;
       if(progress) progress(done, items.length);
+      if(dbState.task[key]) dbState.task[key].sub(done / items.length);
     }
   };
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  try{
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  }finally{
+    dbState.mapping[key]--;
+  }
   return out;
 }
 dbState.cancelled = {};
 
 function dbStatus(key, notes){ setStatus(`${key}Status`, notes); }
-function dbProgress(key, text){ dbStatus(key, [{ level: 'busy', text }]); }
+// Progress of an import: dbPlan sets its weighted steps, dbStep moves on,
+// dbProgress changes the text of the current step.
+function dbPlan(key, weights){
+  dbState.task[key] = startProgress(`${key}Status`, weights);
+  return dbState.task[key];
+}
+function dbStep(key, i, text){
+  if(!dbState.task[key] || !dbState.task[key].active) dbPlan(key, [1]);
+  dbState.task[key].step(i, text);
+}
+function dbProgress(key, text){
+  const task = dbState.task[key];
+  if(task && task.active) task.say(text); else dbStep(key, 0, text);
+}
 function dbBusy(key, busy){
   dbState.busy[key] = busy;
   if(busy) dbState.cancelled[key] = false;
@@ -18287,9 +18603,15 @@ function dbBusy(key, busy){
 async function dbRun(key, fn){
   if(dbState.busy[key]) return;
   dbBusy(key, true);
+  dbState.mapping[key] = 0;
+  dbStep(key, 0, `Contacting ${DB_LABELS[key]}…`);
   try{ await fn(); }
   catch(err){ dbStatus(key, [{ level: 'error', text: err.message }]); }
-  finally{ dbBusy(key, false); }
+  finally{
+    if(dbState.task[key]) dbState.task[key].stop();
+    dbState.task[key] = null;
+    dbBusy(key, false);
+  }
 }
 function dbCancel(key){
   dbState.cancelled[key] = true;
@@ -18438,7 +18760,9 @@ async function reactomeFetch(){
     const maxReactions = Math.max(5, Math.min(500, parseInt(document.getElementById('reactomeMaxReactions').value, 10) || 150));
     const maxSize = Math.max(2, parseInt(document.getElementById('reactomeMaxSize').value, 10) || 25);
     const smallMolecules = document.getElementById('reactomeSmall').checked;
-    dbProgress('reactome', 'Reading the pathway…');
+    // steps: pathway, sub-pathways, reactions, building
+    dbPlan('reactome', [2, 1, 6, 1]);
+    dbStep('reactome', 0, 'Reading the pathway…');
     const top = await dbFetch('reactome', `${DB_URLS.reactome}/data/query/${encodeURIComponent(pid)}`);
     const contained = await dbFetch('reactome', `${DB_URLS.reactome}/data/pathway/${encodeURIComponent(pid)}/containedEvents`) || [];
     const byDbId = new Map(contained.filter(e => e && typeof e === 'object').map(e => [e.dbId, e]));
@@ -18453,11 +18777,13 @@ async function reactomeFetch(){
     if(!used.length) throw new Error('This pathway has no reactions to read.');
     // sub-pathways and the reactions each contains
     const children = (top.hasEvent || []).map(resolve).filter(e => e && e.schemaClass === 'Pathway').slice(0, 40);
+    dbStep('reactome', 1, `Reading ${plural(children.length, 'sub-pathway')}…`);
     const childReactions = await dbMap('reactome', children, 4, async ch => {
       const evs = await dbFetch('reactome', `${DB_URLS.reactome}/data/pathway/${encodeURIComponent(ch.stId)}/containedEvents`) || [];
       return new Set(evs.filter(e => e && typeof e === 'object').map(e => e.stId));
     });
     // participants of each reaction
+    dbStep('reactome', 2, `Reading reactions: 0 of ${used.length}…`);
     const parts = await dbMap('reactome', used, 4, r => dbFetch('reactome', `${DB_URLS.reactome}/data/participants/${encodeURIComponent(r.stId)}`),
       (d, n) => dbProgress('reactome', `Reading reactions: ${d} of ${n}…`));
     const nodeAttrs = {};
@@ -18514,6 +18840,8 @@ async function reactomeFetch(){
         .map(([rid, r]) => ({ name: stripTags(r.name), members: r.members, meta: { description: `Reactome reaction ${rid}`, stId: rid } }));
       groupings.push({ label: 'reactions', groups });
     }
+    dbStep('reactome', 3, 'Building and opening the network…');
+    await nextPaint();
     dbAddImport('reactome', {
       name: `Reactome ${stripTags(top.displayName)} (${pid})`,
       edges, nodeAttrs, groupings, notes,
@@ -18537,7 +18865,13 @@ async function omnipathFetch(){
     const among = document.getElementById('omnipathAmong').checked;
     const maxPartners = Math.max(0, parseInt(document.getElementById('omnipathMax').value, 10) || 0);
     const channels = document.getElementById('omnipathChannels').value;
-    dbProgress('omnipath', 'Fetching interactions from OmniPath…');
+    const wantedGroups = [...document.querySelectorAll('#omnipathGroups input:checked')].map(i => i.value);
+    const annResource = document.getElementById('omnipathAnnotation').value.trim();
+    // steps: interactions, complexes, intercellular roles, annotations, building
+    const omniSteps = [6, wantedGroups.includes('complexes') ? 2 : 0, wantedGroups.includes('intercell') ? 2 : 0,
+      wantedGroups.includes('annotations') && annResource ? 2 : 0, 1];
+    dbPlan('omnipath', omniSteps);
+    dbStep('omnipath', 0, 'Fetching interactions from OmniPath…');
     const url = `${DB_URLS.omnipath}/interactions?partners=${encodeURIComponent(names.join(','))}&genesymbols=yes&organisms=${organism}&datasets=${datasets.join(',')}&fields=sources,references,curation_effort,type${among ? '&source_target=AND' : ''}&format=json`;
     const rows = await dbFetch('omnipath', url) || [];
     if(!Array.isArray(rows) || !rows.length) throw new Error('OmniPath has no interactions for these proteins with the ticked datasets.');
@@ -18587,7 +18921,7 @@ async function omnipathFetch(){
     const fetchAll = async path => (await dbMap('omnipath', batches, 2, b => dbFetch('omnipath', `${DB_URLS.omnipath}/${path}${path.includes('?') ? '&' : '?'}proteins=${b.join(',')}&format=json`)))
       .flatMap(x => Array.isArray(x) ? x : []);
     if(wanted.includes('complexes') && uniprots.length){
-      dbProgress('omnipath', 'Fetching complexes…');
+      dbStep('omnipath', 1, 'Fetching complexes…');
       const cx = await fetchAll('complexes');
       const groups = new Map();
       cx.forEach(c=>{
@@ -18600,7 +18934,7 @@ async function omnipathFetch(){
       groupings.push({ label: 'complexes', minSize: 2, groups: [...groups.values()].sort((a, b) => b.members.length - a.members.length).slice(0, 60) });
     }
     if(wanted.includes('intercell') && uniprots.length){
-      dbProgress('omnipath', 'Fetching intercellular roles…');
+      dbStep('omnipath', 2, 'Fetching intercellular roles…');
       const ic = await fetchAll('intercell?scope=generic');
       const groups = new Map();
       ic.forEach(r=>{
@@ -18614,7 +18948,7 @@ async function omnipathFetch(){
     }
     const resource = document.getElementById('omnipathAnnotation').value.trim();
     if(wanted.includes('annotations') && resource && uniprots.length){
-      dbProgress('omnipath', `Fetching ${resource} annotations…`);
+      dbStep('omnipath', 3, `Fetching ${resource} annotations…`);
       const an = await fetchAll(`annotations?resources=${encodeURIComponent(resource)}`);
       const LABELS = ['pathway', 'location', 'state', 'function', 'category', 'mainclass', 'classification', 'family', 'disease'];
       const groups = new Map();
@@ -18629,6 +18963,8 @@ async function omnipathFetch(){
       if(!groups.size) notes.push({ level: 'warn', text: `${resource} has no pathway-like annotations for these proteins.` });
       groupings.push({ label: resource, groups: [...groups.values()].map(g => ({ ...g, members: [...g.members] })) });
     }
+    dbStep('omnipath', omniSteps.length - 1, 'Building and opening the network…');
+    await nextPaint();
     dbAddImport('omnipath', {
       name: `OmniPath ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`,
       edges, nodeAttrs, groupings, notes,
@@ -18695,7 +19031,8 @@ async function ndexFetch(){
   await dbRun('ndex', async ()=>{
     const uuid = document.getElementById('ndexNetwork').value;
     if(!uuid) throw new Error('Search and choose a network first.');
-    dbProgress('ndex', 'Downloading the network from NDEx…');
+    dbPlan('ndex', [8, 1]);
+    dbStep('ndex', 0, 'Downloading the network from NDEx…');
     const cx = await dbFetch('ndex', `${DB_URLS.ndex}/v3/networks/${encodeURIComponent(uuid)}`);
     const net = readCx2(cx);
     if(!net.nodes.length) throw new Error('This network has no nodes, or is not public.');
@@ -18746,6 +19083,8 @@ async function ndexFetch(){
     const notes = [];
     if(!groupings.length) notes.push({ level: 'ok', text: 'The network has no node attribute that makes useful groups (2 to 60 values covering at least 30% of the nodes); add an annotation or use communities.' });
     if(positions) notes.push({ level: 'ok', text: 'The layout saved in NDEx is kept.' });
+    dbStep('ndex', 1, 'Building and opening the network…');
+    await nextPaint();
     dbAddImport('ndex', {
       name: `NDEx ${net.name || uuid}`.slice(0, 90),
       edges, nodeAttrs, groupings: groupings.slice(0, 6), positions, notes,
@@ -18781,7 +19120,8 @@ async function intactFetch(){
     const ids = names.map(n => /[\s():]/.test(n) ? `"${n}"` : n).join(' OR ');
     let miql = `identifier:(${ids})`;
     if(taxon) miql += ` AND taxidA:${taxon} AND taxidB:${taxon}`;
-    dbProgress('intact', 'Fetching interactions from IntAct…');
+    dbPlan('intact', [8, 1]);
+    dbStep('intact', 0, 'Fetching interactions from IntAct…');
     const text = await dbFetch('intact', `${DB_URLS.intact}/query/${encodeURIComponent(miql)}?format=tab25&firstResult=0&maxResults=${maxRows}`, { accept: 'text/plain', text: true });
     const lines = String(text || '').split('\n').filter(l => l.trim());
     if(!lines.length) throw new Error('IntAct has no interactions for these names in this organism.');
@@ -18829,6 +19169,8 @@ async function intactFetch(){
       { name: 'Query proteins', members: [...present].filter(n => nodeAttrs[n].query) },
       { name: 'Interaction partners', members: [...present].filter(n => !nodeAttrs[n].query) },
     ] }];
+    dbStep('intact', 1, 'Building and opening the network…');
+    await nextPaint();
     dbAddImport('intact', {
       name: `IntAct ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`,
       edges: edges.map(({ evidence, ...e }) => e), nodeAttrs, groupings, notes,
@@ -18877,7 +19219,8 @@ async function goFetchModel(){
     const typed = document.getElementById('goModelId').value.trim();
     const id = (typed || document.getElementById('goModel').value || '').replace(/^gomodel:/, '');
     if(!id) throw new Error('Choose a GO-CAM model or type its identifier.');
-    dbProgress('go', 'Downloading the GO-CAM model…');
+    dbPlan('go', [6, 1]);
+    dbStep('go', 0, 'Downloading the GO-CAM model…');
     const m = await dbFetch('go', `${DB_URLS.goapi}/gocam-model/${encodeURIComponent(id)}`);
     const labels = new Map((m.objects || []).map(o => [o.id, o.label || o.id]));
     const label = t => {
@@ -18915,6 +19258,8 @@ async function goFetchModel(){
     };
     const groupings = [byAspect('part_of', 'biological process'), byAspect('occurs_in', 'cellular component'), byAspect('molecular_function', 'molecular function')];
     if(!edges.length) throw new Error('This model has no causal links between gene products.');
+    dbStep('go', 1, 'Building and opening the network…');
+    await nextPaint();
     dbAddImport('go', {
       name: `GO-CAM ${m.title || id}`.slice(0, 90),
       edges, nodeAttrs, groupings,
@@ -18943,7 +19288,10 @@ async function goAnnotateView(){
     const batches = [];
     for(let i = 0; i < accs.length; i += 100) batches.push(accs.slice(i, i + 100));
     const groupings = [];
-    for(const aspect of aspects){
+    // steps: one per aspect, then adding the groupings
+    dbPlan('go', [...aspects.map(() => 3), 1]);
+    for(const [ai, aspect] of aspects.entries()){
+      dbStep('go', ai, `Reading ${aspect.replace('_', ' ')} annotations: 0 of ${batches.length} batches…`);
       const terms = new Map();
       const results = await dbMap('go', batches, 2, async b => {
         const all = [];
@@ -18971,6 +19319,8 @@ async function goAnnotateView(){
         .sort((a, b) => b.members.length - a.members.length).slice(0, maxGroups);
       groupings.push({ label: `GO ${aspect.replace('_', ' ')}`, groups });
     }
+    dbStep('go', aspects.length, 'Adding the groupings…');
+    await nextPaint();
     const v = activeView();
     const entries = dbAddGroupingsToView('go', groupings, v ? v.name : 'View');
     dbStatus('go', entries.length
