@@ -81,7 +81,7 @@ the `init()`s in the original order, then runs the boot sequence.
   bindings are read-only across files); `config.ts` — `NORMA_CFG` from `window.NORMA_CONFIG`.
 - `palette.ts`, `themes.ts`, `sample_data.ts`, `cy.ts` (Cytoscape instance, stylesheet, `onCommitStyle`
   hooks), `network_state.ts`, `hulls.ts` (group hulls / fog), `parallel_edges.ts`, `metrics.ts`.
-- `layouts/` — `input` (what strategies see), `run`, `controls`; `library.ts`, `uploads.ts`,
+- `layouts/` — `input` (what strategies see), `run` (incl. cose in `cose.worker.ts`, inlined into the bundle), `controls`; `library.ts`, `uploads.ts`,
   `examples.ts`, `export_norma.ts`, `wiring.ts` (tabs, keyboard, main buttons).
 - `profiler.ts`, `viewbar.ts`, `side_tabs.ts`, `directed_stats.ts`, `demo_downloads.ts`,
   `recording.ts` (undo history), `label_colors.ts`, `benchmark.ts`, `contours.ts`.

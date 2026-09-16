@@ -19,8 +19,6 @@ test('example opens with nodes, edges and groups', async ({ page }) => {
 })
 
 test('every built-in example loads', async ({ page }) => {
-  // the large examples run several seconds of layout each
-  test.setTimeout(300_000)
   await page.goto('/')
   const keys = await page
     .locator('#sampleSelect option')

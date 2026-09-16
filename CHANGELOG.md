@@ -37,6 +37,11 @@
 
 ### Fixed
 
+- Large networks took 25-35 s to lay out on opening (cose). Once the page has painted a frame,
+  Cytoscape's cose runs 5-7x slower on the main thread (a V8 effect, reproducible with plain
+  Cytoscape); the progress-bar change had moved the computation after that first paint. cose for
+  networks above 150 nodes now runs headless in a Web Worker: 4-8 s again, and the page stays
+  responsive while it computes.
 - Group shading (hulls, fog, Bubble Sets) drawn at the wrong scale or not shown after a window moved
   between displays with different pixel ratios or a canvas resize without a resize event; the
   shading canvas now re-checks its size and pixel ratio and redraws inside an animation frame.

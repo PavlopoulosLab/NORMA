@@ -50,7 +50,10 @@ class _Echo(http.server.BaseHTTPRequestHandler):
 
 def _serve(cls):
     httpd = handler.ThreadingServer(("127.0.0.1", 0), cls)
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    # short poll interval: shutdown() waits one interval per test
+    threading.Thread(
+        target=httpd.serve_forever, kwargs={"poll_interval": 0.02}, daemon=True
+    ).start()
     return httpd, f"http://127.0.0.1:{httpd.server_address[1]}"
 
 

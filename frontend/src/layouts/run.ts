@@ -21,7 +21,8 @@ import {
   targetNodeSpacing,
 } from '../metrics'
 import { cy } from '../cy'
-import { nextPaint, setStatus } from './controls'
+import { setStatus } from './controls'
+import CoseWorker from './cose.worker?worker&inline'
 
 /* ---------- running layouts ---------- */
 export const STRATEGIES = new Set(['virtual', 'gravity', 'supernodes'])
@@ -44,6 +45,7 @@ export function setLayoutBusy(busy) {
 
 async function runComputedLayout(compute) {
   cancelFrJobs()
+  cancelCoseJob()
   const run = ++S.layoutRunSeq
   const nodeCount = cy.nodes().length
   setLayoutBusy(true)
@@ -85,6 +87,7 @@ export function runLayout(name) {
   }
   // a Cytoscape layout replaces any computed one still running
   cancelFrJobs()
+  cancelCoseJob()
   S.layoutRunSeq++
   setLayoutBusy(false)
   // Animating every force-directed iteration is slow on bigger graphs;
@@ -104,21 +107,93 @@ export function runLayout(name) {
     eles.layout(opts).run()
     return
   }
-  // computed in one go before it animates: show that work is going on
+  // Computed in one go, in a worker, then animated to the final positions.
+  // Once the page has painted a frame, Cytoscape's cose runs 5-7x slower on
+  // the main thread (a V8 effect, reproducible with plain Cytoscape); a
+  // worker is a fresh isolate, so it stays fast and the page stays usable.
   const run = S.layoutRunSeq
   document.getElementById('btnRunLayout').disabled = true
   setStatus('layoutStatus', [{ level: 'busy', text: 'Computing layout…', progress: null }])
-  nextPaint().then(() => {
+  const finish = () => {
     if (run !== S.layoutRunSeq) return
+    document.getElementById('btnRunLayout').disabled = false
+    setStatus('layoutStatus', [])
+  }
+  coseInWorker(eles, opts)
+    .then((positions) => {
+      if (run !== S.layoutRunSeq) return
+      if (positions) {
+        eles
+          .nodes()
+          .layout({
+            name: 'preset',
+            positions,
+            fit: true,
+            padding: opts.padding,
+            animate: true,
+            animationDuration: opts.animationDuration,
+          })
+          .run()
+      } else eles.layout(opts).run() // no worker (very old browser): as before
+    })
+    .finally(finish)
+}
+
+/* ---------- cose in a worker ---------- */
+let coseWorker = null
+let coseJob = null // { resolve } of the run in progress
+
+function coseInWorker(eles, opts) {
+  cancelCoseJob()
+  if (!coseWorker) {
     try {
-      eles.layout(opts).run()
-    } finally {
-      if (run === S.layoutRunSeq) {
-        document.getElementById('btnRunLayout').disabled = false
-        setStatus('layoutStatus', [])
-      }
+      coseWorker = new CoseWorker()
+    } catch (e) {
+      return Promise.resolve(null)
     }
+    coseWorker.onmessage = (e) => {
+      const job = coseJob
+      coseJob = null
+      if (job) job.resolve(e.data.error ? null : e.data.positions)
+    }
+    coseWorker.onerror = (e) => {
+      e.preventDefault()
+      const job = coseJob
+      coseJob = null
+      coseWorker = null
+      if (job) job.resolve(null)
+    }
+  }
+  // what cose reads: node ids, positions and outer sizes, edges, the viewport
+  const elements = eles.nodes().map((n) => ({
+    data: { id: n.id(), w: n.outerWidth(), h: n.outerHeight() },
+    position: n.position(),
+  }))
+  eles
+    .edges()
+    .forEach((e) =>
+      elements.push({ data: { id: e.id(), source: e.source().id(), target: e.target().id() } })
+    )
+  const { animate, animationDuration, ...rest } = opts
+  const layout = { ...rest, boundingBox: { x1: 0, y1: 0, w: cy.width(), h: cy.height() } }
+  return new Promise((resolve) => {
+    coseJob = { resolve }
+    coseWorker.postMessage({
+      elements,
+      style: [{ selector: 'node', style: { width: 'data(w)', height: 'data(h)' } }],
+      opts: layout,
+    })
   })
+}
+
+// Stops a cose computation still running in the worker; its caller sees null.
+export function cancelCoseJob() {
+  if (!coseJob) return
+  const job = coseJob
+  coseJob = null
+  coseWorker.terminate()
+  coseWorker = null
+  job.resolve(null)
 }
 
 // Layout by groups: block arrangements or a NORMA-2.0 strategy, each
