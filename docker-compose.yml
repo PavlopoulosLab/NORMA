@@ -1,0 +1,14 @@
+# docker compose up -d   ->  NORMA on http://127.0.0.1:8000 (put an HTTPS proxy in front, see deploy/nginx.conf)
+services:
+  norma:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      NORMA_MODE: hosted
+      NORMA_PUBLIC_URL: https://norma.example.org/
+      NORMA_TRUST_PROXY: "true"
+      NORMA_ACCESS_LOG: anonymous
+    volumes:
+      - ./norma.config.hosted.json:/srv/norma/norma.config.json:ro

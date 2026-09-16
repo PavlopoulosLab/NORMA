@@ -1,0 +1,8 @@
+{
+  "_comment": "Settings for running NORMA on this computer. See norma.config.hosted.json for a public server and README.md for every option.",
+  "mode": "local",
+  "server": { "host": "127.0.0.1", "port": 8000, "accessLog": "off" },
+  "api": { "enabled": true, "ttlHours": 24, "maxMB": 50, "maxSessions": 500 },
+  "relays": { "string": true, "arena3d": true, "databases": true },
+  "app": { "maxNodes": 5000, "theme": "white", "startTab": "welcome", "cdnFallback": true }
+}
