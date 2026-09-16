@@ -37,7 +37,7 @@ Items marked **deploy** depend on how the public server is set up.
 | Requirement | How NORMA meets it |
 |---|---|
 | Help page listing all services with their URLs | API tab (REST table, links, postMessage) and Help → *API for other applications* |
-| Template script (Python) accessing several services and parsing output | `norma_api_client.py` (health, submit, read back, link) — downloadable from the API tab |
+| Template script (Python) accessing several services and parsing output | `examples/norma_api_client.py` (health, submit, read back, link) — downloadable from the API tab |
 | Prominent link to the template on the home page | Welcome page footer: *Programmatic access: Python template* |
 
 ## Also expected
@@ -51,5 +51,5 @@ Items marked **deploy** depend on how the public server is set up.
 ## Before submitting
 1. Copy `norma.config.hosted.json` to `norma.config.json` and fill in `publicUrl`, `institution`, `contactEmail`, `maintainedUntil` and `testedBrowsers`.
 2. Serve it over HTTPS on port 443 (`deploy/nginx.conf` + `deploy/norma.service`, or Docker).
-3. Check `https://YOUR-SERVER/api/health`, open every sample link in Help, and run `python3 norma_api_client.py --server https://YOUR-SERVER/`.
+3. Check `https://YOUR-SERVER/api/health`, open every sample link in Help, and run `python3 examples/norma_api_client.py --server https://YOUR-SERVER/`.
 4. Test the site in at least two browsers.

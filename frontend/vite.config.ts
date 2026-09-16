@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [viteSingleFile()],
   build: { rollupOptions: { input: 'norma.html' } },
   server: {
-    // norma_api_client.py (the API template) is imported ?raw from the repo root
+    // examples/norma_api_client.py (the API template) is imported ?raw from outside frontend/
     fs: { allow: ['..'] },
     proxy: Object.fromEntries(
       ['/api', '/string-api', '/db-api', '/arena3d-api', '/norma-config.js'].map((p) => [

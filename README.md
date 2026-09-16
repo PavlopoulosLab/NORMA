@@ -45,10 +45,10 @@ For the NAR Web Server Issue requirements see `docs/NAR_CHECKLIST.md`.
 
 ## Programmatic access
 
-`norma_api_client.py` is a template client (standard library only):
+`examples/norma_api_client.py` is a template client (standard library only):
 
 ```bash
-python3 norma_api_client.py --server http://localhost:8000/ --open
+python3 examples/norma_api_client.py --server http://localhost:8000/ --open
 ```
 
 ## NORMA API

@@ -1,6 +1,5 @@
 // @ts-nocheck
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
-import apiClientTemplate from '../../../norma_api_client.py?raw'
 import cytoscape from 'cytoscape'
 
 /* ============================================================

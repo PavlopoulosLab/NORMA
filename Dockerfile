@@ -5,13 +5,14 @@ WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json frontend/
 RUN cd frontend && npm ci --no-audit --no-fund
 COPY frontend frontend
-COPY norma_api_client.py .
+COPY examples examples
 RUN cd frontend && npm run build
 
 FROM python:3.12-slim
 WORKDIR /srv/norma
 COPY backend backend
-COPY norma_api_client.py norma.config.json norma.config.hosted.json ./
+COPY examples examples
+COPY norma.config.json norma.config.hosted.json ./
 COPY --from=build /build/frontend/dist frontend/dist
 RUN useradd --system --home /srv/norma norma && chown -R norma /srv/norma
 USER norma
