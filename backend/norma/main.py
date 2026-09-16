@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import ssl
 import threading
 
@@ -101,6 +102,8 @@ def main(argv: list[str] | None = None) -> None:
         print("  relays:   %s" % (", ".join(on) if on else "off"))
         print("  settings: {}".format(cfg.get("_file", "built-in defaults")))
         print(f"  files:    {static.STATIC_DIR}")
+        if not os.path.isfile(os.path.join(static.STATIC_DIR, "norma.html")):
+            print("  note: the page is not built yet: cd frontend && npm install && npm run build")
         if cfg["mode"] == "hosted" and not tls and not srv["trustProxy"]:
             print("  note: public servers should use HTTPS (TLS options or a reverse proxy).")
         print("Press Ctrl+C to stop.")

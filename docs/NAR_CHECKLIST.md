@@ -17,7 +17,7 @@ Items marked **deploy** depend on how the public server is set up.
 ## Web servers and services must
 | Requirement | How NORMA meets it |
 |---|---|
-| HTTPS on port 443 | **deploy**: `deploy/nginx.conf` (HTTPS on 443, HTTP redirected), or `server.py --tls-cert --tls-key --port 443 --http-redirect-port 80`; HSTS sent over HTTPS |
+| HTTPS on port 443 | **deploy**: `deploy/nginx.conf` (HTTPS on 443, HTTP redirected), or `backend/server.py --tls-cert --tls-key --port 443 --http-redirect-port 80`; HSTS sent over HTTPS |
 | Cookie consent if permanent cookies are used; no third-party/tracking cookies | NORMA sets **no cookies** and uses no tracking; only the optional WebGL preference is kept in local storage. No fonts or scripts from other sites (`app.cdnFallback: false` on the server) |
 | Sample data accessible to check formats | Help → *Example files* (every sample file downloadable) |
 | Links to sample output that work like real output | Help → *Sample data and sample output* |

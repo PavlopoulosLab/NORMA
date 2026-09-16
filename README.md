@@ -9,11 +9,14 @@ the MIT License; no login, no cookies, no tracking.
 
 | | |
 |---|---|
+| Build the page once | `cd frontend && npm install && npm run build` (writes `frontend/dist/norma.html`; needs Node 22) |
 | On your computer | double-click `run_local.sh` (macOS/Linux) or `run_local.bat` (Windows), or `python3 backend/server.py` |
-| Without Python | open `norma.html` in a browser (no REST API or relays) |
+| Without Python | open `frontend/dist/norma.html` in a browser (no REST API or relays) |
 | Public server | `python3 backend/server.py --mode hosted --config norma.config.hosted.json` behind HTTPS (`deploy/nginx.conf`) |
-| Docker | `docker compose up -d` |
+| Docker | `docker compose up -d` (builds the page inside the image) |
 | All options | `python3 backend/server.py --help`, `python3 backend/server.py --print-config` |
+
+The server needs only Python 3.9+ (standard library); the page is built once with Node.
 
 ## Settings
 
@@ -22,7 +25,8 @@ Settings come from (increasing priority) built-in defaults, `norma.config.json`
 command-line options. `mode` is `local` (127.0.0.1, opens the browser, no
 access log) or `hosted` (0.0.0.0, trusts the reverse proxy, anonymous access
 log, security headers). The page receives its part of the settings as
-`/norma-config.js`; for static hosting edit the `norma-config.js` file.
+`/norma-config.js`; for static hosting edit `frontend/public/norma-config.js` before building
+(or the `norma-config.js` next to the built page).
 
 | Setting | CLI / environment | Meaning |
 |---|---|---|
@@ -37,7 +41,7 @@ log, security headers). The page receives its part of the settings as
 | `site.*` | `NORMA_CONTACT_EMAIL`, `NORMA_INSTITUTION`, `NORMA_NOTICE` | contact, institution, licence, privacy/imprint links, maintenance statement, tested browsers, notice banner |
 | `app.maxNodes`, `theme`, `startTab`, `cdnFallback` | `NORMA_MAX_NODES` | page defaults |
 
-For the NAR Web Server Issue requirements see `NAR_CHECKLIST.md`.
+For the NAR Web Server Issue requirements see `docs/NAR_CHECKLIST.md`.
 
 ## Programmatic access
 
@@ -65,7 +69,7 @@ the API tab in NORMA documents all three and has a tester.
 
 ## Why the relays
 
-Browsers restrict pages from calling other sites. `server.py` serves NORMA and
+Browsers restrict pages from calling other sites. The server serves NORMA and
 passes STRING requests on under `/string-api/`, so the browser only talks to
 your own server:
 
@@ -101,16 +105,34 @@ directly from the browser.
 
 ### Behind another web server
 
-For a public server, put `server.py` (hosted mode) behind nginx or Apache with
-HTTPS; `deploy/nginx.conf` is a complete example, including serving NORMA under
-a path (`X-Forwarded-Prefix`). The folder can also be served as static files
-(the page then reads `norma-config.js`, and `index.html` forwards the root address to `norma.html`); the REST API and relays need
-`server.py`, and the importers then call the services directly.
+For a public server, put `backend/server.py` (hosted mode) behind nginx or Apache
+with HTTPS; `deploy/nginx.conf` is a complete example, including serving NORMA under
+a path (`X-Forwarded-Prefix`). `frontend/dist/` can also be served as static files
+(the page then reads `norma-config.js`, and `index.html` forwards the root address
+to `norma.html`); the REST API and relays need the server, and the importers then
+call the services directly.
+
+## Development
+
+```
+backend/    standard-library Python server: backend/norma/{config,api,relays,static,handler,main}.py
+frontend/   Vite + TypeScript page: src/ (modules), e2e/ (Playwright), public/ (assets)
+deploy/     nginx / Apache / systemd examples;  docs/  NAR checklist, design notes
+```
+
+```bash
+cd backend && uv sync && uv run pytest          # server tests; ruff, mypy also via uv run
+cd frontend && npm install && npm run dev        # http://localhost:5173/norma.html, API proxied to :8000
+cd frontend && npm test && npm run test:e2e      # Vitest units; Playwright (starts the server itself)
+pre-commit install                               # ruff, eslint, prettier, tsc before each commit
+```
+
+See `AGENTS.md` for the architecture and the rules for coding agents, `CHANGELOG.md` for changes.
 
 ## STRING logo
 
 STRING's logo is not bundled. To show it in the importer, save the official
-logo from <https://string-db.org> as `assets/string-logo.png`; otherwise a plain
+logo from <https://string-db.org> as `frontend/public/assets/string-logo.png` (before building); otherwise a plain
 "STRING" label is shown (and the browser logs a harmless 404 for the missing file).
 
 ## Citing
