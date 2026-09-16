@@ -5109,6 +5109,20 @@ function collectAttrs(obj, reservedKeys){
   return attrs;
 }
 
+// Colors from loaded network/session data (nodeColors, groupAttrs.color, ...)
+// are untrusted and end up in style/attribute values, so only a strict CSS
+// color syntax is let through; anything else (e.g. an attribute-breakout
+// attempt) is rejected rather than escaped, since these values are used both
+// in innerHTML templates and as literal Cytoscape style colors.
+function sanitizeColor(c){
+  if(typeof c !== 'string') return null;
+  const v = c.trim();
+  if(/^#[0-9a-fA-F]{3,4}$|^#[0-9a-fA-F]{6}$|^#[0-9a-fA-F]{8}$/.test(v)) return v;
+  if(/^(rgb|rgba|hsl|hsla)\(\s*[\d.]+%?(\s*,\s*[\d.]+%?){2,3}\s*\)$/.test(v)) return v;
+  if(/^[a-zA-Z]{3,20}$/.test(v)) return v;
+  return null;
+}
+
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, ch => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
@@ -5785,7 +5799,7 @@ function loadData(data, opts = {}){
   // give groups their palette colors in display order
   if(Array.isArray(data.groupOrder)){
     data.groupOrder.forEach(g=>{
-      const explicit = (data.nodeColors && data.nodeColors[g]) || (groupAttrs[g] && groupAttrs[g].color);
+      const explicit = sanitizeColor((data.nodeColors && data.nodeColors[g]) || (groupAttrs[g] && groupAttrs[g].color));
       if(explicit) nodeColorMap[g] = explicit; else colorForGroup(g);
     });
   }
@@ -5801,7 +5815,7 @@ function loadData(data, opts = {}){
     }
     groupsArr.forEach(g=>{
       // explicit color precedence: nodeColors[g], then groupAttrs[g].color
-      const explicit = (data.nodeColors && data.nodeColors[g]) || (groupAttrs[g] && groupAttrs[g].color);
+      const explicit = sanitizeColor((data.nodeColors && data.nodeColors[g]) || (groupAttrs[g] && groupAttrs[g].color));
       if(explicit) nodeColorMap[g] = explicit;
     });
     // a node's own "color" is kept separately and used when
@@ -5830,7 +5844,7 @@ function loadData(data, opts = {}){
   data.edges.forEach((e,i)=>{
     const type = e.type || 'link';
     usedTypes.add(type);
-    const explicit = (data.edgeColors && data.edgeColors[type]) || e.color;
+    const explicit = sanitizeColor((data.edgeColors && data.edgeColors[type]) || e.color);
     if(!EDGE_TYPES[type]){
       EDGE_TYPES[type] = { color: explicit || nextAutoEdgeColor(), label: type };
     } else if(explicit){
@@ -5937,7 +5951,7 @@ function applyNodePalette(name, keepDataColors = false){
   const palette = NODE_PALETTES[name] || NODE_PALETTES.vivid;
   const groups = Object.keys(nodeColorMap).filter(g => g !== UNGROUPED);
   groups.forEach((g, i) => {
-    const own = keepDataColors && groupAttrs[g] && groupAttrs[g].color;
+    const own = keepDataColors && sanitizeColor(groupAttrs[g] && groupAttrs[g].color);
     nodeColorMap[g] = own || colorAtIndex(palette, i);
   });
   cy.batch(()=> cy.nodes().forEach(n => refreshNodeVisual(n)));
@@ -10835,12 +10849,15 @@ function restoreView(v, { reuseData = false } = {}){
   refreshAllDerivedUI();
   if(v.data){
     if(st.groupColors){
-      nodeColorMap = { ...st.groupColors };
+      nodeColorMap = {};
+      Object.entries(st.groupColors).forEach(([g, c]) => { const sc = sanitizeColor(c); if(sc) nodeColorMap[g] = sc; });
     }
     if(st.typeColors){
       Object.entries(st.typeColors).forEach(([t, c])=>{
-        if(EDGE_TYPES[t]) EDGE_TYPES[t].color = c;
-        else EDGE_TYPES[t] = { color: c, label: t };
+        const sc = sanitizeColor(c);
+        if(!sc) return;
+        if(EDGE_TYPES[t]) EDGE_TYPES[t].color = sc;
+        else EDGE_TYPES[t] = { color: sc, label: t };
       });
       cy.edges().forEach(e => { const m = EDGE_TYPES[e.data('type')]; if(m) e.data('color', m.color); });
     }
@@ -16966,7 +16983,7 @@ function groupStatsTsv(){
 // Group colors given with generated data win over the palette that a
 // data config re-applies.
 function applyGroupColorOverrides(colors){
-  Object.entries(colors || {}).forEach(([g, c]) => { nodeColorMap[g] = c; });
+  Object.entries(colors || {}).forEach(([g, c]) => { const sc = sanitizeColor(c); if(sc) nodeColorMap[g] = sc; });
   cy.batch(()=> cy.nodes().forEach(n => refreshNodeVisual(n)));
   buildGroupLegend();
   applyGroupVisibility();
@@ -17654,7 +17671,10 @@ function loadSession(obj){
   });
   kinds.forEach(kind => { normaLibrary[kind].length = 0; normaLibrary[kind].push(...rebuilt[kind]); });
   normaEntrySeq = maxSeq;
-  if(obj.edgeTypes) Object.entries(obj.edgeTypes).forEach(([k, t]) => { if(!EDGE_TYPES[k]) EDGE_TYPES[k] = t; else Object.assign(EDGE_TYPES[k], t); });
+  if(obj.edgeTypes) Object.entries(obj.edgeTypes).forEach(([k, t]) => {
+    const safe = { ...t, color: sanitizeColor(t && t.color) || (EDGE_TYPES[k] && EDGE_TYPES[k].color) || nextAutoEdgeColor() };
+    if(!EDGE_TYPES[k]) EDGE_TYPES[k] = safe; else Object.assign(EDGE_TYPES[k], safe);
+  });
   // views
   views.length = 0;
   let maxView = viewSeq;
@@ -19328,7 +19348,7 @@ function refreshAfterDelete(v){
   document.getElementById('normaStatus').innerHTML = status;
   // keep what the view looked like
   if(st.groupColors){
-    Object.entries(st.groupColors).forEach(([g, c]) => { if(nodeColorMap[g]) nodeColorMap[g] = c; });
+    Object.entries(st.groupColors).forEach(([g, c]) => { if(nodeColorMap[g]){ const sc = sanitizeColor(c); if(sc) nodeColorMap[g] = sc; } });
   }
   const used = new Set(getUsedGroups());
   if(Array.isArray(st.activeGroups)){
