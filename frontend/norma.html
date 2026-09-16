@@ -1684,7 +1684,7 @@
             <button type="button" id="btnEmptyHelp"><span class="ico" data-icon="help"></span>Help</button>
           </div>
           <p class="site-footer" id="siteFooter"></p>
-        <p class="welcome-foot">NORMA 3.0 runs in your browser: your files stay on this computer, except what you send to online databases or Arena3D yourself. Networks of up to 5,000 nodes.</p>
+        <p class="welcome-foot">NORMA 3.0 runs in your browser: your files stay on this computer, except what you send to online databases or Arena3D yourself. Networks of up to 10,000 nodes.</p>
         </div>
     </div>
   </section>
@@ -1766,7 +1766,7 @@
         <p class="sub">Times the main steps on random networks of growing size (generated from fixed seeds; the table lists their edges), in this browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. The view is not changed.</p>
         <div class="bench-controls">
           <label class="inline-num">Up to
-            <select id="runtimeMax"><option value="1000">1,000 nodes</option><option value="2500">2,500 nodes</option><option value="5000" selected>5,000 nodes (the largest NORMA shows)</option></select>
+            <select id="runtimeMax"><option value="1000">1,000 nodes</option><option value="2500">2,500 nodes</option><option value="5000" selected>5,000 nodes</option><option value="10000">10,000 nodes (the largest NORMA shows)</option></select>
           </label>
           <button class="primary" id="btnRuntime">Time the main steps</button>
           <button id="btnRuntimeTsv" disabled>Download table</button>
@@ -1852,7 +1852,7 @@
           <tr><td><code>format</code> / <code>views</code></td><td>—</td><td>A whole <b>session file</b> (<code>"format": "norma3-session"</code>) can be sent as the payload too.</td></tr>
         </tbody>
       </table>
-      <p>With <code>edges</code> or <code>files</code>, NORMA adds the network, groupings and values to <b>Files</b> like uploaded files and opens them in a new view, so everything in NORMA works on them. Networks larger than 5,000 nodes are cut to their first 5,000. The example in <a href="#api-try">Try it</a> shows all common fields.</p>
+      <p>With <code>edges</code> or <code>files</code>, NORMA adds the network, groupings and values to <b>Files</b> like uploaded files and opens them in a new view, so everything in NORMA works on them. Networks larger than 10,000 nodes are cut to their first 10,000. The example in <a href="#api-try">Try it</a> shows all common fields.</p>
 
       <h2 id="api-rest">REST</h2>
       <p>When NORMA runs with <code>server.py</code> (see <a href="#help-hosting">Running NORMA locally or on a server</a>), the server offers:</p>
@@ -1966,7 +1966,7 @@ window.addEventListener("message", (e) =&gt; {
 
       <h2 id="api-limits">Limits and privacy</h2>
       <ul>
-        <li>Payloads up to 50 MB; networks up to 5,000 nodes are shown in full.</li>
+        <li>Payloads up to 50 MB; networks up to 10,000 nodes are shown in full.</li>
         <li>Data sent with <b>postMessage</b> or <b>#json</b> links stays in the browser. With <b>REST</b>, the payload is kept only in the memory of the server you sent it to, for the time set there, and anyone with the link can open it until then; don't use it for confidential data on a shared server.</li>
         <li>NORMA only displays what it receives: payloads cannot run code, and NORMA sends nothing back except the <code>norma:loaded</code> summary to the page that asked.</li>
       </ul>
@@ -2111,7 +2111,7 @@ window.addEventListener("message", (e) =&gt; {
         <div id="helpDemoFiles"></div>
 
         <h2 id="help-files">Files and formats</h2>
-        <p>Upload one or many files at once with <b>Upload files…</b>, or drop them on the upload box. <b>Detect file type</b> recognizes networks by their header and expression files by their colors; anything else is read as an annotation. Pick a type yourself if detection guesses wrong. Networks with more than 5,000 nodes are cut to their first 5,000 nodes, with a note in the list. <b>Arena3D network files</b> (columns SourceNode, SourceLayer, TargetNode, TargetLayer, Weight, Channel) are recognized too: each becomes a network and an annotation with one group per layer. The list below it chooses whether network rows without a Direction value are read as undirected or directed. The name box names a single upload; with several files, each keeps its file name. Every file appears in one of three lists (Networks, Annotations, Expressions), in A–Z order, and stays there until you delete it (see <a href="#help-delete">Deleting files</a>). Files live only in this browser tab.</p>
+        <p>Upload one or many files at once with <b>Upload files…</b>, or drop them on the upload box. <b>Detect file type</b> recognizes networks by their header and expression files by their colors; anything else is read as an annotation. Pick a type yourself if detection guesses wrong. Networks with more than 10,000 nodes are cut to their first 10,000 nodes, with a note in the list. <b>Arena3D network files</b> (columns SourceNode, SourceLayer, TargetNode, TargetLayer, Weight, Channel) are recognized too: each becomes a network and an annotation with one group per layer. The list below it chooses whether network rows without a Direction value are read as undirected or directed. The name box names a single upload; with several files, each keeps its file name. Every file appears in one of three lists (Networks, Annotations, Expressions), in A–Z order, and stays there until you delete it (see <a href="#help-delete">Deleting files</a>). Files live only in this browser tab.</p>
         <h3 id="help-delete">Deleting files</h3>
         <p>There are four ways to remove things completely:</p>
         <ul>
@@ -2209,7 +2209,7 @@ TP53&#9;NA&#9;NA</pre>
         <p>Search, group shading, shapes, bundling and edge labels work the same for directed and undirected edges.</p>
 
         <h2 id="help-db">Database importers</h2>
-        <p>The <b>Database importers</b> tab fetches networks and groupings from public databases; no account is needed. Every import is added to <b>Files</b> (a network plus one annotation per grouping) and opens in a new view, where the <b>Grouping</b> list switches between its groupings. Nodes keep useful identifiers as attributes, in particular <code>uniprot</code>, which the Gene Ontology importer uses. Networks with directed edges open with arrows. Very large results are cut to 5,000 nodes, and every importer has a <b>Cancel</b> button. When NORMA runs with <code>server.py</code>, all requests go through the server (see <a href="#help-hosting">Running NORMA locally or on a server</a>); otherwise the browser calls the services directly, which some browsers block. STRING is described in <a href="#help-string">Importing from STRING</a>.</p>
+        <p>The <b>Database importers</b> tab fetches networks and groupings from public databases; no account is needed. Every import is added to <b>Files</b> (a network plus one annotation per grouping) and opens in a new view, where the <b>Grouping</b> list switches between its groupings. Nodes keep useful identifiers as attributes, in particular <code>uniprot</code>, which the Gene Ontology importer uses. Networks with directed edges open with arrows. Very large results are cut to 10,000 nodes, and every importer has a <b>Cancel</b> button. When NORMA runs with <code>server.py</code>, all requests go through the server (see <a href="#help-hosting">Running NORMA locally or on a server</a>); otherwise the browser calls the services directly, which some browsers block. STRING is described in <a href="#help-string">Importing from STRING</a>.</p>
         <h3>Reactome</h3>
         <p>Curated pathways from <a href="https://reactome.org" target="_blank" rel="noopener">Reactome</a>. Type a pathway name (choose the species) or a stable identifier such as <code>R-HSA-69278</code>, choose <b>Search pathways</b>, pick one, and choose <b>Fetch pathway network</b>. NORMA reads the pathway's reactions (up to <b>Most reactions</b>) and their participating molecules: nodes are the proteins (and, if ticked, small molecules), and two nodes are linked when they take part in the same reaction, weighted by how many reactions they share. Reactions with more than the chosen number of molecules are left out, since they would link everything to everything. Groupings: the pathway's <b>sub-pathways</b> (the proteins of the reactions each contains) and, optionally, the 40 largest <b>reactions</b>.</p>
         <h3>OmniPath</h3>
@@ -2602,7 +2602,7 @@ TP53&#9;NA&#9;NA</pre>
             <tr><td><code>api.enabled</code>, <code>ttlHours</code>, <code>maxMB</code>, <code>maxSessions</code></td><td><code>--no-api</code>, <code>NORMA_API</code>, <code>NORMA_API_TTL_HOURS</code>, <code>NORMA_API_MAX_MB</code></td><td>The REST API and how long, how large and how many payloads it keeps</td></tr>
             <tr><td><code>relays.string</code>, <code>arena3d</code>, <code>databases</code></td><td><code>--no-relays</code>, <code>NORMA_RELAYS</code></td><td>Turn the relays on or off; without them the page calls the services directly</td></tr>
             <tr><td><code>site.*</code></td><td><code>NORMA_CONTACT_EMAIL</code>, <code>NORMA_INSTITUTION</code>, <code>NORMA_NOTICE</code></td><td>Name, institution, contact e-mail and page, source code, licence name and link, privacy policy and imprint links, maintenance statement, tested browsers, and a notice shown at the top of the page (e.g. planned maintenance)</td></tr>
-            <tr><td><code>app.maxNodes</code>, <code>theme</code>, <code>startTab</code>, <code>cdnFallback</code></td><td><code>NORMA_MAX_NODES</code></td><td>Largest network shown (default 5,000), starting theme and page, and whether Cytoscape.js may be downloaded if the bundled copy is missing</td></tr>
+            <tr><td><code>app.maxNodes</code>, <code>theme</code>, <code>startTab</code>, <code>cdnFallback</code></td><td><code>NORMA_MAX_NODES</code></td><td>Largest network shown (default 10,000), starting theme and page, and whether Cytoscape.js may be downloaded if the bundled copy is missing</td></tr>
           </tbody>
         </table>
         <h3>What the server offers</h3>
@@ -2618,8 +2618,8 @@ TP53&#9;NA&#9;NA</pre>
         <h2 id="help-performance">Performance</h2>
         <ul>
           <li><b>Display → Performance → Draw with WebGL</b> uses Cytoscape.js's WebGL renderer, which draws large networks much faster. It is experimental: the choice is made when the page starts, so NORMA asks to reload the page (save the session first to keep your views). Adding <code>?webgl=1</code> or <code>?webgl=0</code> to the address sets it for one visit. Exported images, group shading, the 3D page and everything else work the same.</li>
-          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 5,000 nodes in your browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
-          <li><b>Network size:</b> NORMA shows networks of up to <b>5,000 nodes</b>. A network file, JSON file, session or combination of networks with more nodes is cut to its first 5,000 nodes (in the order they first appear) and the edges among them, and a message says how much was left out. To study part of a bigger network, filter it first (for example to a pathway, a STRING neighbourhood or a community).</li>
+          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 10,000 nodes in your browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
+          <li><b>Network size:</b> NORMA shows networks of up to <b>10,000 nodes</b>. A network file, JSON file, session or combination of networks with more nodes is cut to its first 10,000 nodes (in the order they first appear) and the edges among them, and a message says how much was left out. To study part of a bigger network, filter it first (for example to a pathway, a STRING neighbourhood or a community).</li>
           <li>Networks of a few thousand nodes are comfortable; beyond that, turn on WebGL drawing, turn off labels, curved edges and edge bundling, and use the grid or weighted force-directed layout.</li>
         </ul>
 
@@ -2645,7 +2645,7 @@ TP53&#9;NA&#9;NA</pre>
 
         <h2 id="help-trouble">Troubleshooting</h2>
         <ul>
-          <li><b>Only part of my network appears</b>: NORMA shows up to 5,000 nodes and keeps the first 5,000 of a larger network (see <a href="#help-performance">Performance</a>).</li>
+          <li><b>Only part of my network appears</b>: NORMA shows up to 10,000 nodes and keeps the first 10,000 of a larger network (see <a href="#help-performance">Performance</a>).</li>
           <li><b>A network file is rejected</b>: its first line must be the header <code>Source</code>, <code>Target</code> (optionally <code>Weight</code> and <code>Type</code>), separated by tabs.</li>
           <li><b>Groups are missing</b>: node names in the annotation must match the network exactly, including capitalization. Names that don't match are discarded when the annotation is uploaded and when it is shown; the status notes list them, and <b>Download corrected annotation</b> saves the cleaned file.</li>
           <li><b>An annotation was not kept</b>: none of its names matched the networks it was checked against. Upload it together with its network, or tick the right network before uploading it.</li>

@@ -262,11 +262,13 @@ export function legendModel() {
   if (o.channels) {
     const types = getUsedTypes().filter((t) => S.activeTypes.has(t))
     if (types.length > 1) {
-      const items = types.slice(0, 30).map((t) => ({
-        kind: 'line',
-        label: (EDGE_TYPES[t] || { label: t }).label,
-        color: (EDGE_TYPES[t] || { color: '#888' }).color,
-      }))
+      const items = types
+        .slice(0, 30)
+        .map((t) => ({
+          kind: 'line',
+          label: (EDGE_TYPES[t] || { label: t }).label,
+          color: (EDGE_TYPES[t] || { color: '#888' }).color,
+        }))
       if (types.length > 30)
         items.push({ kind: 'note', label: `and ${types.length - 30} more channels` })
       model.sections.push({

@@ -1,9 +1,10 @@
 // @ts-nocheck
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
 import { STRING_CALLER, STRING_PRIOR } from '../view3d/export'
+import { readTextWithProgress } from '../layouts/controls'
 
 /* ---------- requests ---------- */
-export var stringState = { busy: false, abort: null, lastCall: 0, versions: new Map() }
+export const stringState = { busy: false, abort: null, lastCall: 0, versions: new Map() }
 
 // How requests reach STRING: through server.py's relay (same origin, so no
 // cross-site restrictions) or directly from the browser.
@@ -53,7 +54,7 @@ export function stringBase() {
   return /^https?:\/\//i.test(raw) ? raw : 'https://' + raw
 }
 
-export async function stringCall(method, params) {
+export async function stringCall(method, params, { onBytes = null } = {}) {
   // one second between calls, as STRING asks
   const wait = stringState.lastCall + 1050 - Date.now()
   if (wait > 0) await new Promise((r) => setTimeout(r, wait))
@@ -93,7 +94,7 @@ export async function stringCall(method, params) {
   } finally {
     clearTimeout(timer)
   }
-  const text = await response.text()
+  const text = await readTextWithProgress(response, onBytes)
   if (!response.ok) {
     if (route === 'proxy') {
       if (response.status === 502 && /could not be reached from this server/.test(text))

@@ -1,5 +1,6 @@
 // @ts-nocheck
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
+import { S } from './state'
 import { activeView } from './profiler'
 import {
   applyLocalLayoutsAfter,
@@ -12,10 +13,18 @@ import {
 import {
   computeSubLayout,
   computeSubLayoutAsync,
+  makeLayoutProgress,
   normalizeSpacing,
   targetNodeSpacing,
 } from './metrics'
-import { downloadText, fileStem, plural, setLayoutMode, setStatus } from './layouts/controls'
+import {
+  downloadText,
+  fileStem,
+  nextPaint,
+  plural,
+  setLayoutMode,
+  setStatus,
+} from './layouts/controls'
 import { escapeHtml } from './network_state'
 import { groupSeparation } from './clustering/mapping'
 import { runActiveLayout } from './layouts/run'
@@ -109,24 +118,28 @@ export async function runLayoutBenchmark() {
   const rows = []
   const started = performance.now()
   try {
-    for (const [kind, name, label] of BENCH_LAYOUTS) {
+    for (const [li, [kind, name, label]] of BENCH_LAYOUTS.entries()) {
       if (benchState.cancel) break
-      setStatus('benchStatus', [
-        {
-          level: 'busy',
-          text: `Running ${label} (${rows.length + 1} of ${BENCH_LAYOUTS.length})…`,
-        },
-      ])
-      await new Promise((r) => setTimeout(r, 20))
+      const text = `Running ${label} (${li + 1} of ${BENCH_LAYOUTS.length})…`
+      const show = (f) => setStatus('benchStatus', [{ level: 'busy', text, progress: f }])
+      show(li / BENCH_LAYOUTS.length)
+      await nextPaint()
       const runs = []
       for (let k = 0; k < repeats; k++) {
         const t0 = performance.now()
         let pos
+        S.layoutProgress = makeLayoutProgress((f) =>
+          show((li + (k + f) / repeats) / BENCH_LAYOUTS.length)
+        )
         try {
           pos = await benchmarkPositions(kind, name, graph)
         } catch (err) {
           pos = null
+        } finally {
+          S.layoutProgress = null
         }
+        show((li + (k + 1) / repeats) / BENCH_LAYOUTS.length)
+        await nextPaint()
         const ms = performance.now() - t0
         if (!pos) continue
         runs.push({ ms, ...groupSeparation(pos, graph.groupsOf) })

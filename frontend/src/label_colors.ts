@@ -4,7 +4,7 @@ import { S } from './state'
 import { UNGROUPED, escapeHtml } from './network_state'
 import { currentTheme } from './themes'
 import { edgeIsDirected } from './export/dialog'
-import { libEntry, normaLibrary, plural, setStatus } from './layouts/controls'
+import { libEntry, nextPaint, normaLibrary, plural, setStatus } from './layouts/controls'
 import { profileDirected } from './directed_stats'
 import { profileGraph, simpleGraph } from './wiring'
 import { renderComparison } from './export/draw'
@@ -264,9 +264,12 @@ export function runComparison() {
     setStatus('cmpStatus', [{ level: 'error', text: 'Choose at least two networks to compare.' }])
     return
   }
-  setStatus('cmpStatus', [{ level: 'busy', text: 'Comparing networks…' }])
+  // steps: one per network, then the overlaps and drawing
+  const cmpShow = (text, f) => setStatus('cmpStatus', [{ level: 'busy', text, progress: f }])
+  cmpShow('Comparing networks…', 0)
   document.getElementById('btnCompare').disabled = true
-  setTimeout(() => {
+  ;(async () => {
+    await nextPaint()
     try {
       const started = performance.now()
       const nets = chosen
@@ -277,7 +280,9 @@ export function runComparison() {
         })
         .filter(Boolean)
       const useDir = document.getElementById('cmpDirected').checked
-      nets.forEach((net, i) => {
+      for (const [i, net] of nets.entries()) {
+        cmpShow(`Profiling network ${i + 1} of ${nets.length}…`, i / (nets.length + 1))
+        await nextPaint()
         net.color = COMPARE_COLORS[i]
         net.nodeSet = new Set(net.ids)
         net.edgeSet = new Set()
@@ -293,7 +298,9 @@ export function runComparison() {
         net.directed =
           useDir && net.pairs.some((p) => p[2]) ? profileDirected(net.ids, net.pairs) : null
         net.degreeOf = new Map(net.ids.map((id, k) => [id, net.stats.degree[k]]))
-      })
+      }
+      cmpShow('Computing overlaps and drawing…', nets.length / (nets.length + 1))
+      await nextPaint()
       compareState.results = nets
       renderComparison(nets)
       const secs = ((performance.now() - started) / 1000).toFixed(2)
@@ -310,7 +317,7 @@ export function runComparison() {
     } finally {
       updateCompareLimit()
     }
-  }, 30)
+  })()
 }
 
 // page wiring, run by main.ts in the original order

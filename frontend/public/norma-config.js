@@ -18,5 +18,5 @@ window.NORMA_CONFIG = {
     notice: "",
     testedBrowsers: []
   },
-  app: { maxNodes: 5000, theme: "white", startTab: "welcome", cdnFallback: true }
+  app: { maxNodes: 10000, theme: "white", startTab: "welcome", cdnFallback: true }
 };

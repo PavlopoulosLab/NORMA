@@ -43,11 +43,14 @@ import {
   libEntry,
   libSelection,
   listSample,
+  nextPaint,
   normaLibrary,
   parseNormaNetwork,
   plural,
+  readTextWithProgress,
   renderLibraryLists,
   setStatus,
+  startProgress,
 } from './layouts/controls'
 import { S } from './state'
 import { WEBGL_ACTIVE, cy } from './cy'
@@ -1175,7 +1178,7 @@ export function webglPreference() {
    weighted layout, edge bundling, profiling, Louvain and the group
    separation score. Nothing on screen changes.
    ============================================================ */
-const RUNTIME_SIZES = [100, 500, 1000, 2500, 5000]
+const RUNTIME_SIZES = [100, 500, 1000, 2500, 5000, 10000]
 
 const runtimeState = { rows: [], running: false, cancel: false }
 
@@ -1198,12 +1201,19 @@ async function runRuntimeTable() {
     return [performance.now() - t, r]
   }
   try {
+    // larger networks take much longer: weigh each size by n^1.5
+    const weightOf = (n) => Math.pow(n, 1.5)
+    const totalWeight = sizes.reduce((a, n) => a + weightOf(n), 0)
+    let doneWeight = 0
     for (const n of sizes) {
       if (runtimeState.cancel) break
-      setStatus('runtimeStatus', [
-        { level: 'busy', text: `Timing a network of ${n.toLocaleString()} nodes…` },
-      ])
-      await new Promise((r) => setTimeout(r, 30))
+      const text = `Timing a network of ${n.toLocaleString()} nodes…`
+      const show = (f) =>
+        setStatus('runtimeStatus', [
+          { level: 'busy', text, progress: (doneWeight + weightOf(n) * f) / totalWeight },
+        ])
+      show(0)
+      await nextPaint()
       const demo = generateRandomNetwork(n, { seed: n + 3 })
       const texts = demoToNormaTexts(demo)
       const row = { nodes: n }
@@ -1226,7 +1236,7 @@ async function runRuntimeTable() {
       headless.destroy()
       const edges = demo.edges.map((e) => ({ source: e.source, target: e.target, weight: 1 }))
       const ids = demo.nodes.map((x) => x.id)
-      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges))
+      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges, (f) => show(0.1 + 0.4 * f)))
       row.layout = tLayout
       if (runtimeState.cancel) break
       const segs = demo.edges.map((e) => ({
@@ -1236,9 +1246,14 @@ async function runRuntimeTable() {
         ty: pos[e.target].y * 40,
       }))
       if (segs.length <= BUNDLE_MAX_EDGES) {
-        const [tBundle] = await time(() => bundleAsync(segs, { threshold: 0.6, iterations: 60 }))
+        show(0.5)
+        const [tBundle] = await time(() =>
+          bundleAsync(segs, { threshold: 0.6, iterations: 60 }, (f) => show(0.5 + 0.4 * f))
+        )
         row.bundle = tBundle
       } else row.bundle = NaN
+      show(0.9)
+      await nextPaint()
       const g = simpleGraph(
         ids,
         demo.edges.map((e) => [e.source, e.target])
@@ -1252,6 +1267,7 @@ async function runRuntimeTable() {
       row.separation = tSep
       runtimeState.rows.push(row)
       renderRuntimeTable()
+      doneWeight += weightOf(n)
       await new Promise((r) => setTimeout(r, 30))
     }
     setStatus('runtimeStatus', [
@@ -1515,7 +1531,7 @@ const DB_LABELS = {
   go: 'Gene Ontology',
 }
 
-const dbState = { busy: {}, abort: {} }
+const dbState = { busy: {}, abort: {}, task: {}, mapping: {} }
 
 async function dbFetch(
   key,
@@ -1554,7 +1570,12 @@ async function dbFetch(
   } finally {
     clearTimeout(timer)
   }
-  const body2 = await response.text()
+  // download progress, except for the many small requests of dbMap (counted there)
+  const task = dbState.task[key]
+  const body2 = await readTextWithProgress(
+    response,
+    task && !dbState.mapping[key] ? (got, total) => task.bytes(got, total) : null
+  )
   if (!response.ok) {
     if (route === 'proxy' && !response.headers.get('X-Norma-Relay'))
       throw new Error(
@@ -1586,6 +1607,7 @@ async function dbMap(key, items, limit, fn, progress) {
   const out = new Array(items.length)
   let next = 0,
     done = 0
+  dbState.mapping[key] = (dbState.mapping[key] || 0) + 1
   const worker = async () => {
     while (next < items.length) {
       if (dbState.cancelled[key]) throw new Error('Cancelled.')
@@ -1598,9 +1620,14 @@ async function dbMap(key, items, limit, fn, progress) {
       }
       done++
       if (progress) progress(done, items.length)
+      if (dbState.task[key]) dbState.task[key].sub(done / items.length)
     }
   }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  try {
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  } finally {
+    dbState.mapping[key]--
+  }
   return out
 }
 
@@ -1608,8 +1635,22 @@ function dbStatus(key, notes) {
   setStatus(`${key}Status`, notes)
 }
 
+// Progress of an import: dbPlan sets its weighted steps, dbStep moves on,
+// dbProgress changes the text of the current step.
+function dbPlan(key, weights) {
+  dbState.task[key] = startProgress(`${key}Status`, weights)
+  return dbState.task[key]
+}
+
+function dbStep(key, i, text) {
+  if (!dbState.task[key] || !dbState.task[key].active) dbPlan(key, [1])
+  dbState.task[key].step(i, text)
+}
+
 function dbProgress(key, text) {
-  dbStatus(key, [{ level: 'busy', text }])
+  const task = dbState.task[key]
+  if (task && task.active) task.say(text)
+  else dbStep(key, 0, text)
 }
 
 function dbBusy(key, busy) {
@@ -1625,11 +1666,15 @@ function dbBusy(key, busy) {
 async function dbRun(key, fn) {
   if (dbState.busy[key]) return
   dbBusy(key, true)
+  dbState.mapping[key] = 0
+  dbStep(key, 0, `Contacting ${DB_LABELS[key]}…`)
   try {
     await fn()
   } catch (err) {
     dbStatus(key, [{ level: 'error', text: err.message }])
   } finally {
+    if (dbState.task[key]) dbState.task[key].stop()
+    dbState.task[key] = null
     dbBusy(key, false)
   }
 }
@@ -1915,7 +1960,9 @@ export async function reactomeFetch() {
       parseInt(document.getElementById('reactomeMaxSize').value, 10) || 25
     )
     const smallMolecules = document.getElementById('reactomeSmall').checked
-    dbProgress('reactome', 'Reading the pathway…')
+    // steps: pathway, sub-pathways, reactions, building
+    dbPlan('reactome', [2, 1, 6, 1])
+    dbStep('reactome', 0, 'Reading the pathway…')
     const top = await dbFetch(
       'reactome',
       `${DB_URLS.reactome}/data/query/${encodeURIComponent(pid)}`
@@ -1949,6 +1996,7 @@ export async function reactomeFetch() {
       .map(resolve)
       .filter((e) => e && e.schemaClass === 'Pathway')
       .slice(0, 40)
+    dbStep('reactome', 1, `Reading ${plural(children.length, 'sub-pathway')}…`)
     const childReactions = await dbMap('reactome', children, 4, async (ch) => {
       const evs =
         (await dbFetch(
@@ -1958,6 +2006,7 @@ export async function reactomeFetch() {
       return new Set(evs.filter((e) => e && typeof e === 'object').map((e) => e.stId))
     })
     // participants of each reaction
+    dbStep('reactome', 2, `Reading reactions: 0 of ${used.length}…`)
     const parts = await dbMap(
       'reactome',
       used,
@@ -2060,6 +2109,8 @@ export async function reactomeFetch() {
         }))
       groupings.push({ label: 'reactions', groups })
     }
+    dbStep('reactome', 3, 'Building and opening the network…')
+    await nextPaint()
     dbAddImport('reactome', {
       name: `Reactome ${stripTags(top.displayName)} (${pid})`,
       edges,
@@ -2089,7 +2140,20 @@ export async function omnipathFetch() {
     const among = document.getElementById('omnipathAmong').checked
     const maxPartners = Math.max(0, parseInt(document.getElementById('omnipathMax').value, 10) || 0)
     const channels = document.getElementById('omnipathChannels').value
-    dbProgress('omnipath', 'Fetching interactions from OmniPath…')
+    const wantedGroups = [...document.querySelectorAll('#omnipathGroups input:checked')].map(
+      (i) => i.value
+    )
+    const annResource = document.getElementById('omnipathAnnotation').value.trim()
+    // steps: interactions, complexes, intercellular roles, annotations, building
+    const omniSteps = [
+      6,
+      wantedGroups.includes('complexes') ? 2 : 0,
+      wantedGroups.includes('intercell') ? 2 : 0,
+      wantedGroups.includes('annotations') && annResource ? 2 : 0,
+      1,
+    ]
+    dbPlan('omnipath', omniSteps)
+    dbStep('omnipath', 0, 'Fetching interactions from OmniPath…')
     const url = `${DB_URLS.omnipath}/interactions?partners=${encodeURIComponent(names.join(','))}&genesymbols=yes&organisms=${organism}&datasets=${datasets.join(',')}&fields=sources,references,curation_effort,type${among ? '&source_target=AND' : ''}&format=json`
     const rows = (await dbFetch('omnipath', url)) || []
     if (!Array.isArray(rows) || !rows.length)
@@ -2198,7 +2262,7 @@ export async function omnipathFetch() {
         )
       ).flatMap((x) => (Array.isArray(x) ? x : []))
     if (wanted.includes('complexes') && uniprots.length) {
-      dbProgress('omnipath', 'Fetching complexes…')
+      dbStep('omnipath', 1, 'Fetching complexes…')
       const cx = await fetchAll('complexes')
       const groups = new Map()
       cx.forEach((c) => {
@@ -2227,7 +2291,7 @@ export async function omnipathFetch() {
       })
     }
     if (wanted.includes('intercell') && uniprots.length) {
-      dbProgress('omnipath', 'Fetching intercellular roles…')
+      dbStep('omnipath', 2, 'Fetching intercellular roles…')
       const ic = await fetchAll('intercell?scope=generic')
       const groups = new Map()
       ic.forEach((r) => {
@@ -2241,7 +2305,7 @@ export async function omnipathFetch() {
     }
     const resource = document.getElementById('omnipathAnnotation').value.trim()
     if (wanted.includes('annotations') && resource && uniprots.length) {
-      dbProgress('omnipath', `Fetching ${resource} annotations…`)
+      dbStep('omnipath', 3, `Fetching ${resource} annotations…`)
       const an = await fetchAll(`annotations?resources=${encodeURIComponent(resource)}`)
       const LABELS = [
         'pathway',
@@ -2278,6 +2342,8 @@ export async function omnipathFetch() {
         groups: [...groups.values()].map((g) => ({ ...g, members: [...g.members] })),
       })
     }
+    dbStep('omnipath', omniSteps.length - 1, 'Building and opening the network…')
+    await nextPaint()
     dbAddImport('omnipath', {
       name: `OmniPath ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`,
       edges,
@@ -2373,7 +2439,8 @@ export async function ndexFetch() {
   await dbRun('ndex', async () => {
     const uuid = document.getElementById('ndexNetwork').value
     if (!uuid) throw new Error('Search and choose a network first.')
-    dbProgress('ndex', 'Downloading the network from NDEx…')
+    dbPlan('ndex', [8, 1])
+    dbStep('ndex', 0, 'Downloading the network from NDEx…')
     const cx = await dbFetch('ndex', `${DB_URLS.ndex}/v3/networks/${encodeURIComponent(uuid)}`)
     const net = readCx2(cx)
     if (!net.nodes.length) throw new Error('This network has no nodes, or is not public.')
@@ -2455,6 +2522,8 @@ export async function ndexFetch() {
         text: 'The network has no node attribute that makes useful groups (2 to 60 values covering at least 30% of the nodes); add an annotation or use communities.',
       })
     if (positions) notes.push({ level: 'ok', text: 'The layout saved in NDEx is kept.' })
+    dbStep('ndex', 1, 'Building and opening the network…')
+    await nextPaint()
     dbAddImport('ndex', {
       name: `NDEx ${net.name || uuid}`.slice(0, 90),
       edges,
@@ -2511,7 +2580,8 @@ export async function intactFetch() {
     const ids = names.map((n) => (/[\s():]/.test(n) ? `"${n}"` : n)).join(' OR ')
     let miql = `identifier:(${ids})`
     if (taxon) miql += ` AND taxidA:${taxon} AND taxidB:${taxon}`
-    dbProgress('intact', 'Fetching interactions from IntAct…')
+    dbPlan('intact', [8, 1])
+    dbStep('intact', 0, 'Fetching interactions from IntAct…')
     const text = await dbFetch(
       'intact',
       `${DB_URLS.intact}/query/${encodeURIComponent(miql)}?format=tab25&firstResult=0&maxResults=${maxRows}`,
@@ -2606,6 +2676,8 @@ export async function intactFetch() {
         ],
       },
     ]
+    dbStep('intact', 1, 'Building and opening the network…')
+    await nextPaint()
     dbAddImport('intact', {
       name: `IntAct ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`,
       edges: edges.map(({ evidence, ...e }) => e),
@@ -2684,7 +2756,8 @@ export async function goFetchModel() {
     const typed = document.getElementById('goModelId').value.trim()
     const id = (typed || document.getElementById('goModel').value || '').replace(/^gomodel:/, '')
     if (!id) throw new Error('Choose a GO-CAM model or type its identifier.')
-    dbProgress('go', 'Downloading the GO-CAM model…')
+    dbPlan('go', [6, 1])
+    dbStep('go', 0, 'Downloading the GO-CAM model…')
     const m = await dbFetch('go', `${DB_URLS.goapi}/gocam-model/${encodeURIComponent(id)}`)
     const labels = new Map((m.objects || []).map((o) => [o.id, o.label || o.id]))
     const label = (t) => {
@@ -2744,6 +2817,8 @@ export async function goFetchModel() {
       byAspect('molecular_function', 'molecular function'),
     ]
     if (!edges.length) throw new Error('This model has no causal links between gene products.')
+    dbStep('go', 1, 'Building and opening the network…')
+    await nextPaint()
     dbAddImport('go', {
       name: `GO-CAM ${m.title || id}`.slice(0, 90),
       edges,
@@ -2777,7 +2852,14 @@ export async function goAnnotateView() {
     const batches = []
     for (let i = 0; i < accs.length; i += 100) batches.push(accs.slice(i, i + 100))
     const groupings = []
-    for (const aspect of aspects) {
+    // steps: one per aspect, then adding the groupings
+    dbPlan('go', [...aspects.map(() => 3), 1])
+    for (const [ai, aspect] of aspects.entries()) {
+      dbStep(
+        'go',
+        ai,
+        `Reading ${aspect.replace('_', ' ')} annotations: 0 of ${batches.length} batches…`
+      )
       const terms = new Map()
       const results = await dbMap(
         'go',
@@ -2824,6 +2906,8 @@ export async function goAnnotateView() {
         .slice(0, maxGroups)
       groupings.push({ label: `GO ${aspect.replace('_', ' ')}`, groups })
     }
+    dbStep('go', aspects.length, 'Adding the groupings…')
+    await nextPaint()
     const v = activeView()
     const entries = dbAddGroupingsToView('go', groupings, v ? v.name : 'View')
     dbStatus(

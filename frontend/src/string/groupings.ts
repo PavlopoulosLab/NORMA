@@ -7,34 +7,44 @@ import {
   plural,
   renderLibraryLists,
   setStatus,
+  startProgress,
 } from '../layouts/controls'
 import { refreshLibraryView } from '../library'
 import { stringCall, stringState } from './requests'
 import { stringNetworkInView, stringSettings, updateStringUI } from './ui_state'
-import { stringProgress } from './import'
 
 /* ---------- groupings ---------- */
-export async function fetchStringGroupings(netEntry, st, notes) {
+// task/step: the import's progress; on its own, it shows a progress of its own.
+export async function fetchStringGroupings(netEntry, st, notes, task = null, step = 0) {
   const meta = netEntry.stringMeta
   const nameOf = new Map(Object.entries(meta.nameOf))
   const byPreferred = new Map([...nameOf.values()].map((n) => [n.toLowerCase(), n]))
   const ids = meta.stringIds
   const enrichment = st.annotMode === 'enrichment'
-  stringProgress(
+  const own = !task
+  if (own) {
+    task = startProgress('stringStatus', [1])
+    step = 0
+  }
+  task.step(
+    step,
     enrichment
       ? `Running functional enrichment for ${plural(ids.length, 'protein')}…`
       : `Fetching functional annotations for ${plural(ids.length, 'protein')}…`
   )
   let rows
   try {
-    rows = await stringCall(enrichment ? 'enrichment' : 'functional_annotation', {
-      identifiers: ids.join('\r'),
-      species: meta.taxon,
-    })
+    rows = await stringCall(
+      enrichment ? 'enrichment' : 'functional_annotation',
+      { identifiers: ids.join('\r'), species: meta.taxon },
+      { onBytes: (got, total) => task.bytes(got, total) }
+    )
   } catch (err) {
     notes.push({ level: 'warn', text: `Groupings couldn't be fetched: ${err.message}` })
+    if (own) task.stop()
     return []
   }
+  if (own) task.stop()
   const wanted = new Set(st.categories)
   const byCat = new Map()
   const seenCats = new Map()

@@ -426,7 +426,7 @@ const ARENA3D_SOURCES = {
 export async function exportArena3d(kind, src = 'view') {
   const S = ARENA3D_SOURCES[src]
   try {
-    setStatus(S.status, [{ level: 'busy', text: 'Preparing the Arena3D network…' }])
+    setStatus(S.status, [{ level: 'busy', text: 'Preparing the Arena3D network…', progress: null }])
     const model = await S.build()
     const stem = S.stem()
     if (kind === 'json') {
@@ -473,7 +473,7 @@ export async function openInArena3d(src = 'view') {
     return
   }
   setStatus(S.status, [
-    { level: 'busy', text: `Sending ${arena3dSummary(model.stats)} to Arena3D…` },
+    { level: 'busy', text: `Sending ${arena3dSummary(model.stats)} to Arena3D…`, progress: null },
   ])
   try {
     const route =

@@ -679,15 +679,48 @@ function revealSection(el) {
   if (h) h.setAttribute('aria-expanded', 'true')
 }
 
+// A busy item may carry `progress`: a fraction from 0 to 1, or null while
+// the amount of work is unknown (an animated bar). Repeated progress updates
+// change the bar in place, so it moves smoothly and screen readers are not
+// sent every percentage.
 export function setStatus(elId, items) {
   const el = document.getElementById(elId)
   if (!el) return
+  const withProgress = items.length === 1 && items[0].progress !== undefined
+  if (!withProgress && progressTasks && progressTasks.has(elId)) progressTasks.get(elId).stop()
+  if (withProgress) {
+    const note = el.children.length === 1 ? el.firstElementChild : null
+    if (note && note.classList.contains('busy') && note._progress) {
+      updateProgressNote(note, items[0])
+      return
+    }
+  }
   // sections start folded: an error opens the section so it is seen
   if (items.some((i) => i.level === 'error')) revealSection(el)
   el.innerHTML = ''
   items.forEach((item) => {
     const note = document.createElement('div')
     note.className = 'note ' + (item.level || 'ok')
+    if (item.progress !== undefined) {
+      const label = document.createElement('span')
+      const row = document.createElement('div')
+      row.className = 'progress-row'
+      const bar = document.createElement('div')
+      bar.className = 'progress'
+      bar.setAttribute('role', 'progressbar')
+      bar.setAttribute('aria-valuemin', '0')
+      bar.setAttribute('aria-valuemax', '100')
+      bar.appendChild(document.createElement('span'))
+      const pct = document.createElement('span')
+      pct.className = 'progress-pct'
+      pct.setAttribute('aria-hidden', 'true')
+      row.append(bar, pct)
+      note.append(label, row)
+      note._progress = { label, bar, pct }
+      updateProgressNote(note, item)
+      el.appendChild(note)
+      return
+    }
     note.textContent = item.text
     if (item.action) {
       const btn = document.createElement('button')
@@ -698,6 +731,146 @@ export function setStatus(elId, items) {
     }
     el.appendChild(note)
   })
+}
+
+function updateProgressNote(note, item) {
+  const { label, bar, pct } = note._progress
+  if (label.textContent !== item.text) {
+    label.textContent = item.text
+    bar.setAttribute('aria-label', item.text)
+  }
+  const f = item.progress
+  if (typeof f === 'number' && Number.isFinite(f)) {
+    const v = Math.max(0, Math.min(1, f))
+    bar.classList.remove('indeterminate')
+    bar.firstElementChild.style.width = (v * 100).toFixed(1) + '%'
+    bar.setAttribute('aria-valuenow', String(Math.round(v * 100)))
+    pct.textContent = Math.floor(v * 100) + '%'
+  } else {
+    bar.classList.add('indeterminate')
+    bar.firstElementChild.style.width = ''
+    bar.removeAttribute('aria-valuenow')
+    pct.textContent = ''
+  }
+}
+
+/* ---------- progress of a task made of weighted steps ----------
+   const task = startProgress('stringStatus', [1, 2, 5]);
+   task.step(0, 'Checking the version…');   // moves to a step
+   task.sub(0.4);                           // measured progress in the step
+   task.say('Reading 3 of 8…');             // new text, same step
+   task.bytes(received, total);             // download progress in the step
+   Until a step reports measured progress, its bar creeps slowly toward the
+   end of the step (never reaching it), so a long single request still shows
+   that work goes on. Any status that is not a progress update, such as the
+   result or an error, ends the task. */
+var progressTasks = new Map()
+
+function formatBytes(n) {
+  if (n < 1024) return `${n} B`
+  if (n < 1048576) return `${(n / 1024).toFixed(0)} kB`
+  return `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`
+}
+
+export function startProgress(elId, weights) {
+  const old = progressTasks.get(elId)
+  if (old) old.stop()
+  const w = weights.map((x) => Math.max(0, +x || 0))
+  const total = w.reduce((a, b) => a + b, 0) || 1
+  const starts = w.map((_, i) => w.slice(0, i).reduce((a, b) => a + b, 0))
+  const task = {
+    index: 0,
+    text: '',
+    measured: null,
+    stepStart: performance.now(),
+    received: 0,
+    active: true,
+    timer: null,
+    last: 0,
+    fraction() {
+      const i = Math.min(this.index, w.length - 1)
+      let sub = this.measured
+      if (sub === null) {
+        // creep: about half of the step after ~6 s, never more than 85%
+        const t = (performance.now() - this.stepStart) / 1000
+        sub = 0.85 * (1 - Math.exp(-t / 8))
+      }
+      return (starts[i] + w[i] * Math.max(0, Math.min(1, sub))) / total
+    },
+    render(force) {
+      if (!this.active) return
+      const now = performance.now()
+      if (!force && now - this.last < 100) return
+      this.last = now
+      const extra = this.received ? ` (${formatBytes(this.received)} received)` : ''
+      setStatus(elId, [{ level: 'busy', text: this.text + extra, progress: this.fraction() }])
+    },
+    step(i, text) {
+      this.index = i
+      this.text = text
+      this.measured = null
+      this.received = 0
+      this.stepStart = performance.now()
+      this.render(true)
+    },
+    say(text) {
+      this.text = text
+      this.render(true)
+    },
+    sub(f) {
+      this.measured = Math.max(0, Math.min(1, f))
+      this.render()
+    },
+    bytes(received, totalBytes) {
+      this.received = received
+      if (totalBytes > 0 && received <= totalBytes) this.measured = received / totalBytes
+      this.render()
+    },
+    stop() {
+      this.active = false
+      clearInterval(this.timer)
+      if (progressTasks.get(elId) === this) progressTasks.delete(elId)
+    },
+  }
+  progressTasks.set(elId, task)
+  task.timer = setInterval(() => task.render(true), 400)
+  return task
+}
+
+// Resolves once the browser has had a chance to paint (for example a
+// progress note) before synchronous work; does not wait in a hidden tab.
+export function nextPaint() {
+  return new Promise((resolve) => {
+    let done = false
+    const finish = () => {
+      if (!done) {
+        done = true
+        resolve()
+      }
+    }
+    requestAnimationFrame(() => setTimeout(finish, 0))
+    setTimeout(finish, 60)
+  })
+}
+
+// Reads a response body as text, reporting the bytes received so far and,
+// when the server gives it, the total.
+export async function readTextWithProgress(response, onBytes) {
+  if (!onBytes || !response.body || typeof response.body.getReader !== 'function')
+    return response.text()
+  const total = Number(response.headers.get('Content-Length')) || 0
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let received = 0,
+    out = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    received += value.length
+    out += decoder.decode(value, { stream: true })
+    onBytes(received, total)
+  }
+  return out + decoder.decode()
 }
 
 export function downloadText(fileName, text) {

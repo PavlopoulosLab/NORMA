@@ -61,7 +61,7 @@ export function nodeFillMode() {
 // their first nodes (in file order) with a message.
 export const MAX_NETWORK_NODES = Math.max(
   100,
-  Math.min(50000, parseInt(NORMA_CFG.app.maxNodes, 10) || 5000)
+  Math.min(50000, parseInt(NORMA_CFG.app.maxNodes, 10) || 10000)
 )
 
 export const RESERVED_NODE_KEYS = new Set([

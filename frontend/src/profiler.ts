@@ -54,6 +54,7 @@ import {
   libEntry,
   libSelection,
   listSample,
+  nextPaint,
   normaLibrary,
   plural,
   renderLibraryLists,
@@ -173,27 +174,40 @@ function runProfiler() {
     ])
     return
   }
-  setStatus('profStatus', [{ level: 'busy', text: 'Computing statistics…' }])
+  const profText = (i) =>
+    chosen.length > 1
+      ? `Computing statistics: network ${i + 1} of ${chosen.length}…`
+      : 'Computing statistics…'
+  setStatus('profStatus', [
+    { level: 'busy', text: profText(0), progress: chosen.length > 1 ? 0 : null },
+  ])
   document.getElementById('btnProfile').disabled = true
-  // let the status paint before the (synchronous) computation starts
-  setTimeout(() => {
+  // one network at a time, letting the progress paint in between
+  ;(async () => {
+    await nextPaint()
     try {
       const started = performance.now()
       const useDir = document.getElementById('profDirected').checked
-      const results = chosen
-        .map((value) => {
-          const g = graphForSource(value)
-          return g && { ...g, sourceValue: value }
-        })
-        .filter(Boolean)
-        .map((src) => ({
+      const results = []
+      for (const [i, value] of chosen.entries()) {
+        if (i > 0) {
+          setStatus('profStatus', [
+            { level: 'busy', text: profText(i), progress: i / chosen.length },
+          ])
+          await nextPaint()
+        }
+        const g = graphForSource(value)
+        if (!g) continue
+        const src = { ...g, sourceValue: value }
+        results.push({
           ...src,
           stats: profileGraph(src.graph),
           directed:
             useDir && src.dirEdges.some((d) => d[2])
               ? profileDirected(src.ids, src.dirEdges)
               : null,
-        }))
+        })
+      }
       profilerState.results = results
       renderProfilerResults(results)
       const secs = ((performance.now() - started) / 1000).toFixed(2)
@@ -214,7 +228,7 @@ function runProfiler() {
     } finally {
       document.getElementById('btnProfile').disabled = false
     }
-  }, 30)
+  })()
 }
 
 export function renderProfilerResults(results) {
@@ -475,11 +489,17 @@ export function renderProfilerResults(results) {
         : a === 'mcl'
           ? { inflation: v }
           : { resolution: v }
+    const cmText = `Finding communities with ${COMMUNITY_ALGORITHMS[a].label}…`
     setStatus('profStatus', [
-      { level: 'busy', text: `Finding communities with ${COMMUNITY_ALGORITHMS[a].label}…` },
+      { level: 'busy', text: cmText, progress: results.length > 1 ? 0 : null },
     ])
-    setTimeout(() => {
-      results.forEach((r) => {
+    ;(async () => {
+      await nextPaint()
+      for (const [i, r] of results.entries()) {
+        if (i > 0) {
+          setStatus('profStatus', [{ level: 'busy', text: cmText, progress: i / results.length }])
+          await nextPaint()
+        }
         const t0 = performance.now()
         try {
           r.cmResult = runCommunityAlgorithm(r.graph, a, params)
@@ -491,12 +511,12 @@ export function renderProfilerResults(results) {
         r.cmMs = performance.now() - t0
         r.cmAlgo = a
         r.cmLabel = `${COMMUNITY_ALGORITHMS[a].label}${name ? ` (${name.toLowerCase()} ${a === 'walktrap' ? Math.round(v) : v})` : ''}`
-      })
+      }
       drawCommunities()
       setStatus('profStatus', [
         { level: 'ok', text: `Found communities with ${COMMUNITY_ALGORITHMS[a].label}.` },
       ])
-    }, 30)
+    })()
   })
   syncParam()
   drawCommunities()
@@ -1360,17 +1380,31 @@ async function runBundling() {
     return
   }
   const run = ++bundleSeq
-  setStatus('bundleStatus', edges.length > 300 ? [{ level: 'busy', text: 'Bundling edges…' }] : [])
+  setStatus(
+    'bundleStatus',
+    edges.length > 300
+      ? [{ level: 'busy', text: `Bundling ${edges.length.toLocaleString()} edges…`, progress: 0 }]
+      : []
+  )
   const list = edges.toArray()
   const segs = list.map((e) => {
     const a = e.source().position(),
       b = e.target().position()
     return { sx: a.x, sy: a.y, tx: b.x, ty: b.y }
   })
-  const result = await bundleAsync(segs, {
-    threshold: 0.85 - 0.5 * strength,
-    iterations: Math.round(30 + 60 * strength),
-  })
+  const result = await bundleAsync(
+    segs,
+    {
+      threshold: 0.85 - 0.5 * strength,
+      iterations: Math.round(30 + 60 * strength),
+    },
+    (f) => {
+      if (run === bundleSeq && edges.length > 300)
+        setStatus('bundleStatus', [
+          { level: 'busy', text: `Bundling ${edges.length.toLocaleString()} edges…`, progress: f },
+        ])
+    }
+  )
   if (run !== bundleSeq || !result || !bundlingOn()) return
   bundleSignature = signature
   lastBundle = { list, segs, result }

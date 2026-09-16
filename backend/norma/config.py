@@ -47,7 +47,7 @@ DEFAULTS: Config = {
         "notice": "",
         "testedBrowsers": [],
     },
-    "app": {"maxNodes": 5000, "theme": "white", "startTab": "welcome", "cdnFallback": True},
+    "app": {"maxNodes": 10000, "theme": "white", "startTab": "welcome", "cdnFallback": True},
 }
 
 ENV_MAP: dict[str, tuple[str, ...]] = {

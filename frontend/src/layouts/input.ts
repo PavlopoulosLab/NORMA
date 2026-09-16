@@ -11,6 +11,7 @@ import { S } from '../state'
 import { UNGROUPED, effectiveGroupsFor } from '../network_state'
 import { cy } from '../cy'
 import { mulberry32 } from '../sample_data'
+import { nextPaint } from './controls'
 
 /* ---------- layout input: what the strategies see ---------- */
 // Visible nodes, their active groups, and one weighted edge per node pair
@@ -152,7 +153,15 @@ function localGroupRadius(k, localName, spacing, clusterScale) {
 async function placeGroupsLocally(graph, groups, centers, radii, localName, force) {
   const rand = mulberry32(FR_SEED)
   const candidates = {}
+  const lp0 = S.layoutProgress
+  if (lp0) lp0.begin([...groups].reduce((a, [, m]) => a + m.length, 0))
+  let lastPaint = performance.now()
   for (const [g, members] of groups) {
+    if (lp0) lp0.part(members.length)
+    if (performance.now() - lastPaint > 60) {
+      await nextPaint()
+      lastPaint = performance.now()
+    }
     const center = centers[g]
     const radius = radii[g]
     if (members.length === 1) {

@@ -9,6 +9,7 @@ import {
   getFrWorker,
   invalidateFullMetrics,
   updateStats,
+  workStep,
 } from '../metrics'
 import { buildSvg } from './svg'
 import { buildSvg3d, export3dSize, renderExportCanvas3d } from '../view3d/export'
@@ -25,7 +26,7 @@ import { cy, setStyle } from '../cy'
 import { exportFrame, exportPixelSize, exportSizeText, withLegendSize } from './draw'
 import { markDirty3d, net3d } from '../view3d/state'
 import { mulberry32 } from '../sample_data'
-import { setStatus } from '../layouts/controls'
+import { nextPaint, setStatus } from '../layouts/controls'
 
 /* ---------- dialog ---------- */
 const EXPORT_FORMATS = {
@@ -128,8 +129,8 @@ async function saveExportImage() {
   const info = EXPORT_FORMATS[o.format]
   const btn = document.getElementById('btnImgSave')
   btn.disabled = true
-  setStatus('imgStatus', [{ level: 'busy', text: 'Drawing the image…' }])
-  await new Promise((r) => setTimeout(r, 30))
+  setStatus('imgStatus', [{ level: 'busy', text: 'Drawing the image…', progress: null }])
+  await nextPaint()
   // optionally hide selection and search/click highlighting while drawing
   let restore = null
   if (o.clean) {
@@ -385,6 +386,7 @@ export function fr3dLayout(ids, edges, opts) {
     let temp = R0 * 0.5
     const cool = temp / (iters + 1)
     for (let it = 0; it < iters; it++) {
+      if ((it & 3) === 0) workStep(it / iters)
       DX.fill(0)
       DY.fill(0)
       DZ.fill(0)
@@ -498,7 +500,13 @@ export function fr3dLayout(ids, edges, opts) {
     return { X, Y, Z, R: R + K * 0.5 }
   }
 
-  const parts = comps.map((m, c) => layoutComponent(m.length, compEdges[c]))
+  let laidOut = 0
+  const parts = comps.map((m, c) => {
+    S.workRange = [laidOut / n, (laidOut + m.length) / n]
+    laidOut += m.length
+    return layoutComponent(m.length, compEdges[c])
+  })
+  S.workRange = [0, 1]
   // pack: the largest piece in the middle, the others on a shell around it
   const centers = [[0, 0, 0]]
   if (parts.length > 1) {
@@ -525,12 +533,12 @@ export function fr3dLayout(ids, edges, opts) {
   return out
 }
 
-export function fr3dAsync(ids, edges, opts) {
+export function fr3dAsync(ids, edges, opts, onProgress) {
   const worker = ids.length > 150 ? getFrWorker() : null
   if (!worker) return Promise.resolve(fr3dLayout(ids, edges, opts))
   const id = ++S.frRequestSeq
   return new Promise((resolve) => {
-    frPending.set(id, { resolve, local: () => fr3dLayout(ids, edges, opts) })
+    frPending.set(id, { resolve, onProgress, local: () => fr3dLayout(ids, edges, opts) })
     worker.postMessage({ id, kind: 'fr3d', ids, edges, opts })
   })
 }

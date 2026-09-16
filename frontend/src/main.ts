@@ -145,6 +145,7 @@ applyEdgeOpacity()
 applyEdgeDirection()
 updateSpreadReadout()
 initSidePanel()
+
 resizeHullCanvas()
 updateStrategyUI()
 updateZoomReadout()

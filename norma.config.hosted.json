@@ -27,5 +27,5 @@
     "notice": "",
     "testedBrowsers": ["Chrome", "Firefox", "Safari", "Edge"]
   },
-  "app": { "maxNodes": 5000, "theme": "white", "startTab": "welcome", "cdnFallback": false }
+  "app": { "maxNodes": 10000, "theme": "white", "startTab": "welcome", "cdnFallback": false }
 }

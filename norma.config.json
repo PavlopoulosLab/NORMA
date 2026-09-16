@@ -4,5 +4,5 @@
   "server": { "host": "127.0.0.1", "port": 8000, "accessLog": "off" },
   "api": { "enabled": true, "ttlHours": 24, "maxMB": 50, "maxSessions": 500 },
   "relays": { "string": true, "arena3d": true, "databases": true },
-  "app": { "maxNodes": 5000, "theme": "white", "startTab": "welcome", "cdnFallback": true }
+  "app": { "maxNodes": 10000, "theme": "white", "startTab": "welcome", "cdnFallback": true }
 }

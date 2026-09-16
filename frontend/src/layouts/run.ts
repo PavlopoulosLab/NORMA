@@ -14,13 +14,14 @@ import {
   cancelFrJobs,
   computeSubLayoutAsync,
   layoutOptsFor,
+  makeLayoutProgress,
   normalizeSpacing,
   shownEdges,
   shownNodes,
   targetNodeSpacing,
 } from '../metrics'
 import { cy } from '../cy'
-import { setStatus } from './controls'
+import { nextPaint, setStatus } from './controls'
 
 /* ---------- running layouts ---------- */
 export const STRATEGIES = new Set(['virtual', 'gravity', 'supernodes'])
@@ -35,7 +36,10 @@ export function groupArrangement() {
 
 export function setLayoutBusy(busy) {
   document.getElementById('btnRunLayout').disabled = busy
-  setStatus('layoutStatus', busy ? [{ level: 'busy', text: 'Computing layout…' }] : [])
+  setStatus(
+    'layoutStatus',
+    busy ? [{ level: 'busy', text: 'Computing layout…', progress: null }] : []
+  )
 }
 
 async function runComputedLayout(compute) {
@@ -43,6 +47,10 @@ async function runComputedLayout(compute) {
   const run = ++S.layoutRunSeq
   const nodeCount = cy.nodes().length
   setLayoutBusy(true)
+  S.layoutProgress = makeLayoutProgress((f) => {
+    if (run === S.layoutRunSeq)
+      setStatus('layoutStatus', [{ level: 'busy', text: 'Computing layout…', progress: f }])
+  })
   // let the busy note paint before any work on the page starts
   await new Promise((r) => setTimeout(r, 0))
   try {
@@ -56,7 +64,10 @@ async function runComputedLayout(compute) {
       ])
     return
   } finally {
-    if (run === S.layoutRunSeq) document.getElementById('btnRunLayout').disabled = false
+    if (run === S.layoutRunSeq) {
+      document.getElementById('btnRunLayout').disabled = false
+      S.layoutProgress = null
+    }
   }
   if (run === S.layoutRunSeq) setStatus('layoutStatus', [])
 }
@@ -88,7 +99,26 @@ export function runLayout(name) {
   // part (repulsion only).
   const channelOnly = document.getElementById('layoutOnActiveOnly').checked
   if (!nodes.length) return
-  nodes.union(shownEdges(channelOnly)).layout(opts).run()
+  const eles = nodes.union(shownEdges(channelOnly))
+  if (animate !== 'end') {
+    eles.layout(opts).run()
+    return
+  }
+  // computed in one go before it animates: show that work is going on
+  const run = S.layoutRunSeq
+  document.getElementById('btnRunLayout').disabled = true
+  setStatus('layoutStatus', [{ level: 'busy', text: 'Computing layout…', progress: null }])
+  nextPaint().then(() => {
+    if (run !== S.layoutRunSeq) return
+    try {
+      eles.layout(opts).run()
+    } finally {
+      if (run === S.layoutRunSeq) {
+        document.getElementById('btnRunLayout').disabled = false
+        setStatus('layoutStatus', [])
+      }
+    }
+  })
 }
 
 // Layout by groups: block arrangements or a NORMA-2.0 strategy, each

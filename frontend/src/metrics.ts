@@ -345,6 +345,20 @@ export const LARGE_NETWORK_NODES = 700
    Input: [{sx, sy, tx, ty}] in model coordinates. Output: for each edge,
    a flat array [x1, y1, x2, y2, ...] of its inner points, or null.
    ============================================================ */
+// Progress of long computations (layouts, edge bundling), reported from
+// inside their loops as a fraction of the part in workRange. In the worker,
+// workSink posts it to the page; on the page itself it is not used.
+var workSink = null,
+  workLast = 0
+
+export function workStep(f) {
+  if (!workSink) return
+  const now = Date.now()
+  if (now - workLast < 80) return
+  workLast = now
+  workSink(S.workRange[0] + (S.workRange[1] - S.workRange[0]) * Math.max(0, Math.min(1, f)))
+}
+
 function fdebBundle(segs, opts) {
   const E = segs.length
   const threshold = opts.threshold
@@ -391,6 +405,7 @@ function fdebBundle(segs, opts) {
   // compatible partners per edge; `flip` marks partners running the other way
   const partners = Array.from({ length: E }, () => [])
   for (let p = 0; p < E; p++) {
+    if ((p & 31) === 0) workStep(0.2 * (1 - ((E - p) * (E - p)) / (E * E)))
     if (len[p] < EPS) continue
     for (let q = p + 1; q < E; q++) {
       if (len[q] < EPS) continue
@@ -471,6 +486,13 @@ function fdebBundle(segs, opts) {
     return out
   }
 
+  // work per iteration grows with the points per edge (2, 4, 8, 16)
+  let planned = 0,
+    spent = 0
+  for (let c = 0, its = opts.iterations; c < cycles; c++) {
+    if (c > 0) its = Math.max(3, Math.round((its * 2) / 3))
+    planned += its * 2 ** c
+  }
   for (let cycle = 0; cycle < cycles; cycle++) {
     if (cycle > 0) {
       P *= 2
@@ -480,6 +502,8 @@ function fdebBundle(segs, opts) {
     }
     const nPts = P + 2 // including endpoints
     for (let it = 0; it < iterations; it++) {
+      workStep(0.2 + (0.8 * spent) / planned)
+      spent += 2 ** cycle
       const next = pts.map((line) => Float64Array.from(line))
       for (let e = 0; e < E; e++) {
         const line = pts[e]
@@ -569,6 +593,7 @@ function frComponent(n, edges, rand) {
   const CELL = 2 // FR's grid variant: repulsion only within 2k
 
   for (let it = 0; it < iterations; it++) {
+    if ((it & 3) === 0) workStep(it / iterations)
     DX.fill(0)
     DY.fill(0)
     if (!useGrid) {
@@ -710,10 +735,13 @@ function frLayout(ids, edges) {
   )
   const compEdges = comps.map(() => [])
   all.forEach((e) => compEdges[compOf[e.s]].push({ s: localIdx[e.s], t: localIdx[e.t], w: e.w }))
-  const parts = comps.map((members, c) => ({
-    members,
-    ...frComponent(members.length, compEdges[c], rand),
-  }))
+  let laidOut = 0
+  const parts = comps.map((members, c) => {
+    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    laidOut += members.length
+    return { members, ...frComponent(members.length, compEdges[c], rand) }
+  })
+  S.workRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -912,6 +940,7 @@ function kkComponent(n, adj) {
   const maxIter = Math.min(50 * n, 40000)
   const eps = 1e-4
   for (let it = 0; it < maxIter; it++) {
+    if ((it & 63) === 0) workStep(it / maxIter)
     let m = -1,
       best = eps
     for (let i = 0; i < n; i++) {
@@ -985,6 +1014,7 @@ function stressComponent(n, adj) {
   const iters = Math.max(20, Math.min(300, Math.floor(4e7 / (n * n))))
   let prev = Infinity
   for (let it = 0; it < iters; it++) {
+    workStep(it / iters)
     let stress = 0
     for (let i = 0; i < n; i++) {
       let sx = 0,
@@ -1038,7 +1068,10 @@ function distanceLayout(ids, edges, kind) {
     adjs[c][localIdx[e.s]].push(localIdx[e.t])
     adjs[c][localIdx[e.t]].push(localIdx[e.s])
   })
+  let laidOut = 0
   const parts = comps.map((members, c) => {
+    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    laidOut += members.length
     if (members.length > DIST_LAYOUT_LIMIT)
       throw new Error(
         `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${DIST_LAYOUT_LIMIT.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
@@ -1050,6 +1083,7 @@ function distanceLayout(ids, edges, kind) {
     // hop units -> FR-like units so packing gaps look alike
     return { members, x: lay.x, y: lay.y }
   })
+  S.workRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -1060,12 +1094,17 @@ function distanceLayout(ids, edges, kind) {
   return out
 }
 
-function distanceLayoutAsync(ids, edges, kind) {
+function distanceLayoutAsync(ids, edges, kind, onProgress) {
   const worker = ids.length > 60 ? getFrWorker() : null
   if (!worker) return Promise.resolve(distanceLayout(ids, edges, kind))
   const id = ++S.frRequestSeq
   return new Promise((resolve, reject) => {
-    frPending.set(id, { resolve, reject, local: () => distanceLayout(ids, edges, kind) })
+    frPending.set(id, {
+      resolve,
+      reject,
+      onProgress,
+      local: () => distanceLayout(ids, edges, kind),
+    })
     worker.postMessage({ id, kind, ids, edges })
   })
 }
@@ -1097,16 +1136,21 @@ export function getFrWorker() {
         kkComponent,
         stressComponent,
         distanceLayout,
+        workStep,
       ]
         .map((f) => f.toString())
         .join('\n') +
-      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\n` +
-      'onmessage = e => { const m = e.data; let result; try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };'
+      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\nvar workRange = [0, 1], workSink = null, workLast = 0;\n` +
+      'onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };'
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))
     frWorker = new Worker(url)
     frWorker.onmessage = (e) => {
       const job = frPending.get(e.data.id)
       if (!job) return
+      if (e.data.progress !== undefined) {
+        if (job.onProgress) job.onProgress(e.data.progress)
+        return
+      }
       frPending.delete(e.data.id)
       if (e.data.error) {
         if (job.reject) job.reject(new Error(e.data.error))
@@ -1138,22 +1182,22 @@ export function cancelFrJobs() {
   frPending.clear()
 }
 
-export function frLayoutAsync(ids, edges) {
+export function frLayoutAsync(ids, edges, onProgress) {
   const worker = ids.length > 60 ? getFrWorker() : null // small graphs: not worth the round trip
   if (!worker) return Promise.resolve(frLayout(ids, edges))
   const id = ++S.frRequestSeq
   return new Promise((resolve) => {
-    frPending.set(id, { resolve, local: () => frLayout(ids, edges) })
+    frPending.set(id, { resolve, onProgress, local: () => frLayout(ids, edges) })
     worker.postMessage({ id, kind: 'fr', ids, edges })
   })
 }
 
-export function bundleAsync(segs, opts) {
+export function bundleAsync(segs, opts, onProgress) {
   const worker = segs.length > 150 ? getFrWorker() : null
   if (!worker) return Promise.resolve(fdebBundle(segs, opts))
   const id = ++S.frRequestSeq
   return new Promise((resolve) => {
-    frPending.set(id, { resolve, local: () => fdebBundle(segs, opts) })
+    frPending.set(id, { resolve, onProgress, local: () => fdebBundle(segs, opts) })
     worker.postMessage({ id, kind: 'fdeb', segs, opts })
   })
 }
@@ -1167,10 +1211,32 @@ export const EDGE_BLIND_LAYOUTS = new Set(['circle', 'grid', 'random'])
 // arbitrary units; callers rescale. Edge weights are honored by 'fr'
 // (attraction x weight) and by 'cose' (shorter, stiffer springs).
 export async function computeSubLayoutAsync(nodeIds, edgeDefs, layoutName) {
-  if (layoutName === 'fr' && nodeIds.length > 1) return frLayoutAsync(nodeIds, edgeDefs)
+  const onProgress = S.layoutProgress ? (f) => S.layoutProgress && S.layoutProgress.report(f) : null
+  if (layoutName === 'fr' && nodeIds.length > 1) return frLayoutAsync(nodeIds, edgeDefs, onProgress)
   if ((layoutName === 'kk' || layoutName === 'stress') && nodeIds.length > 1)
-    return distanceLayoutAsync(nodeIds, edgeDefs, layoutName)
+    return distanceLayoutAsync(nodeIds, edgeDefs, layoutName, onProgress)
   return computeSubLayout(nodeIds, edgeDefs, layoutName)
+}
+
+export function makeLayoutProgress(show) {
+  return {
+    total: 1,
+    done: 0,
+    current: 1,
+    begin(total) {
+      this.total = Math.max(1e-9, total)
+      this.done = 0
+      this.current = 0
+    },
+    part(weight) {
+      this.done += this.current
+      this.current = weight
+      this.report(0)
+    },
+    report(f) {
+      show(Math.min(1, (this.done + this.current * Math.max(0, Math.min(1, f))) / this.total))
+    },
+  }
 }
 
 export function computeSubLayout(nodeIds, edgeDefs, layoutName) {

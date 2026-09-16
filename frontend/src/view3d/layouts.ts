@@ -125,7 +125,8 @@ async function computeLayout3d(algo) {
     const r = await fr3dAsync(
       ids,
       edges.map((e) => ({ s: e.data('source'), t: e.data('target'), w: e.data('weight') })),
-      { spacing, seed: 123 }
+      { spacing, seed: 123 },
+      net3d.onLayoutProgress
     )
     return r
   }
@@ -323,9 +324,14 @@ export async function runLayout3d(algo) {
   algo = algo || el3('layout3d').value
   const seq = ++net3d.layoutSeq
   el3('btnRun3d').disabled = true
+  const big3d = shownNodes().length > 300
   setLayoutStatus3d(
-    shownNodes().length > 300 ? [{ level: 'busy', text: 'Computing the 3D layout…' }] : []
+    big3d ? [{ level: 'busy', text: 'Computing the 3D layout…', progress: null }] : []
   )
+  net3d.onLayoutProgress = (f) => {
+    if (big3d && seq === net3d.layoutSeq)
+      setLayoutStatus3d([{ level: 'busy', text: 'Computing the 3D layout…', progress: f }])
+  }
   await new Promise((r) => setTimeout(r, 20))
   try {
     const result = await computeLayout3d(algo)

@@ -33,7 +33,7 @@ export const NORMA_CFG = (() => {
       notice: '',
       testedBrowsers: [],
     },
-    app: { maxNodes: 5000, theme: 'white', startTab: 'welcome', cdnFallback: true },
+    app: { maxNodes: 10000, theme: 'white', startTab: 'welcome', cdnFallback: true },
   }
   const c = (typeof window.NORMA_CONFIG === 'object' && window.NORMA_CONFIG) || {}
   const merge = (a, b) => {

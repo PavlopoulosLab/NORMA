@@ -1086,6 +1086,59 @@ button:disabled:hover {
   border-left-color: var(--muted);
   color: var(--muted);
 }
+.status .note .progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.status .note .progress {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+}
+.status .note .progress > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+.status .note .progress.indeterminate > span {
+  width: 35%;
+  animation: progress-slide 1.3s ease-in-out infinite;
+}
+.status .note .progress-pct {
+  font-family: var(--mono);
+  font-size: 11px;
+  min-width: 3.2em;
+  text-align: right;
+  color: var(--text);
+}
+@keyframes progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(290%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status .note .progress.indeterminate > span {
+    animation: none;
+    width: 100%;
+    opacity: 0.45;
+  }
+  .status .note .progress > span {
+    transition: none;
+  }
+}
 
 /* sidebar structure */
 .section h3 {

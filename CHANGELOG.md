@@ -12,6 +12,9 @@
 - Tooling: `uv` + ruff + mypy (strict) for the server; Vite, TypeScript, ESLint, Prettier for the
   page; GitHub Actions CI and pre-commit hooks.
 - MIT `LICENSE` file, `AGENTS.md` / `CLAUDE.md` for coding agents, this changelog.
+- Progress bars for long computations: layouts, edge bundling, the profiler, comparison, the
+  database importers and STRING report their progress in the status area (with a time estimate
+  for tasks made of weighted steps). Default `app.maxNodes` raised to 10,000.
 - The side panel can be dragged to a different width, collapsed with the arrow on its edge and
   resized from the keyboard; the choice is remembered in the browser.
 

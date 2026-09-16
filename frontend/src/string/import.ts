@@ -8,6 +8,7 @@ import {
   plural,
   renderLibraryLists,
   setStatus,
+  startProgress,
 } from '../layouts/controls'
 import {
   combineStringScores,
@@ -23,9 +24,6 @@ import { refreshLibraryView } from '../library'
 import { stringSettings, updateStringUI } from './ui_state'
 
 /* ---------- import ---------- */
-export function stringProgress(text) {
-  setStatus('stringStatus', [{ level: 'busy', text }])
-}
 
 export async function runStringImport() {
   const st = stringSettings()
@@ -58,16 +56,27 @@ export async function runStringImport() {
   stringState.cancelled = false
   updateStringUI()
   const notes = []
+  const withGroupings = !!(st.categories.length || st.otherCategories)
+  // steps: version, names, network, descriptions, groupings, opening
+  const task = startProgress('stringStatus', [
+    1,
+    2,
+    6,
+    st.descriptions ? 2 : 0,
+    withGroupings ? 4 : 0,
+    1,
+  ])
+  const onBytes = (got, total) => task.bytes(got, total)
   try {
-    stringProgress('Checking the STRING version…')
+    task.step(0, 'Checking the STRING version…')
     const ver = await stringVersion()
 
-    stringProgress(`Looking up ${plural(st.names.length, 'name')} in ${st.speciesLabel}…`)
-    const mapped = await stringCall('get_string_ids', {
-      identifiers: st.names.join('\r'),
-      species: st.taxon,
-      echo_query: 1,
-    })
+    task.step(1, `Looking up ${plural(st.names.length, 'name')} in ${st.speciesLabel}…`)
+    const mapped = await stringCall(
+      'get_string_ids',
+      { identifiers: st.names.join('\r'), species: st.taxon, echo_query: 1 },
+      { onBytes }
+    )
     const byQuery = new Map()
     ;(mapped || []).forEach((r) => {
       const q = r.queryItem ?? st.names[r.queryIndex]
@@ -97,7 +106,8 @@ export async function runStringImport() {
     const queryIds = [...new Set(found.map((n) => byQuery.get(n).stringId))]
     const taxonName = byQuery.get(found[0]).taxonName || st.speciesLabel
 
-    stringProgress(
+    task.step(
+      2,
       st.addNodes
         ? `Fetching the network with up to ${st.addNodes} interactors…`
         : 'Fetching the network…'
@@ -109,7 +119,7 @@ export async function runStringImport() {
       network_type: st.networkType,
     }
     if (st.addNodes > 0) params.add_nodes = st.addNodes
-    const rows = await stringCall('network', params)
+    const rows = await stringCall('network', params, { onBytes })
     const built = buildStringNetwork(rows || [], queryIds, byQuery, st)
     if (!built.edges.length)
       throw new Error(
@@ -119,12 +129,13 @@ export async function runStringImport() {
 
     // descriptions for every protein
     if (st.descriptions) {
-      stringProgress(`Fetching descriptions for ${plural(built.nodeIds.length, 'protein')}…`)
+      task.step(3, `Fetching descriptions for ${plural(built.nodeIds.length, 'protein')}…`)
       try {
-        const info = await stringCall('get_string_ids', {
-          identifiers: built.stringIds.join('\r'),
-          species: st.taxon,
-        })
+        const info = await stringCall(
+          'get_string_ids',
+          { identifiers: built.stringIds.join('\r'), species: st.taxon },
+          { onBytes }
+        )
         ;(info || []).forEach((r) => {
           const name = built.nameOf.get(r.stringId)
           if (name && r.annotation) built.nodeAttrs[name].description = r.annotation
@@ -158,9 +169,10 @@ export async function runStringImport() {
 
     // groupings
     let annEntries = []
-    if (st.categories.length || st.otherCategories) {
-      annEntries = await fetchStringGroupings(netEntry, st, notes)
+    if (withGroupings) {
+      annEntries = await fetchStringGroupings(netEntry, st, notes, task, 4)
     }
+    task.step(5, 'Opening the network…')
 
     // show it
     const preferred =
@@ -187,6 +199,7 @@ export async function runStringImport() {
   } catch (err) {
     setStatus('stringStatus', [{ level: 'error', text: err.message }, ...notes])
   } finally {
+    task.stop()
     stringState.busy = false
     stringState.abort = null
     updateStringUI()
