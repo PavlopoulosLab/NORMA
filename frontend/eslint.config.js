@@ -1,9 +1,10 @@
 import tseslint from 'typescript-eslint'
 
-// ponytail: the former single-file script (src/app.ts, later its split modules) is
-// untyped (`@ts-nocheck`), so the type-aware rules only report `any` noise there.
-// Type-checked rules apply to every typed module; drop a file from LEGACY as it gets typed.
-const LEGACY = ['src/app.ts']
+// ponytail: the modules split from the former single-file script are untyped
+// (`@ts-nocheck`), so the type-aware rules only report `any` noise there. Type-checked
+// rules apply to every typed module; add a file to TYPED as its @ts-nocheck is removed.
+const LEGACY = ['src/**/*.ts']
+const TYPED = ['src/state.ts']
 
 export default tseslint.config(
   ...tseslint.configs.recommendedTypeChecked,
@@ -17,10 +18,12 @@ export default tseslint.config(
   },
   {
     files: LEGACY,
+    ignores: TYPED,
     ...tseslint.configs.disableTypeChecked,
   },
   {
     files: LEGACY,
+    ignores: TYPED,
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',

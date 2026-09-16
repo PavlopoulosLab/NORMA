@@ -72,15 +72,27 @@ cd frontend && npm run lint && npm run format && npx tsc --noEmit
 - `main.py` — argparse, TLS, browser opening, serve loop. `backend/server.py` is the entry point.
 
 ### Frontend (`frontend/src/`)
-One `<script>` of ~15K lines was split by its section headers; modules keep their original names.
-- `main.ts` — entry; imports the modules in the original evaluation order and wires the page.
-- `state.ts` — the shared mutable state object (`S`), formerly top-level `let`s.
-- `config.ts` — `NORMA_CFG` from `window.NORMA_CONFIG` + defaults.
-- `cy.ts`, `groups/`, `layouts/`, `clustering/` — Cytoscape instance, hull/fog shading, layout
-  strategies, Leiden / label propagation / Walktrap / MCL.
-- `export/` — canvas/SVG/PDF painters shared by the 2D and 3D views.
-- `view3d/` — the software-rendered 3D view (canvas 2D, no WebGL).
-- `string/`, `arena3d.ts`, `enrichment.ts` — importers and relays; `api_tab.ts` — the API tester.
+The former 15K-line `<script>` of `norma.html` was split by its section headers; every module still
+carries `// @ts-nocheck` and is typed one file at a time (remove the pragma, fix the errors, add the
+file to `TYPED` in `eslint.config.js`). Each module keeps its declarations at top level and its page
+wiring (listeners, initial renders) in an exported `init()`; `main.ts` imports all modules and calls
+the `init()`s in the original order, then runs the boot sequence.
+- `main.ts` — entry; `state.ts` — `S`, the mutable state several modules assign (ES module
+  bindings are read-only across files); `config.ts` — `NORMA_CFG` from `window.NORMA_CONFIG`.
+- `palette.ts`, `themes.ts`, `sample_data.ts`, `cy.ts` (Cytoscape instance, stylesheet, `onCommitStyle`
+  hooks), `network_state.ts`, `hulls.ts` (group hulls / fog), `parallel_edges.ts`, `metrics.ts`.
+- `layouts/` — `input` (what strategies see), `run`, `controls`; `library.ts`, `uploads.ts`,
+  `examples.ts`, `export_norma.ts`, `wiring.ts` (tabs, keyboard, main buttons).
+- `profiler.ts`, `viewbar.ts`, `side_tabs.ts`, `directed_stats.ts`, `demo_downloads.ts`,
+  `recording.ts` (undo history), `label_colors.ts`, `benchmark.ts`, `contours.ts`.
+- `export/` — `draw`, `shading`, `raster` (PNG/JPEG/WebP/PDF), `svg`, `dialog`: painters shared by
+  the 2D and 3D image export.
+- `view3d/` — the software-rendered 3D view (canvas 2D, no WebGL): `state`, `cache`, `camera`,
+  `painters`, `draw`, `layouts`, `tab`, `input`, `export`.
+- `string/` — STRING importer (`requests`, `ui_state`, `import`, `groupings`, `wiring`);
+  `arena3d.ts`, `enrichment.ts` (database importers, enrichment), `group_network.ts`, `welcome.ts`.
+- `clustering/` — `leiden`, `label_propagation`, `walktrap`, `mcl`, `mapping`, `wiring`.
+- `api/` — `wiring` (links, `postMessage`, `?session=`), `tester` (the API tab).
 - `window.__norma = { cy, net3d, views, currentTab }` is the Playwright test hook.
 
 ### Communication
