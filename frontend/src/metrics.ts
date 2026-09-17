@@ -1141,7 +1141,14 @@ export function getFrWorker() {
         .map((f) => f.toString())
         .join('\n') +
       `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\nvar workRange = [0, 1], workSink = null, workLast = 0;\n` +
-      'onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };'
+      // The dispatcher below used to call these by their literal source
+      // names, which broke once the production build's minifier renamed
+      // these (non-exported) functions: the worker still got their bodies
+      // via .toString(), but under whatever new name the minifier picked,
+      // so the hardcoded names threw "X is not defined". Using .name reads
+      // each function's *current* runtime name, so it always matches the
+      // identifier its .toString() source was declared under.
+      `onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? ${fdebBundle.name}(m.segs, m.opts) : m.kind === "fr3d" ? ${fr3dLayout.name}(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? ${distanceLayout.name}(m.ids, m.edges, m.kind) : ${frLayout.name}(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };`
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))
     frWorker = new Worker(url)
     frWorker.onmessage = (e) => {
