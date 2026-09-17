@@ -1,0 +1,89 @@
+negative regulation of anoikis	P06731,Q07817,P05556,Q07820,P10415
+T cell receptor signaling pathway	P35998,P48556,Q13200,P25787,Q99460,P62195,Q9UNM6,O14818,Q15008,P51665,P60900,O00231,P62191
+regulation of cellular response to heat	Q99615,P08107,K7ELV2,P62258,Q9UL15,O95816,P0DMV8,P78406,Q92793,P52948
+RNA secondary structure unwinding	Q9NR30,Q8TDD1,Q9BUQ8,Q9UHI6,O00148,P38919,Q13838
+SRP-dependent cotranslational protein targeting to membrane	P60866,P08708,P61254,P62269,P39019,P42677,P61927,P62753,Q9Y3U8,P46782
+positive regulation of establishment of protein localization to telomere	P40227,P17987,P48643,Q99832
+Fc-epsilon receptor signaling pathway	P35998,P48556,Q13200,P25787,Q99460,P62195,P0DP23,Q9UNM6,O14818,Q15008,P51665,P60900,O00231,P62191
+mRNA transport	Q09161,O14980,Q9Y5S9,Q53F19,P09651,Q96A72,Q9UN86
+negative regulation of transcription elongation from RNA polymerase II promoter	Q8WX92,Q9H3P2,P18615,O94762
+nuclear export	Q09161,Q9H814,P52298,P09651
+response to hydrogen peroxide	O00629,Q13443,P22460,P42224,Q9P289,P09601,P10415
+intracellular protein transport	Q9UM54,Q9H173,Q9ULJ7,Q14974,O00203,P35606,O14964,Q96JC1,P53621,O95373,Q9UBF2,Q9H270,O15397,O14980,O43592,P53618
+rRNA processing	P60866,Q9NR30,P39019,P62753,P61927,P57678,O43818,P08708,P61254,Q9NU22,P62269,P42677,P38919,P46782,Q9Y3U8
+release of cytochrome c from mitochondria	Q07817,Q16548,Q3ZCQ8,O00429,P10415
+positive regulation of translation	P11940,Q9BRP8,Q14011,Q6PKG0,P98179,P38919,Q13838
+focal adhesion assembly	P12814,Q08043,P35609,Q14155,P10415
+calcium activated phosphatidylserine scrambling	A1A5B4,Q32M45,Q4KMQ2
+gene silencing by RNA	P30876,Q09161,Q7KZF4,P11940,K7ELV2,P52298,O15397,P78406,P52948,P24928
+negative regulation of programmed cell death	P02768,Q96EY1,O76024,P62195
+protein folding in endoplasmic reticulum	Q8N766,Q8IXB1,Q86YB8,P11021
+positive regulation of viral genome replication	P62937,P11940,Q6PKG0,Q9P035,P78563
+protein complex assembly	P52907,O14745,Q9BSJ2,O43292,Q9Y375,Q9NU22,P30153,Q92793,P06493,O00505
+mitochondrion organization	P06576,P35232,Q5VV67,O00429,Q96EY1,P09874,Q9Y276,Q99623
+T cell differentiation in thymus	P61769,Q96EY1,P62753,P35222,P10415
+intra-Golgi vesicle-mediated transport	P53621,Q9UBF2,P35606,P39880,P53618
+protein homotetramerization	Q9H773,Q96GX9,O00429,P34897,Q14500,P35609,P14735
+calcium activated galactosylceramide scrambling	A1A5B4,Q32M45,Q4KMQ2
+calcium activated phosphatidylcholine scrambling	A1A5B4,Q32M45,Q4KMQ2
+viral entry into host cell	P08107,P27487,P05556,P15151,P0DMV8,Q9BYF1,P15144,O00505,P14735
+DNA duplex unwinding	Q13283,P12956,P13010,Q9Y265,P25205,O94762
+platelet degranulation	P0DP23,P12814,P05155,P02768,O15439,P15692,O43707,P00747,P35609
+regulation of nucleic acid-templated transcription	P12814,P35637,O43707,P35609
+cell proliferation	O15503,P68036,Q14160,Q13561,P08581,P13010,Q16576,P06493,Q15303,P25100,Q07817,P09603,Q9BXP5,Q6PKG0,O95071,P42677,Q7L590,P12004,Q10589,P10415
+osteoblast differentiation	P35998,Q9NR30,Q7KZF4,P06576,P35232,P12109,Q00839,J3QSV6,P38159
+intrinsic apoptotic signaling pathway in response to DNA damage	Q07817,Q16548,Q92843,Q07820,P09601,P10415
+regulation of DNA recombination	P52294,P52292,Q96FV9
+positive regulation of histone H3-K4 methylation	P26358,P35222,Q9H3P2,P18615
+transport	P53007,Q9Y6R1,P02768,Q9UBX3,P52948,Q15818,Q9UN86,Q9NZJ7,Q15311,P46379,P33527,P38606,Q13283,Q00325,Q02978,Q9Y3A6,Q13224,Q9H936,P48065
+positive regulation of intrinsic apoptotic signaling pathway	O14745,Q07817,O00429,P63244,P10415
+7-methylguanosine mRNA capping	P30876,Q09161,P52298,Q53F19,P24928
+SREBP signaling pathway	O15503,Q9Y5U4,Q12770
+IRES-dependent viral translational initiation	P26599,Q14152,O00303
+extrinsic apoptotic signaling pathway in absence of ligand	Q07817,Q16548,Q92843,Q07820,P10415
+ribosomal small subunit assembly	P08708,P39019,P42677,P46782
+ubiquitin-dependent protein catabolic process	P35998,P68036,P46379,Q9UNM6,P25787,O14818,Q9NXK8,O95071,P60900,O00231,P63279,Q9NVW2
+regulation of translational initiation	Q09161,P52298,O75822,Q14152,O00303
+establishment of integrated proviral latency	P62937,P12956,P13010
+response to endoplasmic reticulum stress	Q8IXB1,Q13438,P57088,Q9Y4L1,P16615,O76024,Q9BS26
+chaperone-mediated protein folding	Q96AY3,P68400,O14656,Q9Y680,Q00688
+gastrulation	P37173,P63244,P62753,P09622
+fibrinolysis	P07355,P00750,P05155,P00747
+negative regulation of mRNA splicing,via spliceosome	O00422,P26599,Q9UKV3,P38159
+RNA processing	Q13310,Q8TDD1,Q9UHI6,P98179,Q96FV9,Q00839,P78563,Q86U42
+negative regulation of apoptotic process	Q9NVI7,P31689,P02768,Q96GX9,Q92843,Q96EY1,P62753,Q86W42,P06493,Q07820,Q15303,P06731,Q07817,Q16548,P46379,Q9Y466,P11021,P15692,Q5JVF3,Q99623,P10415,P63104
+negative regulation of intrinsic apoptotic signaling pathway	Q07817,Q92843,Q07820,P10415
+protein targeting	P27348,Q13438,P62258,Q96RT1,P63104
+regulation of smooth muscle cell proliferation	P12956,P13010,P35222
+positive regulation of RNA polymerase II transcriptional preinitiation complex assembly	P35998,P62191,P62195
+response to hypoxia	P22460,P00750,P37173,P27487,O00469,Q12770,P15692,Q92793,P09601,O43707,P05026
+response to drug	Q9UM54,Q5JWF2,P42224,P13010,P06493,Q92820,P35222,P61769,P37173,P33527,O14980,P40939,O15439,P28300,P05023,P10415
+membrane repolarization during cardiac muscle cell action potential	P62258,P05023,P05026
+endoplasmic reticulum mannose trimming	Q13438,Q9BZQ6,Q9NYU1
+positive regulation of potassium ion transport	P33176,P35609,Q12959
+positive regulation of cellular component movement	P39019,P15692,O43707
+response to unfolded protein	P34932,Q96CS3,P31689,O95757,Q9BS26
+cellular protein modification process	P00750,P68036,P38435,O00469,Q86YB8,P22314,P28300,P63279
+protein peptidyl-prolyl isomerization	Q6UX04,P62937,Q96AY3,Q9Y680,Q00688
+muscle contraction	Q9NYL9,P0DP23,P19105,Q08043,P60660,Q14500,P50402,Q86U42,O14950
+type I interferon signaling pathway	P42224,P52630,P04439,P05161,Q10589,Q14653
+positive regulation of protein ubiquitination	Q9NV92,P68036,Q13155,Q96EY1,P11021,O76024
+gluconeogenesis	P04406,P53007,O75746,Q9UBX3,Q02978
+mitotic nuclear envelope disassembly	K7ELV2,P78406,P06493,P50402,P52948
+positive regulation of mesenchymal cell proliferation	P37173,P42224,P15692,P35222
+protein targeting to plasma membrane	P07355,P19105,Q92953,P35613,O14950
+positive regulation of protein targeting to mitochondrion	P19784,P48556,Q8TAD8,P68036,Q9H270,P55786,Q9Y265
+nuclear pore complex assembly	P57088,Q9NQC3,P52948
+positive regulation of DNA-templated transcription,elongation	Q13769,Q96FV9,Q13838
+endoplasmic reticulum unfolded protein response	O76061,P11021,Q9BZQ6,Q9NYU1,O76024
+ER-associated misfolded protein catabolic process	Q99470,Q9NYU1,O14656
+relaxation of cardiac muscle	P05023,P16615,P05026
+proteasome assembly	P48556,Q9UNM6,O00231
+regulation of cardiac muscle cell contraction	Q14524,P05023,P63165
+lysine catabolic process	Q9UDR5,Q9BQT8,P09622
+potassium ion import	Q14500,P48050,P05023,P05026
+proteolysis involved in cellular protein catabolic process	P25787,O14818,P11021,P60900,P14735
+substantia nigra development	P0DP23,P27348,O15027,P62258,P11021
+establishment or maintenance of epithelial cell apical/basal polarity	Q7KZI7,Q96RT1,Q12959
+microtubule cytoskeleton organization	Q9P0L2,P04406,Q96N67,Q7KZI7,P06493,P27448
+positive regulation of protein insertion into mitochondrial membrane involved in apoptotic signaling pathway	P27348,P62258,P10415,P63104
