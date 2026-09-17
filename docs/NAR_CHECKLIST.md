@@ -8,7 +8,7 @@ Items marked **deploy** depend on how the public server is set up.
 | Requirement | How NORMA meets it |
 |---|---|
 | Broad audience, simple to use | Works on any network plus any grouping; Welcome page with one-click examples |
-| Functional at proposal time | **deploy**: run `python3 server.py --mode hosted` behind HTTPS (see below) |
+| Functional at proposal time | **deploy**: run `python3 backend/server.py --mode hosted` behind HTTPS (see below) |
 | Simple way to try sample data | *Open an example* (Welcome page) and the Examples list; `?example=NAME` links |
 | Help/tutorial with links to sample output | Help tab: *Getting started*, *Sample data and sample output* (live example links) |
 | Help explains how to interpret results | Help → *Interpreting the results* |
@@ -17,7 +17,7 @@ Items marked **deploy** depend on how the public server is set up.
 ## Web servers and services must
 | Requirement | How NORMA meets it |
 |---|---|
-| HTTPS on port 443 | **deploy**: `deploy/nginx.conf` (HTTPS on 443, HTTP redirected), or `server.py --tls-cert --tls-key --port 443 --http-redirect-port 80`; HSTS sent over HTTPS |
+| HTTPS on port 443 | **deploy**: `deploy/nginx.conf` (HTTPS on 443, HTTP redirected), or `backend/server.py --tls-cert --tls-key --port 443 --http-redirect-port 80`; HSTS sent over HTTPS |
 | Cookie consent if permanent cookies are used; no third-party/tracking cookies | NORMA sets **no cookies** and uses no tracking; only the optional WebGL preference is kept in local storage. No fonts or scripts from other sites (`app.cdnFallback: false` on the server) |
 | Sample data accessible to check formats | Help → *Example files* (every sample file downloadable) |
 | Links to sample output that work like real output | Help → *Sample data and sample output* |
@@ -37,7 +37,7 @@ Items marked **deploy** depend on how the public server is set up.
 | Requirement | How NORMA meets it |
 |---|---|
 | Help page listing all services with their URLs | API tab (REST table, links, postMessage) and Help → *API for other applications* |
-| Template script (Python) accessing several services and parsing output | `norma_api_client.py` (health, submit, read back, link) — downloadable from the API tab |
+| Template script (Python) accessing several services and parsing output | `examples/norma_api_client.py` (health, submit, read back, link) — downloadable from the API tab |
 | Prominent link to the template on the home page | Welcome page footer: *Programmatic access: Python template* |
 
 ## Also expected
@@ -51,5 +51,5 @@ Items marked **deploy** depend on how the public server is set up.
 ## Before submitting
 1. Copy `norma.config.hosted.json` to `norma.config.json` and fill in `publicUrl`, `institution`, `contactEmail`, `maintainedUntil` and `testedBrowsers`.
 2. Serve it over HTTPS on port 443 (`deploy/nginx.conf` + `deploy/norma.service`, or Docker).
-3. Check `https://YOUR-SERVER/api/health`, open every sample link in Help, and run `python3 norma_api_client.py --server https://YOUR-SERVER/`.
+3. Check `https://YOUR-SERVER/api/health`, open every sample link in Help, and run `python3 examples/norma_api_client.py --server https://YOUR-SERVER/`.
 4. Test the site in at least two browsers.
