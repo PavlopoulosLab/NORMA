@@ -1,0 +1,19 @@
+# systemd unit: sudo cp deploy/norma.service /etc/systemd/system/ && sudo systemctl enable --now norma
+[Unit]
+Description=NORMA 3.0 web server
+After=network-online.target
+
+[Service]
+Type=simple
+User=norma
+WorkingDirectory=/srv/norma
+ExecStart=/usr/bin/python3 /srv/norma/backend/server.py --mode hosted --config /srv/norma/norma.config.json --no-open
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

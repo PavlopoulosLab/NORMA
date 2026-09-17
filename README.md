@@ -1,151 +1,151 @@
-<!-- Badges -->
+# NORMA 3.0 — The Network Makeup Artist
 
-[![R-CMD-check](https://github.com/yourusername/NORMA/workflows/R-CMD-check/badge.svg)](https://github.com/yourusername/NORMA/actions)
-[![Shiny App](https://img.shields.io/badge/Shiny-online-brightgreen)](https://pavlopoulos-lab-services.org/shiny/app/norma)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+NORMA visualises and analyses networks together with their annotated groups.
+It runs in the web browser; this package runs it **on your computer** or as a
+**public web server** with the same files. Free and open to all users under
+the MIT License; no login, no cookies, no tracking.
 
-# NORMA: The Network Makeup Artist
+## Quick start
 
-> A web tool for interactive network annotation visualization and topological analysis.
+| | |
+|---|---|
+| Build the page once | `cd frontend && npm install && npm run build` (writes `frontend/dist/norma.html`; needs Node 22) |
+| On your computer | double-click `run_local.sh` (macOS/Linux) or `run_local.bat` (Windows), or `python3 backend/server.py` |
+| Without Python | open `frontend/dist/norma.html` in a browser (no REST API or relays) |
+| Public server | `python3 backend/server.py --mode hosted --config norma.config.hosted.json` behind HTTPS (`deploy/nginx.conf`) |
+| Docker | `docker compose up -d` (builds the page inside the image) |
+| All options | `python3 backend/server.py --help`, `python3 backend/server.py --print-config` |
 
----
+The server needs only Python 3.9+ (standard library); the page is built once with Node.
 
-## 📖 Table of Contents
+## Settings
 
-1. [Overview](#overview)
-2. [Key Features](#key-features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Input Formats](#input-formats)
-6. [Examples & Demo Data](#examples--demo-data)
-7. [Contact & Support](#contact--support)
-8. [Publications](#publications)
-9. [License](#license)
+Settings come from (increasing priority) built-in defaults, `norma.config.json`
+(or `--config FILE` / `NORMA_CONFIG`), `NORMA_*` environment variables and
+command-line options. `mode` is `local` (127.0.0.1, opens the browser, no
+access log) or `hosted` (0.0.0.0, trusts the reverse proxy, anonymous access
+log, security headers). The page receives its part of the settings as
+`/norma-config.js`; for static hosting edit `frontend/public/norma-config.js` before building
+(or the `norma-config.js` next to the built page).
 
----
+| Setting | CLI / environment | Meaning |
+|---|---|---|
+| `mode` | `--mode`, `NORMA_MODE` | `local` or `hosted` |
+| `server.host`, `server.port` | `--host`, `--port`, `NORMA_HOST`, `NORMA_PORT` | listening address |
+| `server.publicUrl` | `--public-url`, `NORMA_PUBLIC_URL` | address users see; used in API links |
+| `server.tlsCert`, `tlsKey`, `httpRedirectPort`, `hsts` | `--tls-cert`, `--tls-key`, `--http-redirect-port` | HTTPS without a proxy |
+| `server.trustProxy` | `NORMA_TRUST_PROXY` | trust `X-Forwarded-*` headers |
+| `server.accessLog` | `--access-log`, `NORMA_ACCESS_LOG` | `off`, `anonymous` (no IPs) or `full` |
+| `api.enabled`, `ttlHours`, `maxMB`, `maxSessions` | `--no-api`, `NORMA_API`, `NORMA_API_TTL_HOURS`, `NORMA_API_MAX_MB` | REST API |
+| `relays.string`, `arena3d`, `databases` | `--no-relays`, `NORMA_RELAYS` | relays for STRING, Arena3D and the database importers |
+| `site.*` | `NORMA_CONTACT_EMAIL`, `NORMA_INSTITUTION`, `NORMA_NOTICE` | contact, institution, licence, privacy/imprint links, maintenance statement, tested browsers, notice banner |
+| `app.maxNodes`, `theme`, `startTab`, `cdnFallback` | `NORMA_MAX_NODES` | page defaults |
 
-## 📝 Overview
+For the NAR Web Server Issue requirements see `docs/NAR_CHECKLIST.md`.
 
-NORMA (Network Makeup Artist) is a Shiny-based web application that lets you:
+## Programmatic access
 
-* **Visualize** multiple networks and their annotations (e.g., GO terms, pathway enrichments)
-* **Overlay** annotations as pie-chart nodes or convex-hull “venn” shapes
-* **Detect** communities automatically when no annotations are provided
-* **Refine** layouts for optimal group separation with common graph algorithms
-* **Highlight** and export publication-quality figures interactively
-* **Compare** network topology metrics across different datasets
+`examples/norma_api_client.py` is a template client (standard library only):
 
----
+```bash
+python3 examples/norma_api_client.py --server http://localhost:8000/ --open
+```
 
-## 🚀 Key Features
+## NORMA API
 
-* **Multi-network support**: Load and visualize several networks side by side.
-* **Annotation overlays**:
+Other applications can open NORMA with their networks and groups:
 
-  * **Pie-chart nodes** for multi-category annotations
-  * **Convex-hulls** for set-overlap style visualization
-* **Community detection**: Fast algorithms (e.g., Louvain, Infomap) for de novo grouping.
-* **Flexible layouts**: Fruchterman–Reingold, Kamada–Kawai, circular, grid, and more.
-* **Interactive figure export**: Customize colors, sizes, labels; download as PNG or PDF.
-* **Topological analysis**: Compute degree, clustering coefficient, betweenness, etc., and compare across networks.
+```bash
+curl -X POST http://localhost:8000/api/external \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Demo","edges":[{"source":"A","target":"B"}],"groups":{"G1":["A","B"]}}'
+# -> {"token": "...", "url": "http://localhost:8000/norma.html?session=...", "expiresInHours": 24}
+```
 
----
+Open the returned `url`. Payloads stay in the server's memory for
+`NORMA_API_TTL_HOURS` (default 24). `GET /api/health` checks the API. Links
+(`norma.html?data=URL`, `#json=...`) and `postMessage` work without the server;
+the API tab in NORMA documents all three and has a tester.
 
-## 🛠 Installation
+## Why the relays
 
-1. **Install R** (≥4.0)
-2. **Install RStudio** (optional, but recommended)
-3. **Clone this repo**
+Browsers restrict pages from calling other sites. The server serves NORMA and
+passes STRING requests on under `/string-api/`, so the browser only talks to
+your own server:
 
-   ```bash
-   git clone https://github.com/yourusername/NORMA.git
-   cd NORMA
-   ```
-4. **Install required packages**
+```
+browser ──▶ http://localhost:8000/string-api/json/network?upstream=https://string-db.org
+server  ──▶ https://string-db.org/api/json/network
+```
 
-   ```r
-   # From your R console:
-   install.packages(c(
-     "shiny", "igraph", "visNetwork", "plotly",
-     "data.table", "DT", "RColorBrewer"
-   ))
-   ```
-5. **Run the app**
+* Only read-only STRING API methods are relayed (`get_string_ids`, `network`,
+  `interaction_partners`, `enrichment`, `functional_annotation`, `version`, …).
+* Only `https://string-db.org` and its version addresses
+  (e.g. `https://version-12-0.string-db.org`) are allowed as targets.
+* Requests are spaced at least one second apart and identify themselves
+  (`caller_identity=NORMA3`), as STRING asks.
+* `GET /string-api/ping` tells the app that the relay is available.
 
-   ```r
-   # In RStudio or R console:
-   shiny::runApp("path/to/NORMA")
-   ```
+The server also relays **Open in Arena3D**:
 
----
+```
+browser ──▶ http://localhost:8000/arena3d-api/external?upstream=https://arena3d.org
+server  ──▶ https://arena3d.org/api/external   (JSON body; answer: { token, url })
+```
 
-## 💻 Usage
+Only `arena3d.org` addresses are accepted.
 
-* **Online demo**: [Launch NORMA in your browser](https://pavlopoulos-lab-services.org/shiny/app/norma)
-* **Local**: Once the app is running, use the sidebar to upload:
+The **database importers** (Reactome, OmniPath, NDEx, IntAct, QuickGO and the
+GO API) go through `/db-api/fetch?url=…`; only those services' API addresses
+are relayed.
 
-  * **Network file** (edge list or adjacency)
-  * **Annotation file** (tab-delimited with node → category)
-* Toggle between “Pie-chart nodes” and “Convex-hulls” in **Visualization**.
-* Explore **Layout**, **Annotation**, and **Analysis** tabs for customization.
+In the app, **Database importers → STRING → STRING server → Connect** is set to
+*Automatically*: the relay is used when present, otherwise STRING is called
+directly from the browser.
 
----
+### Behind another web server
 
-## 📂 Input Formats
+For a public server, put `backend/server.py` (hosted mode) behind nginx or Apache
+with HTTPS; `deploy/nginx.conf` is a complete example, including serving NORMA under
+a path (`X-Forwarded-Prefix`). `frontend/dist/` can also be served as static files
+(the page then reads `norma-config.js`, and `index.html` forwards the root address
+to `norma.html`); the REST API and relays need the server, and the importers then
+call the services directly.
 
-* **Network**:
+## Development
 
-  * Edge list: `source<TAB>target`
-  * Adjacency matrix: CSV or TSV
-* **Annotations**:
+```
+backend/    standard-library Python server: backend/norma/{config,api,relays,static,handler,main}.py
+frontend/   Vite + TypeScript page: src/ (modules), e2e/ (Playwright), public/ (assets)
+deploy/     nginx / Apache / systemd examples;  docs/  NAR checklist, design notes
+```
 
-  * Plain table:
+```bash
+cd backend && uv sync && uv run pytest          # server tests; ruff, mypy also via uv run
+cd frontend && npm install && npm run dev        # http://localhost:5173/norma.html, API proxied to :8000
+cd frontend && npm test && npm run test:e2e      # Vitest units; Playwright (starts the server itself)
+pre-commit install                               # ruff, eslint, prettier, tsc before each commit
+```
 
-    ```text
-    node_id<TAB>category1,category2,...
-    ```
-* See the **Help → Input File** tab in the app for detailed examples.
+See `AGENTS.md` for the architecture and the rules for coding agents, `CHANGELOG.md` for changes.
 
----
+## STRING logo
 
-## 📊 Examples & Demo Data
+STRING's logo is not bundled. To show it in the importer, save the official
+logo from <https://string-db.org> as `frontend/public/assets/string-logo.png` (before building); otherwise a plain
+"STRING" label is shown (and the browser logs a harmless 404 for the missing file).
 
-Download sample networks and annotation sets from the app’s **Help → Examples** tab or directly from our website. These include:
+## Citing
 
-* Human protein–protein interaction subnetworks
-* GO term enrichment outputs for test datasets
-* Synthetic networks demonstrating overlapping modules
-
----
-
-## 📬 Contact & Support
-
-For questions, issues, or feature requests, please email:
-
-> **George A. Pavlopoulos**
-> [pavlopoulos@fleming.gr](mailto:pavlopoulos@fleming.gr)
-
-Or open an issue on GitHub:
-[https://github.com/yourusername/NORMA/issues](https://github.com/yourusername/NORMA/issues)
-
----
-
-## 📚 Publications
-
-* **NORMA: The Network Makeup Artist**
-  Koutrouli M., Karatzas E., Papanikolopoulou K., Pavlopoulos G.A.
-  *Genomics, Proteomics & Bioinformatics*. 2022 Jun;20(3):578⎼586. Epub 2021 Jun 24.
-  doi: [10.1016/j.gpb.2021.02.005](https://doi.org/10.1016/j.gpb.2021.02.005)
-  PMID: [34171457](https://pubmed.ncbi.nlm.nih.gov/34171457/)
-
-* **The network makeup artist (NORMA-2.0): Distinguishing annotated groups in a network using innovative layout strategies**
-  Karatzas E., Koutrouli M., Baltoumas F.A., Papanikolopoulou K., Bouyioukos C., Pavlopoulos G.A.
-  *Bioinformatics Advances*. 2022 May 13;2(1)\:vbac036.
-  doi: [10.1093/bioadv/vbac036](https://doi.org/10.1093/bioadv/vbac036)
-  PMID: [36699373](https://pubmed.ncbi.nlm.nih.gov/36699373/)
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+* Karatzas E, Koutrouli M, Baltoumas FA, Papanikolopoulou K, Bouyioukos C,
+  Pavlopoulos GA. The network makeup artist (NORMA-2.0): distinguishing annotated
+  groups in a network using innovative layout strategies.
+  *Bioinformatics Advances* 2022;2(1):vbac036. doi:10.1093/bioadv/vbac036
+* Koutrouli M, Karatzas E, Papanikolopoulou K, Pavlopoulos GA. NORMA: The Network
+  Makeup Artist, a web tool for network annotation visualization.
+  *Genomics, Proteomics & Bioinformatics* 2022;20(3):578–586. doi:10.1016/j.gpb.2021.02.005
+* When using Arena3D: Karatzas E, Baltoumas FA, Panayiotou NA, Schneider R,
+  Pavlopoulos GA. Arena3Dweb: interactive 3D visualization of multilayered networks.
+  *Nucleic Acids Research* 2021;49(W1):W36–W45. doi:10.1093/nar/gkab278
+* When using STRING data: Szklarczyk D *et al.* The STRING database in 2023.
+  *Nucleic Acids Research* 2023;51(D1):D638–D646. doi:10.1093/nar/gkac1000

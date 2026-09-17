@@ -1,0 +1,31 @@
+{
+  "_comment": "Settings for the normaviz.org public server, behind an HTTPS reverse proxy (see deploy/apache-normaviz.conf). Copy to norma.config.json or pass with --config.",
+  "mode": "hosted",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "publicUrl": "https://normaviz.org/",
+    "trustProxy": true,
+    "hsts": true,
+    "accessLog": "anonymous",
+    "openBrowser": false
+  },
+  "api": { "enabled": true, "ttlHours": 24, "maxMB": 50, "maxSessions": 500 },
+  "relays": { "string": true, "arena3d": true, "databases": true },
+  "site": {
+    "name": "NORMA",
+    "institution": "TODO: your institute, City, Country",
+    "contactName": "The NORMA team",
+    "contactEmail": "admin@normaviz.org",
+    "contactUrl": "https://github.com/PavlopoulosLab/NORMA/issues",
+    "sourceUrl": "https://github.com/PavlopoulosLab/NORMA",
+    "licenceName": "MIT License",
+    "licenceUrl": "https://opensource.org/licenses/MIT",
+    "privacyUrl": "",
+    "imprintUrl": "",
+    "maintainedUntil": "2031",
+    "notice": "",
+    "testedBrowsers": ["Chrome", "Firefox", "Safari", "Edge"]
+  },
+  "app": { "maxNodes": 10000, "theme": "white", "startTab": "welcome", "cdnFallback": false }
+}
