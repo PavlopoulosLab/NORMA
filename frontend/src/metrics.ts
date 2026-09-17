@@ -348,15 +348,27 @@ export const LARGE_NETWORK_NODES = 700
 // Progress of long computations (layouts, edge bundling), reported from
 // inside their loops as a fraction of the part in workRange. In the worker,
 // workSink posts it to the page; on the page itself it is not used.
-var workSink = null,
-  workLast = 0
-
+//
+// These live on globalThis (not as module-scope `var`s, and not on the
+// shared `S` state object) because getFrWorker() below rebuilds this
+// function's source with .toString() and pastes it into a separate worker
+// script that only shares globals, not module bindings: a module-scope var
+// or an `S.x` property read/written here would, after the production
+// build's minifier renames it, no longer match the plain, unrenamed name
+// the worker's hand-written preamble uses to set it up (or `S` wouldn't
+// exist there at all) - throwing "<renamed> is not defined" the moment a
+// layout ran in the worker (only reproducible on a network big enough to
+// take that path; see the "run in the worker" e2e test in smoke.spec.ts).
+// `globalThis.__normaWorkX` is immune: globalThis is never renamed, and
+// plain string property names survive the default (non-mangling) minifier.
 export function workStep(f) {
-  if (!workSink) return
+  const sink = globalThis.__normaWorkSink
+  if (!sink) return
   const now = Date.now()
-  if (now - workLast < 80) return
-  workLast = now
-  workSink(S.workRange[0] + (S.workRange[1] - S.workRange[0]) * Math.max(0, Math.min(1, f)))
+  if (now - (globalThis.__normaWorkLast || 0) < 80) return
+  globalThis.__normaWorkLast = now
+  const r = globalThis.__normaWorkRange || [0, 1]
+  sink(r[0] + (r[1] - r[0]) * Math.max(0, Math.min(1, f)))
 }
 
 function fdebBundle(segs, opts) {
@@ -723,7 +735,13 @@ function frLayout(ids, edges) {
     const w = Number.isFinite(e.weight) && e.weight > 0 ? e.weight : 1
     all.push({ s, t, w })
   })
-  const rand = mulberry32(FR_SEED)
+  // 123, not FR_SEED: this function is also pasted verbatim into the layout
+  // worker (see getFrWorker() below), which only shares globals with the
+  // page, not module bindings - a reference to the FR_SEED const would, once
+  // the production build's minifier renames it, no longer resolve to
+  // anything there. FR_SEED stays the single source of truth for every
+  // other (main-thread-only) caller; keep this literal equal to it.
+  const rand = mulberry32(123)
   const comps = connectedComponents(ids.length, all)
   const compOf = new Int32Array(ids.length)
   const localIdx = new Int32Array(ids.length)
@@ -737,11 +755,11 @@ function frLayout(ids, edges) {
   all.forEach((e) => compEdges[compOf[e.s]].push({ s: localIdx[e.s], t: localIdx[e.t], w: e.w }))
   let laidOut = 0
   const parts = comps.map((members, c) => {
-    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    globalThis.__normaWorkRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
     laidOut += members.length
     return { members, ...frComponent(members.length, compEdges[c], rand) }
   })
-  S.workRange = [0, 1]
+  globalThis.__normaWorkRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -764,7 +782,6 @@ function frLayout(ids, edges) {
    the weighted Fruchterman-Reingold layout, and run in the worker.
    Edge weights are not used: distances are shortest paths in hops.
    ============================================================ */
-const DIST_LAYOUT_LIMIT = 2500
 // nodes per component
 
 // all-pairs hop distances of one component (local indices)
@@ -1070,11 +1087,16 @@ function distanceLayout(ids, edges, kind) {
   })
   let laidOut = 0
   const parts = comps.map((members, c) => {
-    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    globalThis.__normaWorkRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
     laidOut += members.length
-    if (members.length > DIST_LAYOUT_LIMIT)
+    // 2500, not DIST_LAYOUT_LIMIT: this function is also pasted verbatim
+    // into the layout worker (see getFrWorker() below), which only shares
+    // globals with the page, not module bindings - a reference to the
+    // DIST_LAYOUT_LIMIT const would, once the production build's minifier
+    // renames it, no longer resolve to anything there.
+    if (members.length > 2500)
       throw new Error(
-        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${DIST_LAYOUT_LIMIT.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
+        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${(2500).toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
       )
     const lay =
       kind === 'kk'
@@ -1083,7 +1105,7 @@ function distanceLayout(ids, edges, kind) {
     // hop units -> FR-like units so packing gaps look alike
     return { members, x: lay.x, y: lay.y }
   })
-  S.workRange = [0, 1]
+  globalThis.__normaWorkRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -1140,7 +1162,7 @@ export function getFrWorker() {
       ]
         .map((f) => f.toString())
         .join('\n') +
-      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\nvar workRange = [0, 1], workSink = null, workLast = 0;\n` +
+      '\n' +
       // The dispatcher below used to call these by their literal source
       // names, which broke once the production build's minifier renamed
       // these (non-exported) functions: the worker still got their bodies
@@ -1148,7 +1170,15 @@ export function getFrWorker() {
       // so the hardcoded names threw "X is not defined". Using .name reads
       // each function's *current* runtime name, so it always matches the
       // identifier its .toString() source was declared under.
-      `onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? ${fdebBundle.name}(m.segs, m.opts) : m.kind === "fr3d" ? ${fr3dLayout.name}(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? ${distanceLayout.name}(m.ids, m.edges, m.kind) : ${frLayout.name}(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };`
+      //
+      // globalThis.__normaWork* (set here, read/written by the pasted
+      // workStep/frLayout/distanceLayout bodies) is the same fix applied to
+      // *data*: a module-scope var or the shared S object would hit the
+      // exact same renamed-name mismatch (or, for S, simply not exist in
+      // the worker at all), since unlike functions, a plain value has no
+      // .name to recover the identifier by. globalThis and plain string
+      // property names are never renamed by the minifier, so this is safe.
+      `onmessage = e => { const m = e.data; let result; globalThis.__normaWorkRange = [0, 1]; globalThis.__normaWorkLast = 0; globalThis.__normaWorkSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? ${fdebBundle.name}(m.segs, m.opts) : m.kind === "fr3d" ? ${fr3dLayout.name}(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? ${distanceLayout.name}(m.ids, m.edges, m.kind) : ${frLayout.name}(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };`
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))
     frWorker = new Worker(url)
     frWorker.onmessage = (e) => {
