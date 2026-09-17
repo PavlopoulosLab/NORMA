@@ -473,6 +473,33 @@ export const NORMA_PARSERS = {
   colors: parseNormaColors,
 }
 
+// Sanity-checks upload content before it reaches the format-specific parsers
+// above, which all assume tab-separated text. Without this, a JSON/XML/
+// binary file doesn't fail cleanly: detectNormaKind has no header or
+// numeric/color column to recognise, so it falls back to "annotation" and
+// the file is silently read as a garbled (but technically valid) group
+// list instead of being rejected with a useful hint.
+export function checkNormaFileFormat(text) {
+  const trimmed = String(text).replace(/^﻿/, '').trimStart()
+  if (!trimmed) return // an empty file is reported by the parsers themselves
+  const sample = trimmed.slice(0, 4000)
+  if (sample.slice(0, 200).includes('�') || sample.includes(' ')) {
+    throw new Error(
+      "This looks like a binary file, not plain text. NORMA's Files uploader needs a tab-separated .txt/.tsv/.csv file — export the data as text first."
+    )
+  }
+  if (sample[0] === '{' || sample[0] === '[') {
+    throw new Error(
+      'This looks like JSON, not a tab-separated NORMA file. If it’s a saved NORMA view or session, use "Open saved work" instead of the Files uploader.'
+    )
+  }
+  if (sample[0] === '<') {
+    throw new Error(
+      "This looks like an XML file (e.g. GraphML, GEXF or SVG), which the Files uploader doesn't read. Export it as a tab-separated Source/Target network, group/member list, or node/color file instead."
+    )
+  }
+}
+
 // Guesses a file's kind: a Source/Target header means a network; a second
 // column that is (almost) always a color means an expression file;
 // anything else is read as an annotation.

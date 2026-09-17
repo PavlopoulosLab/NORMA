@@ -5,6 +5,7 @@ import {
   addNormaEntry,
   annotationText,
   articleFor,
+  checkNormaFileFormat,
   detectNormaKind,
   downloadText,
   fileStem,
@@ -57,6 +58,7 @@ export async function handleNormaUploads(fileList) {
   for (const file of files) {
     try {
       const text = await readFileText(file)
+      checkNormaFileFormat(text)
       if ((chosenKind === 'auto' || chosenKind === 'network') && isArena3dNetworkText(text)) {
         // an Arena3D network file: a network plus its layers as groups
         const conv = convertArena3dNetwork(text)

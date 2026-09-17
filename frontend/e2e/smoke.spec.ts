@@ -174,3 +174,31 @@ test('unknown example shows an error, not a crash', async ({ page }) => {
   expect(await nodeCount(page)).toBe(0)
   void EXAMPLE
 })
+
+test('uploading a non-NORMA file is rejected with a warning before it reaches the canvas', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.locator('#filesSection h3').click()
+  await page.setInputFiles('#normaFileInput', {
+    name: 'export.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"nodes":["A","B"],"edges":[["A","B"]]}'),
+  })
+  await expect(page.locator('#normaStatus .note.error')).toContainText(/looks like JSON/)
+  await expect(page.locator('#libNetworks .lib-empty')).toBeVisible()
+  await expect(page.locator('#libNetworks .lib-row')).toHaveCount(0)
+  expect(await nodeCount(page)).toBe(0)
+})
+
+test('uploading a valid network file is accepted and ready to show', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('#filesSection h3').click()
+  await page.setInputFiles('#normaFileInput', {
+    name: 'network.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Source\tTarget\tWeight\nA\tB\t1\nB\tC\t2\n'),
+  })
+  await expect(page.locator('#normaStatus .note.ok').first()).toContainText(/added/i)
+  await expect(page.locator('#libNetworks')).not.toBeEmpty()
+})

@@ -1036,6 +1036,23 @@
     </div>
 
     <div id="panelExport" class="side-panel" role="tabpanel" aria-labelledby="sideTabExport" hidden>
+      <div class="section collapsible collapsed" data-tint="exsave">
+        <h3 role="button" tabindex="0" aria-expanded="false">Save your work<button type="button" class="helplink" data-help="help-save" aria-label="Help: Save your work">?</button></h3>
+        <div class="menu-sep"><span>View file (.json) <span class="lib-hint">the current view</span></span></div>
+        <div class="row" style="margin-top:0;">
+          <button id="btnExport">Save view file</button>
+        </div>
+        <div class="menu-sep"><span>Session file (.json) <span class="lib-hint">all views and files</span></span></div>
+        <div class="row" style="margin-top:0;">
+          <button type="button" id="btnSessionSave">Save session file</button>
+        </div>
+        <div id="sessionSaveStatus" class="status" role="status" aria-live="polite"></div>
+        <div class="menu-sep"><span>Settings file (.json) <span class="lib-hint">display settings only</span></span></div>
+        <div class="row" style="margin-top:0;">
+          <button id="btnExportConfig">Save settings file</button>
+        </div>
+      </div>
+
       <div class="section collapsible collapsed" data-tint="exfiles">
         <h3 role="button" tabindex="0" aria-expanded="false">NORMA files<button type="button" class="helplink" data-help="help-save" aria-label="Help: NORMA files">?</button></h3>
         <p class="db-tag">Tab-separated files that NORMA (and the original NORMA) can read again.</p>
@@ -1074,23 +1091,6 @@
           <button type="button" data-export-format="cyjs" title="Cytoscape's .cyjs format with positions: Cytoscape desktop, Cytoscape.js">Cytoscape (.cyjs)</button>
         </div>
         <div id="otherExportStatus" class="status" role="status" aria-live="polite"></div>
-      </div>
-
-      <div class="section collapsible collapsed" data-tint="exsave">
-        <h3 role="button" tabindex="0" aria-expanded="false">Save your work<button type="button" class="helplink" data-help="help-save" aria-label="Help: Save your work">?</button></h3>
-        <div class="menu-sep"><span>View file (.json) <span class="lib-hint">the current view</span></span></div>
-        <div class="row" style="margin-top:0;">
-          <button id="btnExport">Save view file</button>
-        </div>
-        <div class="menu-sep"><span>Session file (.json) <span class="lib-hint">all views and files</span></span></div>
-        <div class="row" style="margin-top:0;">
-          <button type="button" id="btnSessionSave">Save session file</button>
-        </div>
-        <div id="sessionSaveStatus" class="status" role="status" aria-live="polite"></div>
-        <div class="menu-sep"><span>Settings file (.json) <span class="lib-hint">display settings only</span></span></div>
-        <div class="row" style="margin-top:0;">
-          <button id="btnExportConfig">Save settings file</button>
-        </div>
       </div>
 
       <div class="section collapsible collapsed" data-tint="exarena">
