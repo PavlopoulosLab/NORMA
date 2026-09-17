@@ -735,13 +735,9 @@ function frLayout(ids, edges) {
     const w = Number.isFinite(e.weight) && e.weight > 0 ? e.weight : 1
     all.push({ s, t, w })
   })
-  // 123, not FR_SEED: this function is also pasted verbatim into the layout
-  // worker (see getFrWorker() below), which only shares globals with the
-  // page, not module bindings - a reference to the FR_SEED const would, once
-  // the production build's minifier renames it, no longer resolve to
-  // anything there. FR_SEED stays the single source of truth for every
-  // other (main-thread-only) caller; keep this literal equal to it.
-  const rand = mulberry32(123)
+  // globalThis.__normaFrSeed, not FR_SEED directly: see the comment by its
+  // declaration above (this function also runs inside the layout worker).
+  const rand = mulberry32(globalThis.__normaFrSeed)
   const comps = connectedComponents(ids.length, all)
   const compOf = new Int32Array(ids.length)
   const localIdx = new Int32Array(ids.length)
@@ -782,6 +778,18 @@ function frLayout(ids, edges) {
    the weighted Fruchterman-Reingold layout, and run in the worker.
    Edge weights are not used: distances are shortest paths in hops.
    ============================================================ */
+const DIST_LAYOUT_LIMIT = 2500
+// frLayout/distanceLayout read these off globalThis instead of closing over
+// the consts directly, because both functions are also pasted verbatim into
+// the layout worker (see getFrWorker() below), which only shares globals
+// with the page, not module bindings. A direct FR_SEED/DIST_LAYOUT_LIMIT
+// reference would, once the production build's minifier renames the const,
+// no longer resolve inside the worker; globalThis and plain string property
+// names are never renamed, so this keeps FR_SEED/DIST_LAYOUT_LIMIT above as
+// the single source of truth for both places instead of a hand-duplicated
+// literal that could silently drift if either value ever changes.
+globalThis.__normaFrSeed = FR_SEED
+globalThis.__normaDistLayoutLimit = DIST_LAYOUT_LIMIT
 // nodes per component
 
 // all-pairs hop distances of one component (local indices)
@@ -1089,14 +1097,13 @@ function distanceLayout(ids, edges, kind) {
   const parts = comps.map((members, c) => {
     globalThis.__normaWorkRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
     laidOut += members.length
-    // 2500, not DIST_LAYOUT_LIMIT: this function is also pasted verbatim
-    // into the layout worker (see getFrWorker() below), which only shares
-    // globals with the page, not module bindings - a reference to the
-    // DIST_LAYOUT_LIMIT const would, once the production build's minifier
-    // renames it, no longer resolve to anything there.
-    if (members.length > 2500)
+    // globalThis.__normaDistLayoutLimit, not DIST_LAYOUT_LIMIT directly: see
+    // the comment by its declaration above (this function also runs inside
+    // the layout worker).
+    const limit = globalThis.__normaDistLayoutLimit
+    if (members.length > limit)
       throw new Error(
-        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${(2500).toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
+        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${limit.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
       )
     const lay =
       kind === 'kk'
@@ -1162,7 +1169,13 @@ export function getFrWorker() {
       ]
         .map((f) => f.toString())
         .join('\n') +
-      '\n' +
+      // FR_SEED/DIST_LAYOUT_LIMIT are interpolated here as plain values
+      // (${FR_SEED}, not the identifier), so this always carries whatever
+      // they're currently set to on the page - no duplicated literal to
+      // keep in sync. See the comment by DIST_LAYOUT_LIMIT's declaration
+      // for why the worker's copies of frLayout/distanceLayout read them
+      // back off globalThis rather than closing over the consts directly.
+      `\nglobalThis.__normaFrSeed = ${FR_SEED};\nglobalThis.__normaDistLayoutLimit = ${DIST_LAYOUT_LIMIT};\n` +
       // The dispatcher below used to call these by their literal source
       // names, which broke once the production build's minifier renamed
       // these (non-exported) functions: the worker still got their bodies
