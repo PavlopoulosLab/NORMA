@@ -1926,11 +1926,9 @@ export async function reactomeSearch() {
         `${DB_URLS.reactome}/search/query?query=${encodeURIComponent(q)}&species=${encodeURIComponent(species)}&types=Pathway&cluster=true`
       )
       const entries = ((r && r.results) || []).flatMap((g) => g.entries || [])
-      entries
-        .slice(0, 40)
-        .forEach((e) =>
-          sel.add(new Option(`${stripTags(e.name)} (${e.stId || e.id})`, e.stId || e.id))
-        )
+      sortedByName(entries.slice(0, 40), (e) => stripTags(e.name)).forEach((e) =>
+        sel.add(new Option(`${stripTags(e.name)} (${e.stId || e.id})`, e.stId || e.id))
+      )
     }
     document.getElementById('reactomePickRow').hidden = !sel.options.length
     dbStatus(
@@ -2374,11 +2372,21 @@ export async function ndexSearch() {
         body: JSON.stringify({ searchString: q }),
         contentType: 'application/json',
       })
-      ;((r && r.networks) || []).forEach((n) => {
+      // Some sources (e.g. WikiPathways) name networks "WP4284 - Cell Cycle":
+      // an id, then " - ", then the actual title. Shown and sorted by that
+      // title instead, with the id moved after it ("Cell Cycle (WP4284)"),
+      // matching the Reactome/GO-CAM "title (id)" pickers. Names with no
+      // such prefix (no digit in the leading token) are left as they are.
+      const networks = ((r && r.networks) || []).map((n) => {
+        const m = /^(\S*\d\S*) - (.+)$/.exec(String(n.name || ''))
+        return { ...n, ndexTitle: m ? m[2] : n.name, ndexId: m ? m[1] : null }
+      })
+      sortedByName(networks, (n) => n.ndexTitle).forEach((n) => {
         const big = (n.nodeCount || 0) > MAX_NETWORK_NODES ? ' — larger than NORMA shows' : ''
+        const label = n.ndexId ? `${n.ndexTitle} (${n.ndexId})` : n.ndexTitle
         sel.add(
           new Option(
-            `${n.name} · ${(n.nodeCount || 0).toLocaleString()} nodes, ${(n.edgeCount || 0).toLocaleString()} edges · ${n.owner || ''}${big}`,
+            `${label} · ${(n.nodeCount || 0).toLocaleString()} nodes, ${(n.edgeCount || 0).toLocaleString()} edges · ${n.owner || ''}${big}`,
             n.externalId
           )
         )
@@ -2712,18 +2720,55 @@ const RO_LABELS = {
 
 const termOf = (x) => (x == null ? null : typeof x === 'string' ? x : x.term || x.id || null)
 
+// The taxon/models listing gives "gocam": "http://model.geneontology.org/<id>"
+// (a full URL, not a bare id); gocam-model/<id> 404s on anything but the bare
+// id, so every candidate field is reduced to its last path segment here, once,
+// rather than passing whatever the API happened to send straight through.
+const bareGoId = (s) => (s == null ? null : String(s).replace(/^.*\//, ''))
+
 export async function goLoadModels() {
   await dbRun('go', async () => {
     const taxon = document.getElementById('goTaxon').value
     dbProgress('go', 'Listing GO-CAM models…')
     const r = await dbFetch('go', `${DB_URLS.goapi}/taxon/${encodeURIComponent(taxon)}/models`)
-    const list = (Array.isArray(r) ? r : (r && (r.models || r.results)) || []).map((m) =>
-      typeof m === 'string'
-        ? { id: m, title: m }
-        : { id: m.id || m.gocam || m.model_id, title: m.title || m.name || m.id || m.gocam }
-    )
+    const list = (Array.isArray(r) ? r : (r && (r.models || r.results)) || []).map((m) => {
+      if (typeof m === 'string') {
+        const id = bareGoId(m)
+        return { id, title: id }
+      }
+      const id = bareGoId(m.id || m.gocam || m.model_id)
+      return { id, title: m.title || m.name || id }
+    })
     goState.models = list.filter((m) => m.id)
-    filterGoModels()
+    const shown = filterGoModels()
+    // The taxon listing has no titles (just ids), so the ones actually shown
+    // are looked up one model at a time and the option text updated in
+    // place; goState.models keeps them (title !== id marks "already known"),
+    // so re-filtering to the same models within this session won't re-fetch.
+    const toName = shown.filter((m) => m.title === m.id)
+    if (toName.length) {
+      dbProgress('go', `Reading model titles: 0 of ${toName.length}…`)
+      await dbMap(
+        'go',
+        toName,
+        6,
+        async (m) => {
+          try {
+            const d = await dbFetch(
+              'go',
+              `${DB_URLS.goapi}/gocam-model/${encodeURIComponent(m.id)}`
+            )
+            if (d && d.title) m.title = d.title
+          } catch {
+            // keep the id as the label
+          }
+        },
+        (done, total) => dbProgress('go', `Reading model titles: ${done} of ${total}…`)
+      )
+      // titles just came in: re-render so the list re-sorts by them instead
+      // of staying in the id order it was first shown in
+      renderGoOptions(shown)
+    }
     dbStatus('go', [
       {
         level: goState.models.length ? 'ok' : 'warn',
@@ -2737,18 +2782,33 @@ export async function goLoadModels() {
 
 const goState = { models: [] }
 
-export function filterGoModels() {
-  const f = document.getElementById('goModelFilter').value.trim().toLowerCase()
+// Before a title is known, m.title === m.id (see goLoadModels): show the
+// bare id then, and "title (id)" once the real title comes in - the same
+// "name (id)" shape as the Reactome/NDEx pickers.
+const goOptionLabel = (m) => (m.title && m.title !== m.id ? `${m.title} (${m.id})` : m.id)
+
+// Sorted by whatever each model's label is showing right now (title once
+// known, the bare id until then), same as the Reactome/NDEx pickers.
+function renderGoOptions(models) {
   const sel = document.getElementById('goModel')
   sel.innerHTML = ''
-  goState.models
+  sortedByName(models, (m) => m.title).forEach((m) => sel.add(new Option(goOptionLabel(m), m.id)))
+}
+
+export function filterGoModels() {
+  const f = document.getElementById('goModelFilter').value.trim().toLowerCase()
+  // Capped lower than Reactome/NDEx's 40: each not-yet-named model shown
+  // costs its own gocam-model request (see goLoadModels), so this bounds a
+  // single "List models"/filter to at most 60 of those round trips.
+  const shown = goState.models
     .filter(
       (m) =>
         !f || String(m.title).toLowerCase().includes(f) || String(m.id).toLowerCase().includes(f)
     )
-    .slice(0, 300)
-    .forEach((m) => sel.add(new Option(m.title, m.id)))
+    .slice(0, 60)
+  renderGoOptions(shown)
   document.getElementById('goPickRow').hidden = !goState.models.length
+  return shown
 }
 
 export async function goFetchModel() {

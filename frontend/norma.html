@@ -321,6 +321,7 @@
         <div class="row"><button id="btnReactomeSearch" data-db-run="reactome">Search pathways</button></div>
         <div id="reactomePickRow" hidden>
           <select id="reactomePathway" size="5" aria-label="Pathway" class="db-pick"></select>
+          <button type="button" class="db-pick-copy" id="btnReactomeCopy">Copy selected</button>
         </div>
         <details class="string-more"><summary>Options</summary>
           <div class="row">
@@ -387,6 +388,7 @@
         <div class="row"><button id="btnNdexSearch" data-db-run="ndex">Search NDEx</button></div>
         <div id="ndexPickRow" hidden>
           <select id="ndexNetwork" size="6" aria-label="Network" class="db-pick"></select>
+          <button type="button" class="db-pick-copy" id="btnNdexCopy">Copy selected</button>
         </div>
         <p class="hint-line">Node attributes with a few distinct values (2–60) become groupings; the NDEx layout is kept.</p>
         <div class="row stack">
@@ -431,6 +433,7 @@
         <div id="goPickRow" hidden>
           <input id="goModelFilter" class="text-input" type="search" placeholder="Filter models by title" autocomplete="off" style="margin-top:6px;">
           <select id="goModel" size="6" aria-label="GO-CAM model" class="db-pick"></select>
+          <button type="button" class="db-pick-copy" id="btnGoCopy">Copy selected</button>
         </div>
         <input id="goModelId" class="text-input" type="text" placeholder="or a model ID, e.g. 5323da1800000002" autocomplete="off" style="margin-top:6px;">
         <div class="row"><button class="primary" id="btnGoModelFetch" data-db-run="go">Fetch GO-CAM network</button></div>
