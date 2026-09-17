@@ -1,0 +1,147 @@
+protein biosynthesis	RPS15,RPS15,RPL37,RPS5,RPL35,FAU,RPS11,RPS21,RPL18,RPS13,RPL21,RPL36,RPL12,RPLP2,RPS19,RPL27,RPL31,MRPS12,LOC440055,RPS27,LOC388344,RPL27A,RPS10,RPS17,RPL28,LOC283412,RPL19,RPS16,RPS14,NARS,RPL7,RPS6,RPS2,U16,NACA,RPL18A,RPL13,RPL29,RPS15A,RPS20,RPS3A,RPS18,RPL14,MRPL34,RPL22,RPL34,RPS27A,EEF1D,RPL15,RPL9,RPL6,RPL26,RPL4,RPS4X,RPS24,RPS9,RPL13A,RPL17,EEF1A1,RPL5,RPL23,MDS1,RPS7,LOC402057,RPS25
+immune response	HLA-DPB1,HLA-DPB1,TAPBP,IL2RG,HLA-DMA,HLA-DQA1,IL16,221651_x_at,IGLV3-10,ARL6IP2,HLA-B,CD164,HLA-DRA,HLA-DMB,TRIM22,HLA-DRB5,HLA-DRB1,IGL@,IGLC1,IGLV3-25,TRB@,HLA-DRB4,LTB,ARHGDIB,C6orf12,HLA-DQB1,HLA-DPA1,TRBV3-1,GPSM3,IGLC2,TRA@,214836_x_at,IGHV1-69,IGHA1,HLA-A,CD7,IGHG3,IGLJ3,IL7R,IL6ST,HLA-C,IGKC,IGHM
+signal transduction	AKT1,AKT1,STAT1,IL2RG,CXCR4,OPHN1,CCL5,PGF,INPP5D,PRKAR1A,CD164,RPS27,HLA-DRB5,CD74,HLA-DRB1,PRKAR2A,CD53,HLA-DRB4,LTB,HSP90AA1,OGT,ROCK1,IFNGR1,PTGES3,HMGB1,GTF2I,GNB2L1,CAP1,SPN,NPM1,IQGAP1,PAFAH1B1,EIF3S3,RAC2,COPS2,PRKACB,PDE4C
+antigen presentation, endogenous antigen	HLA-J,HLA-J,RPLP2,221651_x_at,IGLV3-10,IGHD,HLA-B,CD74,IGL@,IGLC1,HLA-E,IGLV3-25,C6orf12,IGLC2,214836_x_at,IGHV1-69,IGHA1,HLA-F,HLA-A,IGHG3,IGLJ3,HLA-G,HLA-C,IGKC,IGHM
+antigen processing, endogenous antigen via ...	CAST,CAST,HLA-J,RPLP2,221651_x_at,IGLV3-10,IGHD,HLA-B,IGL@,IGLC1,HLA-E,IGLV3-25,C6orf12,IGLC2,214836_x_at,IGHV1-69,IGHA1,HLA-F,HLA-A,IGHG3,IGLJ3,HLA-G,HLA-C,IGKC,IGHM
+regulation of transcription, DNA-dependent	NFE2L2,NFE2L2,STAT1,MGC2474,LYSMD4,ZMYND11,ZNF160,CDC5L,TRIM22,SFPQ,IFI16,HCLS1,ATRX,HMGB1,CSDE1,SCAND1,RPL6,LOC342346,SUB1
+electron transport	MT1X,MT1X,MT1L,COX4I1,NCF1,SDHA,UQCRQ,UQCRC1,GPX4,UQCRFS1,NDUFV1,COX5B,NDUFS3,NDUFS8,COX5A,NDUFB4,CYC1,COX8A,RPA1
+protein amino acid phosphorylation	AKT1,AKT1,RAVER2,GMFG,PRKAR1A,PRKD2,MYLK,PRKAR2A,ROCK1,TGFB1,PCM1,U16,LCK,CSNK1A1,HNRPDL,RPL4,PRKACB
+antigen processing, exogenous antigen via M...	HLA-DPB1,HLA-DPB1,HLA-DMA,HLA-DQA1,HLA-DRA,HLA-DMB,HLA-DRB5,HLA-DRB1,HLA-DRB4,HLA-DQB1,HLA-DPA1
+antigen presentation, exogenous antigen	HLA-DPB1,HLA-DPB1,HLA-DMA,HLA-DQA1,HLA-DRA,HLA-DMB,HLA-DRB5,HLA-DRB1,HLA-DRB4,HLA-DQB1,HLA-DPA1
+cell adhesion	ITGAV,ITGAV,LAMC1,CCL5,FNBP4,ADRM1,CD164,TGFB1I1,SELL,DGCR6,COL6A1,PLEKHC1,CD2,ITGB2
+intracellular signaling cascade	STAT1,STAT1,RAVER2,INPP5D,PRKAR1A,PRKD2,NCF1,PRKAR2A,WSB1,HCLS1,HMHA1,ROCK1,LCK
+transcription from RNA polymerase II promoter	TARDBP,TARDBP,NFE2L2,STAT1,POLR2J,TGFB1I1,TCEA1,HMHA1,POLR2I,BTF3,COPS2,POLR2E
+cell motility	CALD1,CALD1,CAPZA1,CCL5,TPM1,MSN,ACTR3,ARPC1B,ARHGDIB,ARPC3,ARPC5,PAFAH1B1
+detection of pest, pathogen or parasite	HLA-DPB1,HLA-DPB1,HLA-DMA,HLA-J,HLA-DMB,HLA-DRB5,HLA-DRB1,HLA-DRB4,HLA-G
+nuclear mRNA splicing, via spliceosome	HNRPM,HNRPM,SFRS10,HNRPH3,SFPQ,HIATL1,RPL35A,SF3B1,HNRPA2B1,HNRPA1
+mitochondrial electron transport, NADH to u...	NDUFC1,NDUFC1,NDUFB6,NDUFB2,NDUFV1,NDUFS7,NDUFS3,NDUFS8,NDUFB4
+development	CECR1,CECR1,CLPTM1,CD164,ARHGDIB,COL6A3,MYH11,ITGB2,DDX1
+phosphate transport	COL6A3,COL6A3,COL1A1,COL6A1,COL4A2,COL4A1,COL3A1,COL1A2
+antigen presentation	HLA-J,HLA-J,HLA-B,HLA-E,C6orf12,HLA-F,HLA-A,HLA-G,HLA-C
+transport	G3BP,G3BP,SLC25A16,UCP2,SLC25A11,TMED5,SLC25A3,ATP2A3
+cell proliferation	RPS21,RPS21,PGF,ZMYND11,RPS27,CD74,IFI16,MIF,ISG20
+anti-apoptosis	AKT1,AKT1,FAIM3,SON,HMGB1,HSP90B1,NPM1,TPT1,PRDX2
+cell surface receptor linked signal transdu...	CD3D,CD3D,CD2,CD79A,BIRC2,MIF,CSNK1A1,IL7R,IL6ST
+generation of precursor metabolites and energy	ACO2,ACO2,ATPIF1,COX4I1,ECH1,UQCR,SLC25A3,COX8A
+protein complex assembly	TAPBP,TAPBP,CAPZA1,GPAA1,LAMC1,TCEB2,CD3D,CD74
+mRNA processing	SFPQ,SFPQ,SRP46,DHX15,HNRPR,SFRS11,SFRS5,RNPC2
+positive regulation of cell proliferation	SSR1,SSR1,CAPNS1,PGF,RPL31,HCLS1,TGFB1,NAP1L1
+RNA splicing	HNRPH3,HNRPH3,SFPQ,DHX15,PPP2CA,ZNF638,SFRS11
+transcription	LYSMD4,LYSMD4,POLR2J,ZNF160,SFPQ,POLR1B,PCM1
+regulation of translational initiation	EIF4G1,EIF4G1,EIF4A2,EIF4G2,EIF5,EIF3S3,DDX1
+pathogenesis	HLA-DPB1,HLA-DPB1,HLA-DRB5,HLA-DRB1,HLA-DRB4
+proton transport	ATP5J2,ATP5J2,ATP6V0D1,UCP2,ATP6V0B,ATP6V0C
+RNA processing	HNRPU,HNRPU,RBPMS,DDX17,HNRPH1,HNRPDL,RNPC2
+regulation of transcription from RNA polyme...	THRAP5,THRAP5,PRKAR1A,HMGB1,LOC342346,SUB1
+protein transport	RAB1A,RAB1A,RAB6A,RAB6C,TLOC1,HSP90B1,COPB
+small GTPase mediated signal transduction	RAP1B,RAP1B,RGS19,RAB1A,RAB6A,RAB6C,RPL29
+response to virus	CCL5,CCL5,IRF7,TRIM22,IFI16,IFNGR1,ISG20
+inflammatory response	CCL5,CCL5,IRF7,MEFV,ALOX5AP,TGFB1,ITGB2
+actin cytoskeleton organization and biogenesis	ARHGDIB,ARHGDIB,PLEKHC1,DST,ROCK1,ARPC5
+protein folding	PPIB,PPIB,HSP90AA1,HSP90B1,EIF3S3,KTN1
+induction of apoptosis	CD2,CD2,PPP2CA,BCLAF1,LCK,RPS3A,SCAND1
+skeletal development	CNOT2,CNOT2,COL1A1,TGFB1,COL1A2,MYH11
+regulation of progression through cell cycle	STAT1,STAT1,PGF,ERH,PPP2CA,LCK,SCAND1
+negative regulation of cell proliferation	CD164,CD164,TGFB1I1,TGFB1,CDKN1B,NPM1
+cellular defense response	HLA-J,HLA-J,CCL5,NCF1,FAIM3,SPN,HLA-G
+translational elongation	RPLP2,RPLP2,TUFM,EEF1B2,EEF1D,EEF1A1
+muscle development	TAGLN,TAGLN,LYSMD4,SMTN,COL6A3,MBNL1
+ATP synthesis coupled proton transport	ATP6V0B,ATP6V0B,ATP6V0C,ATP5D,ATP5G3
+proteolysis	CAST,CAST,MASP1,YME1L1,MMP2,IGHG3
+microtubule-based movement	220725_x_at,220725_x_at,KNS2,KTN1
+metabolism	ACO2,ACO2,ECH1,POPDC3,IGLC2,DIP2A
+apoptosis	AD7C-NTP,AD7C-NTP,FIS1,ITGB2,CROP
+amino acid transport	SLC38A2,SLC38A2,218041_x_at,RPL24
+response to unfolded protein	HSP90AA1,HSP90AA1,HSP90B1,EIF3S3
+intracellular protein transport	VDP,VDP,NAPA,CLTC,CD74,NPM1,COPE
+transcription initiation from RNA polymeras...	THRAP5,THRAP5,IRF7,THRAP1,GTF2I
+response to oxidative stress	CCL5,CCL5,GPX1,GPX4,CSDE1,PRDX2
+nucleobase, nucleoside, nucleotide and nucl...	NDUFA10,NDUFA10,ERH,208246_x_at
+carbohydrate metabolism	LOC91316,LOC91316,MAN2B1,AKR7A2
+protein modification	SUMO2,SUMO2,RPN1,MAN2B1,RPS27A
+ubiquitin-dependent protein catabolism	USP34,USP34,UBE4A,PSMB9,PSMB8
+defense response	CD48,CD48,PTPRCAP,HLA-B,CD79A
+DNA replication	MCM3AP,MCM3AP,NARS,NAP1L1,SET
+androgen receptor signaling pathway	THRAP5,THRAP5,THRAP1,TGFB1I1
+protein targeting to mitochondrion	TIMM8B,TIMM8B,TOMM20,TIMM13
+oxygen transport	SLC38A2,SLC38A2,218041_x_at
+G-protein coupled receptor protein signalin...	AKT1,AKT1,RGS19,CXCR4,FNBP4
+nervous system development	OPHN1,OPHN1,MBNL1,PAFAH1B1
+mitochondrial transport	UCP2,UCP2,HSP90AA1,EIF3S3
+embryo implantation	LOC283412,LOC283412,RPL29
+DNA repair	SFPQ,SFPQ,ATRX,HMGB1,RPA1
+protein refolding	HSP90AA1,HSP90AA1,EIF3S3
+positive regulation of nitric oxide biosynt...	HSP90AA1,HSP90AA1,EIF3S3
+lipid metabolism	PAFAH1B1,PAFAH1B1,ATP8B1
+cell cycle arrest	EIF4G2,EIF4G2,DST,CDKN1B
+cell cycle	CUL4B,CUL4B,RPS27A,SEPT7
+protein ubiquitination	UBE4A,UBE4A,PCNP,RPS27A
+protein targeting	TOMM20,TOMM20,SRP9,COPB
+nucleosome assembly	NAP1L1,NAP1L1,SET,H3F3A
+negative regulation of cell adhesion	CD164,CD164,ARHGDIB,SPN
+cell-cell signaling	CCL5,CCL5,PGF,LTB,ITGB2
+positive regulation of transcription	TGFB1I1,TGFB1I1,RPS27A
+negative regulation of transcription	IRF7,IRF7,SUMO1,BCLAF1
+hemopoiesis	CD164,CD164,ZNF160,LCK
+cellular defense response (sensu Vertebrata)	IGHA1,IGHA1,IGHG3,IGHM
+retrograde vesicle-mediated transport, Golg...	TAPBP,TAPBP,COPE,COPB
+protein import into nucleus	MCM3AP,MCM3AP,NDUFA13
+positive regulation of transcription, DNA-d...	TGFB1I1,TGFB1I1,TGFB1
+negative regulation of cell growth	PPP2CA,PPP2CA,NDUFA13
+integrin-mediated signaling pathway	ITGAV,ITGAV,DST,ITGB2
+cotranslational protein targeting to membrane	SSR1,SSR1,TLOC1,TRAM1
+Rho protein signal transduction	ARHGDIB,ARHGDIB,ROCK1
+sensory perception of sound	TIMM8B,TIMM8B,TIMM13
+regulation of translation	PPP2CA,PPP2CA,EEF1A1
+regulation of transcription	POLR2L,POLR2L,PPP2CA
+prostaglandin biosynthesis	CD74,CD74,PTGES3,MIF
+mitosis	TARDBP,TARDBP,CORO1A
+insulin receptor signaling pathway	PHIP,PHIP,AKT1,MYH11
+DNA recombination	ATRX,ATRX,HMGB1,RPA1
+tricarboxylic acid cycle	ACO2,ACO2,SDHA,RPA1
+negative regulation of transcription, DNA-d...	RPS14,RPS14,NDUFA13
+intra-Golgi vesicle-mediated transport	NAPA,NAPA,COPE,COPB
+cell death	EIF4G2,EIF4G2,TGFB1
+protein amino acid autophosphorylation	RPS2,RPS2,U16,RPL4
+circulation	RPL31,RPL31,COL3A1
+calcium ion transport	ATP2A3,ATP2A3,TPT1
+axon guidance	OPHN1,OPHN1,RPS27A
+ER-associated protein catabolism	RPL27,RPL27,RPS27A
+regulation of actin filament polymerization	ARPC3,ARPC3,ARPC5
+positive regulation of I-kappaB kinase/NF-k...	BIRC2,BIRC2,EEF1D
+organ morphogenesis	DGCR6,DGCR6,TGFB1
+negative regulation of transcription from R...	IRF7,IRF7,ZMYND11
+mRNA splice site selection	SRP46,SRP46,SFRS5
+erythrocyte differentiation	RPS19,RPS19,HCLS1
+cytokinesis	SEPT2,SEPT2,SEPT7
+chromosome segregation	ARL8B,ARL8B,RIOK3
+cell-matrix adhesion	ITGAV,ITGAV,ITGB2
+activation of NF-kappaB transcription factor	U16,U16,NPM1,RPL4
+T cell activation	CD3D,CD3D,CD2,CD7
+ubiquitin cycle	TPT1,TPT1,UBE2D2
+regulation of cell adhesion	NPTN,NPTN,PPP2CA
+cell growth	TGFB1,TGFB1,DDX5
+angiogenesis	CAST,CAST,ATPIF1
+translational initiation	EIF5,EIF5,RPS3A
+transforming growth factor beta receptor si...	FNTA,FNTA,TGFB1
+response to drug	RAB6C,RAB6C,LCK
+regulation of apoptosis	TPT1,TPT1,PRDX2
+chromosome organization and biogenesis (sen...	ATRX,ATRX,H3F3A
+caspase activation	STAT1,STAT1,LCK
+antimicrobial humoral response (sensu Verte...	IL7R,IL7R,ITGB2
+I-kappaB kinase/NF-kappaB cascade	PHIP,PHIP,STAT1
+transmembrane receptor protein tyrosine kin...	CD7,CD7,COL1A2
+response to stress	NPM1,NPM1,CROP
+response to metal ion	MT1X,MT1X,MT1L
+calcium ion homeostasis	CCL5,CCL5,TPT1
+regulation of macrophage activation	CD74,CD74,MIF
+nucleocytoplasmic transport	NPM1,NPM1,SET
+negative regulation of apoptosis	CD74,CD74,MIF
+muscle contraction	DES,DES,CALD1
+establishment and/or maintenance of cell po...	CAP1,CAP1,SPN
+chemotaxis	CCL5,CCL5,SPN
+Ras protein signal transduction	G3BP,G3BP,LCK
+regulation of heart contraction	DES,DES,TPM1
+activation of MAPKK activity	U16,U16,RPL4
+JNK cascade	U16,U16,RPL4
+cytoskeleton organization and biogenesis	DES,DES,DST

@@ -1,0 +1,10 @@
+CDKN1A	blue
+TP53	blue
+MDM4	blue
+BCL2L1	red
+CHEK2	red
+ATM	red
+TP53BP2	red
+CDKN2A	blue
+EP300	red
+CREBBP	red

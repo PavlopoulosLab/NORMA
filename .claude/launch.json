@@ -1,6 +1,0 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    { "name": "norma", "runtimeExecutable": "python3", "runtimeArgs": ["backend/server.py", "--mode", "local", "--port", "8765", "--no-open"], "port": 8765 }
-  ]
-}
