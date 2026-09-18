@@ -502,11 +502,11 @@ export function fr3dLayout(ids, edges, opts) {
 
   let laidOut = 0
   const parts = comps.map((m, c) => {
-    S.workRange = [laidOut / n, (laidOut + m.length) / n]
+    globalThis.__normaWorkRange = [laidOut / n, (laidOut + m.length) / n]
     laidOut += m.length
     return layoutComponent(m.length, compEdges[c])
   })
-  S.workRange = [0, 1]
+  globalThis.__normaWorkRange = [0, 1]
   // pack: the largest piece in the middle, the others on a shell around it
   const centers = [[0, 0, 0]]
   if (parts.length > 1) {

@@ -348,15 +348,27 @@ export const LARGE_NETWORK_NODES = 700
 // Progress of long computations (layouts, edge bundling), reported from
 // inside their loops as a fraction of the part in workRange. In the worker,
 // workSink posts it to the page; on the page itself it is not used.
-var workSink = null,
-  workLast = 0
-
+//
+// These live on globalThis (not as module-scope `var`s, and not on the
+// shared `S` state object) because getFrWorker() below rebuilds this
+// function's source with .toString() and pastes it into a separate worker
+// script that only shares globals, not module bindings: a module-scope var
+// or an `S.x` property read/written here would, after the production
+// build's minifier renames it, no longer match the plain, unrenamed name
+// the worker's hand-written preamble uses to set it up (or `S` wouldn't
+// exist there at all) - throwing "<renamed> is not defined" the moment a
+// layout ran in the worker (only reproducible on a network big enough to
+// take that path; see the "run in the worker" e2e test in smoke.spec.ts).
+// `globalThis.__normaWorkX` is immune: globalThis is never renamed, and
+// plain string property names survive the default (non-mangling) minifier.
 export function workStep(f) {
-  if (!workSink) return
+  const sink = globalThis.__normaWorkSink
+  if (!sink) return
   const now = Date.now()
-  if (now - workLast < 80) return
-  workLast = now
-  workSink(S.workRange[0] + (S.workRange[1] - S.workRange[0]) * Math.max(0, Math.min(1, f)))
+  if (now - (globalThis.__normaWorkLast || 0) < 80) return
+  globalThis.__normaWorkLast = now
+  const r = globalThis.__normaWorkRange || [0, 1]
+  sink(r[0] + (r[1] - r[0]) * Math.max(0, Math.min(1, f)))
 }
 
 function fdebBundle(segs, opts) {
@@ -723,7 +735,9 @@ function frLayout(ids, edges) {
     const w = Number.isFinite(e.weight) && e.weight > 0 ? e.weight : 1
     all.push({ s, t, w })
   })
-  const rand = mulberry32(FR_SEED)
+  // globalThis.__normaFrSeed, not FR_SEED directly: see the comment by its
+  // declaration above (this function also runs inside the layout worker).
+  const rand = mulberry32(globalThis.__normaFrSeed)
   const comps = connectedComponents(ids.length, all)
   const compOf = new Int32Array(ids.length)
   const localIdx = new Int32Array(ids.length)
@@ -737,11 +751,11 @@ function frLayout(ids, edges) {
   all.forEach((e) => compEdges[compOf[e.s]].push({ s: localIdx[e.s], t: localIdx[e.t], w: e.w }))
   let laidOut = 0
   const parts = comps.map((members, c) => {
-    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    globalThis.__normaWorkRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
     laidOut += members.length
     return { members, ...frComponent(members.length, compEdges[c], rand) }
   })
-  S.workRange = [0, 1]
+  globalThis.__normaWorkRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -765,6 +779,17 @@ function frLayout(ids, edges) {
    Edge weights are not used: distances are shortest paths in hops.
    ============================================================ */
 const DIST_LAYOUT_LIMIT = 2500
+// frLayout/distanceLayout read these off globalThis instead of closing over
+// the consts directly, because both functions are also pasted verbatim into
+// the layout worker (see getFrWorker() below), which only shares globals
+// with the page, not module bindings. A direct FR_SEED/DIST_LAYOUT_LIMIT
+// reference would, once the production build's minifier renames the const,
+// no longer resolve inside the worker; globalThis and plain string property
+// names are never renamed, so this keeps FR_SEED/DIST_LAYOUT_LIMIT above as
+// the single source of truth for both places instead of a hand-duplicated
+// literal that could silently drift if either value ever changes.
+globalThis.__normaFrSeed = FR_SEED
+globalThis.__normaDistLayoutLimit = DIST_LAYOUT_LIMIT
 // nodes per component
 
 // all-pairs hop distances of one component (local indices)
@@ -1070,11 +1095,15 @@ function distanceLayout(ids, edges, kind) {
   })
   let laidOut = 0
   const parts = comps.map((members, c) => {
-    S.workRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
+    globalThis.__normaWorkRange = [laidOut / ids.length, (laidOut + members.length) / ids.length]
     laidOut += members.length
-    if (members.length > DIST_LAYOUT_LIMIT)
+    // globalThis.__normaDistLayoutLimit, not DIST_LAYOUT_LIMIT directly: see
+    // the comment by its declaration above (this function also runs inside
+    // the layout worker).
+    const limit = globalThis.__normaDistLayoutLimit
+    if (members.length > limit)
       throw new Error(
-        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${DIST_LAYOUT_LIMIT.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
+        `${kind === 'kk' ? 'Kamada–Kawai' : 'Stress majorization'} handles connected parts of up to ${limit.toLocaleString('en-US')} nodes; this network has one of ${members.length.toLocaleString('en-US')}. Use a force-directed layout instead.`
       )
     const lay =
       kind === 'kk'
@@ -1083,7 +1112,7 @@ function distanceLayout(ids, edges, kind) {
     // hop units -> FR-like units so packing gaps look alike
     return { members, x: lay.x, y: lay.y }
   })
-  S.workRange = [0, 1]
+  globalThis.__normaWorkRange = [0, 1]
   packComponents(parts)
   const out = {}
   parts.forEach((p) =>
@@ -1140,8 +1169,29 @@ export function getFrWorker() {
       ]
         .map((f) => f.toString())
         .join('\n') +
-      `\nconst FR_SEED = ${FR_SEED};\nconst DIST_LAYOUT_LIMIT = ${DIST_LAYOUT_LIMIT};\nvar workRange = [0, 1], workSink = null, workLast = 0;\n` +
-      'onmessage = e => { const m = e.data; let result; workRange = [0, 1]; workLast = 0; workSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? fdebBundle(m.segs, m.opts) : m.kind === "fr3d" ? fr3dLayout(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? distanceLayout(m.ids, m.edges, m.kind) : frLayout(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };'
+      // FR_SEED/DIST_LAYOUT_LIMIT are interpolated here as plain values
+      // (${FR_SEED}, not the identifier), so this always carries whatever
+      // they're currently set to on the page - no duplicated literal to
+      // keep in sync. See the comment by DIST_LAYOUT_LIMIT's declaration
+      // for why the worker's copies of frLayout/distanceLayout read them
+      // back off globalThis rather than closing over the consts directly.
+      `\nglobalThis.__normaFrSeed = ${FR_SEED};\nglobalThis.__normaDistLayoutLimit = ${DIST_LAYOUT_LIMIT};\n` +
+      // The dispatcher below used to call these by their literal source
+      // names, which broke once the production build's minifier renamed
+      // these (non-exported) functions: the worker still got their bodies
+      // via .toString(), but under whatever new name the minifier picked,
+      // so the hardcoded names threw "X is not defined". Using .name reads
+      // each function's *current* runtime name, so it always matches the
+      // identifier its .toString() source was declared under.
+      //
+      // globalThis.__normaWork* (set here, read/written by the pasted
+      // workStep/frLayout/distanceLayout bodies) is the same fix applied to
+      // *data*: a module-scope var or the shared S object would hit the
+      // exact same renamed-name mismatch (or, for S, simply not exist in
+      // the worker at all), since unlike functions, a plain value has no
+      // .name to recover the identifier by. globalThis and plain string
+      // property names are never renamed by the minifier, so this is safe.
+      `onmessage = e => { const m = e.data; let result; globalThis.__normaWorkRange = [0, 1]; globalThis.__normaWorkLast = 0; globalThis.__normaWorkSink = f => postMessage({ id: m.id, progress: f }); try{ result = m.kind === "fdeb" ? ${fdebBundle.name}(m.segs, m.opts) : m.kind === "fr3d" ? ${fr3dLayout.name}(m.ids, m.edges, m.opts) : (m.kind === "kk" || m.kind === "stress") ? ${distanceLayout.name}(m.ids, m.edges, m.kind) : ${frLayout.name}(m.ids, m.edges); } catch(err){ postMessage({ id: m.id, error: String(err && err.message || err) }); return; } postMessage({ id: m.id, result }); };`
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))
     frWorker = new Worker(url)
     frWorker.onmessage = (e) => {

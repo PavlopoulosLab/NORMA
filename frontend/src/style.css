@@ -3553,6 +3553,18 @@ button.danger:hover {
   width: 100%;
   margin-top: 6px;
   font-size: 12px;
+  overflow-x: auto;
+}
+.db-pick option {
+  white-space: nowrap;
+}
+/* Options in a native <select> can't be text-selected/copied by dragging,
+   so this copies the selected option's full label (including the part cut
+   off by the box's width) to the clipboard instead. */
+.db-pick-copy {
+  margin-top: 6px;
+  padding: 3px 10px;
+  font-size: 11.5px;
 }
 .menu-sep {
   display: flex;
@@ -3641,4 +3653,68 @@ details > summary + .menu-sep {
 ::selection {
   background: #fde68a;
   color: #111827;
+}
+
+/* ---------- small screens (phones/narrow tablets): the sidebar becomes an
+   overlay drawer instead of a fixed grid column, and the dense toolbar rows
+   scroll horizontally instead of clipping or overlapping ---------- */
+@media (max-width: 760px) {
+  #app {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  #brand,
+  #sideTabs,
+  #sidebar {
+    position: fixed;
+    left: 0;
+    width: min(86vw, 320px);
+    z-index: 50;
+  }
+  #brand {
+    top: 0;
+    height: 52px;
+  }
+  #sideTabs {
+    top: 52px;
+    height: 42px;
+  }
+  #sidebar {
+    top: 94px;
+    bottom: 0;
+  }
+  #sideResizer {
+    display: none;
+  }
+  #sideToggle {
+    left: 0 !important;
+    z-index: 51;
+  }
+  /* backdrop behind the open drawer; tapping it closes the drawer (see side_panel.ts) */
+  #app:not(.side-collapsed)::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 45;
+  }
+  #viewHeader,
+  #topbar,
+  #ctxbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #viewHeader > *,
+  #tabs > * {
+    flex-shrink: 0;
+  }
+  #brand .title small {
+    display: none;
+  }
+  .welcome-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .welcome-steps {
+    grid-template-columns: 1fr;
+  }
 }
