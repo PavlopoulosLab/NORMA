@@ -47,6 +47,45 @@ test('layouts move the nodes', async ({ page }) => {
     .toBe(true)
 })
 
+test('Kamada-Kawai and Stress layouts run in the background worker on a big network', async ({
+  page,
+  request,
+}) => {
+  // Regression test: getFrWorker() (metrics.ts) builds the layout worker by
+  // stringifying module-private functions and dispatching them by their
+  // literal source names. This suite runs against the production build
+  // (see playwright.config.ts), where the bundler's minifier renames those
+  // functions; the dispatcher's hardcoded names didn't follow, so "kk" and
+  // "stress" threw "distanceLayout is not defined" inside the worker and
+  // silently failed (runComputedLayout only reports it into #layoutStatus,
+  // it never throws or logs). That only happens once a network is big
+  // enough to take the worker path (> 60 nodes) - a small example never
+  // exercised it.
+  const n = 80
+  const edges = Array.from({ length: n - 1 }, (_, i) => ({ source: `N${i}`, target: `N${i + 1}` }))
+  const r = await request.post('/api/external', { data: { name: 'Layout worker test', edges } })
+  expect(r.ok()).toBe(true)
+  const { url } = (await r.json()) as { url: string }
+  await page.goto(url)
+  await expect.poll(() => nodeCount(page)).toBe(n)
+
+  await page.locator('#sideTabDisplay').click()
+  await page.locator('#layoutSection h3').click()
+  await expect(page.locator('#btnRunLayout')).toBeVisible()
+
+  for (const kind of ['kk', 'stress']) {
+    const before = await positions(page)
+    await selectValue(page, '#layoutSelect', kind)
+    await page.locator('#btnRunLayout').click()
+    await expect
+      .poll(async () => JSON.stringify(await positions(page)) !== JSON.stringify(before), {
+        timeout: 20_000,
+      })
+      .toBe(true)
+    await expect(page.locator('#layoutStatus')).toBeEmpty()
+  }
+})
+
 test('tabs switch views, 3D view activates', async ({ page }) => {
   await openExample(page)
   for (const [tab, view] of [
@@ -134,4 +173,32 @@ test('unknown example shows an error, not a crash', async ({ page }) => {
   await expect(page.locator('body')).toContainText(/no example called/i)
   expect(await nodeCount(page)).toBe(0)
   void EXAMPLE
+})
+
+test('uploading a non-NORMA file is rejected with a warning before it reaches the canvas', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.locator('#filesSection h3').click()
+  await page.setInputFiles('#normaFileInput', {
+    name: 'export.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"nodes":["A","B"],"edges":[["A","B"]]}'),
+  })
+  await expect(page.locator('#normaStatus .note.error')).toContainText(/looks like JSON/)
+  await expect(page.locator('#libNetworks .lib-empty')).toBeVisible()
+  await expect(page.locator('#libNetworks .lib-row')).toHaveCount(0)
+  expect(await nodeCount(page)).toBe(0)
+})
+
+test('uploading a valid network file is accepted and ready to show', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('#filesSection h3').click()
+  await page.setInputFiles('#normaFileInput', {
+    name: 'network.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Source\tTarget\tWeight\nA\tB\t1\nB\tC\t2\n'),
+  })
+  await expect(page.locator('#normaStatus .note.ok').first()).toContainText(/added/i)
+  await expect(page.locator('#libNetworks')).not.toBeEmpty()
 })

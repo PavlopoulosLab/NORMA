@@ -365,6 +365,67 @@ export function apiAnnounceReady() {
   } catch (e) {}
 }
 
+// Options in a native <select> can't be text-selected by dragging, so the
+// "Copy selected" buttons next to the Reactome/NDEx/GO-CAM pickers go
+// through the clipboard directly. A permission prompt some browsers/contexts
+// show for the async Clipboard API can sit unanswered indefinitely (e.g. an
+// embedded or automated page with nobody to click it), so that path is
+// capped with a short timeout and falls back to execCommand, which works
+// off the same click without ever prompting.
+function execCommandCopy(text) {
+  const ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.position = 'fixed'
+  ta.style.opacity = '0'
+  document.body.appendChild(ta)
+  ta.focus()
+  ta.select()
+  let ok = false
+  try {
+    ok = document.execCommand('copy')
+  } catch (e) {
+    ok = false
+  }
+  document.body.removeChild(ta)
+  return ok
+}
+
+async function copyText(text) {
+  try {
+    await Promise.race([
+      navigator.clipboard.writeText(text),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timed out')), 1200)),
+    ])
+    return true
+  } catch (e) {
+    return execCommandCopy(text)
+  }
+}
+
+// The confirmation flashes on the button itself (like the API tab's "Copy"
+// buttons), rather than the usual toast() - the toast lands on #canvas,
+// which is hidden while the Welcome/Profiler/other tabs are the one shown,
+// so a person copying a picker result before ever opening a network would
+// never see it.
+async function copySelectedOption(buttonId, selectId) {
+  const btn = document.getElementById(buttonId)
+  const sel = document.getElementById(selectId)
+  const opt = sel.options[sel.selectedIndex]
+  const original = btn.textContent
+  const flash = (text) => {
+    btn.textContent = text
+    setTimeout(() => {
+      btn.textContent = original
+    }, 1200)
+  }
+  // A freshly populated multi-row <select> isn't guaranteed to start with
+  // an option selected (unlike a plain dropdown), so clicking this before
+  // choosing one is a real click-through, not just a shouldn't-happen case.
+  if (!opt) return flash('Choose one first')
+  const ok = await copyText(opt.text)
+  flash(ok ? 'Copied' : "Couldn't copy")
+}
+
 // page wiring, run by main.ts in the original order
 export function init() {
   /* ---------- wiring ---------- */
@@ -374,12 +435,15 @@ export function init() {
     const bind = (id, fn) => document.getElementById(id).addEventListener('click', fn)
     bind('btnReactomeSearch', reactomeSearch)
     bind('btnReactomeFetch', reactomeFetch)
+    bind('btnReactomeCopy', () => copySelectedOption('btnReactomeCopy', 'reactomePathway'))
     bind('btnOmnipathFetch', omnipathFetch)
     bind('btnNdexSearch', ndexSearch)
     bind('btnNdexFetch', ndexFetch)
+    bind('btnNdexCopy', () => copySelectedOption('btnNdexCopy', 'ndexNetwork'))
     bind('btnIntactFetch', intactFetch)
     bind('btnGoModels', goLoadModels)
     bind('btnGoModelFetch', goFetchModel)
+    bind('btnGoCopy', () => copySelectedOption('btnGoCopy', 'goModel'))
     bind('btnGoAnnotate', goAnnotateView)
     document.getElementById('goModelFilter').addEventListener('input', filterGoModels)
     const sc = document.getElementById('intactScore')

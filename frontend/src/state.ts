@@ -17,7 +17,6 @@ export const S = {
   dataCache: { version: -1, data: null },
   historyGestureOpen: false,
   cyLayoutsRunning: 0,
-  workRange: [0, 1],
   frRequestSeq: 0,
   normaEntrySeq: 0,
   viewSeq: 0,

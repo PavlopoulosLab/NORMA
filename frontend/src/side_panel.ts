@@ -18,6 +18,8 @@ export function init() {
     if (saved) {
       width = Number(saved.width) || DEFAULT_W
       collapsed = !!saved.collapsed
+    } else if (window.innerWidth <= 760) {
+      collapsed = true
     }
   } catch (e) {}
   const save = () => {
@@ -43,6 +45,11 @@ export function init() {
     save()
   }
   toggle.addEventListener('click', () => setCollapsed(!collapsed))
+  // on small screens the sidebar is an overlay drawer with a backdrop (#app::before);
+  // a tap on the backdrop reports #app itself as the target, so treat that as "close"
+  app.addEventListener('click', (e) => {
+    if (e.target === app && !collapsed) setCollapsed(true)
+  })
 
   handle.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return
