@@ -75,16 +75,17 @@ export function capsulePath(a, b, pad) {
   )
 }
 
+// A hull must actually contain every member node, so this traces the true
+// polygon through the (already-inflated) hull points rather than rounding
+// the corners: a rounded corner falls short of the padded vertex by an
+// amount that grows with its distance from its neighbors, so a far-dragged
+// node ends up outside the shape. See hulls.ts's drawGroupHulls, which draws
+// the same shape on the live 2D canvas and hit this exact bug first; this
+// path-data version feeds the 3D view and the 2D image export.
 export function blobPath(points) {
   const n = points.length
-  const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 })
-  const m0 = mid(points[n - 1], points[0])
-  let d = `M${m0.x.toFixed(2)},${m0.y.toFixed(2)}`
-  for (let i = 0; i < n; i++) {
-    const p = points[i],
-      m = mid(p, points[(i + 1) % n])
-    d += `Q${p.x.toFixed(2)},${p.y.toFixed(2)} ${m.x.toFixed(2)},${m.y.toFixed(2)}`
-  }
+  let d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`
+  for (let i = 1; i < n; i++) d += `L${points[i].x.toFixed(2)},${points[i].y.toFixed(2)}`
   return d + 'Z'
 }
 

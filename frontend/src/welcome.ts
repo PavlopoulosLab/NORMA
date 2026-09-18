@@ -1,6 +1,7 @@
 // @ts-nocheck
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
 import { cy } from './cy'
+import { expandSidePanel } from './side_panel'
 import { switchSideTab } from './side_tabs'
 import { switchTab } from './wiring'
 
@@ -113,6 +114,7 @@ export function init() {
   document.getElementById('btnEmpty2Welcome').addEventListener('click', () => switchTab('welcome'))
 
   document.getElementById('btnEmptyString').addEventListener('click', () => {
+    expandSidePanel()
     switchSideTab('db')
     document.getElementById('stringSection').classList.remove('collapsed')
     document.querySelector('#stringSection > h3').setAttribute('aria-expanded', 'true')
@@ -122,6 +124,7 @@ export function init() {
   })
 
   document.getElementById('btnEmptyUpload').addEventListener('click', () => {
+    expandSidePanel()
     switchSideTab('data')
     document.getElementById('btnNormaAdd').click()
   })
