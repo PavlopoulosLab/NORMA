@@ -135,6 +135,7 @@
           <button class="primary" id="btnSample" title="Opens the example in a new view">Open example</button>
           <button id="btnClear" title="Empty the current view; files stay in the lists">Clear view</button>
         </div>
+        <div id="examplesStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
       <div class="section collapsible collapsed" id="filesSection" data-tint="files">
@@ -199,12 +200,12 @@
           <button type="button" id="btnSessionOpen">Open session file…</button>
           <input type="file" id="sessionFileInput" accept=".json,application/json" hidden>
         </div>
-        <div id="sessionStatus" class="status" role="status" aria-live="polite"></div>
         <div class="menu-sep"><span>Settings file (.json) <span class="lib-hint">display settings only</span></span></div>
         <div class="row" style="margin-top:0;">
           <button id="btnImportConfigTrigger">Open settings file…</button>
         </div>
         <input type="file" id="configFileInput" accept="application/json,.json" style="display:none;">
+        <div id="savedWorkStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
     </div>

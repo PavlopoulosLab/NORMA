@@ -267,3 +267,33 @@ test('OmniPath search is case-insensitive: a lowercase query is sent to the API 
   await expect.poll(() => requestedUrl).toContain('partners=EGFR')
   expect(requestedUrl).not.toContain('partners=egfr')
 })
+
+test('Upload Data panels report loading progress at the bottom of their own section', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  // Examples: opening one reports progress in #examplesStatus, not #normaStatus
+  await page.locator('.section[data-tint="examples"] h3').click()
+  await page.locator('#btnSample').click()
+  await expect(page.locator('#examplesStatus .note.ok')).toContainText(/opened/i)
+
+  // Files: reading an uploaded file reports progress in #normaStatus (already
+  // covered structurally elsewhere; here we just confirm it still ends well)
+  await page.locator('#filesSection h3').click()
+  await page.setInputFiles('#normaFileInput', {
+    name: 'network2.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Source\tTarget\nX\tY\n'),
+  })
+  await expect(page.locator('#normaStatus .note.ok').first()).toContainText(/added/i)
+
+  // Open saved work: a settings file reports progress in #savedWorkStatus
+  await page.locator('.section[data-tint="saved"] h3').click()
+  await page.setInputFiles('#configFileInput', {
+    name: 'norma-settings.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ themeSelect: 'dark' })),
+  })
+  await expect(page.locator('#savedWorkStatus .note.ok')).toContainText(/applied settings/i)
+})
