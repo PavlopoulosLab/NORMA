@@ -2,6 +2,14 @@
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
 
 /* ---------- side panel: drag to resize, arrow to collapse ---------- */
+// Expands the side panel if it's currently collapsed, so a shortcut button
+// that jumps to a sidebar section (e.g. "Import from a database" on the
+// Welcome page) doesn't switch tabs behind a still-closed panel.
+export function expandSidePanel() {
+  const app = document.getElementById('app')
+  if (app.classList.contains('side-collapsed')) document.getElementById('sideToggle').click()
+}
+
 // page wiring, run by main.ts in the original order
 export function init() {
   const app = document.getElementById('app')

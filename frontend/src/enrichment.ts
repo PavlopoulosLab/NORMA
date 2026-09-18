@@ -2127,7 +2127,12 @@ export async function reactomeFetch() {
    --------------------------------------------------------------- */
 export async function omnipathFetch() {
   await dbRun('omnipath', async () => {
-    const names = dbSplitList(document.getElementById('omnipathQuery').value)
+    // OmniPath's API matches gene symbols and UniProt accessions case-sensitively
+    // (and both are conventionally uppercase), so normalize the query first --
+    // otherwise "egfr" silently finds nothing where "EGFR" would.
+    const names = dbSplitList(document.getElementById('omnipathQuery').value).map((n) =>
+      n.toUpperCase()
+    )
     if (!names.length)
       throw new Error('Type one or more gene symbols or UniProt accessions, for example EGFR.')
     const organism = document.getElementById('omnipathOrganism').value

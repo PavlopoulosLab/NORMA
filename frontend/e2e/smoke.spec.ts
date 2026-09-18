@@ -202,3 +202,68 @@ test('uploading a valid network file is accepted and ready to show', async ({ pa
   await expect(page.locator('#normaStatus .note.ok').first()).toContainText(/added/i)
   await expect(page.locator('#libNetworks')).not.toBeEmpty()
 })
+
+test('"Import from a database" expands a collapsed sidebar and opens Database importers', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.locator('#sideToggle').click()
+  await expect(page.locator('#app')).toHaveClass(/side-collapsed/)
+  await page.locator('#btnEmptyString').click()
+  await expect(page.locator('#app')).not.toHaveClass(/side-collapsed/)
+  await expect(page.locator('#sideTabDb')).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('#panelDb')).toBeVisible()
+})
+
+test('"Upload files" expands a collapsed sidebar and opens the Files section', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('#sideToggle').click()
+  await expect(page.locator('#app')).toHaveClass(/side-collapsed/)
+  const chooser = page.waitForEvent('filechooser')
+  await page.locator('#btnEmptyUpload').click()
+  await (await chooser).setFiles([])
+  await expect(page.locator('#app')).not.toHaveClass(/side-collapsed/)
+  await expect(page.locator('#sideTabData')).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('#panelData')).toBeVisible()
+})
+
+test('OmniPath search is case-insensitive: a lowercase query is sent to the API in uppercase', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.locator('#sideTabDb').click()
+  await page.locator('#omnipathSection h3').click()
+  await page.fill('#omnipathQuery', 'egfr')
+  // keep this to the one interactions request the fix touches
+  await page.locator('#omnipathGroups input[value="complexes"]').uncheck()
+  await page.locator('#omnipathGroups input[value="intercell"]').uncheck()
+
+  // e2e's webServer runs with --no-relays, so this goes straight to
+  // omnipathdb.org rather than through the same-origin db-api/fetch proxy.
+  let requestedUrl = ''
+  await page.route('https://omnipathdb.org/**', async (route) => {
+    requestedUrl = route.request().url()
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          source: 'P00533',
+          target: 'P01111',
+          source_genesymbol: 'EGFR',
+          target_genesymbol: 'HRAS',
+          is_directed: 1,
+          is_stimulation: 1,
+          is_inhibition: 0,
+          sources: ['SignaLink'],
+          curation_effort: 3,
+          type: 'post_translational',
+        },
+      ]),
+    })
+  })
+
+  await page.locator('#btnOmnipathFetch').click()
+  await expect.poll(() => requestedUrl).toContain('partners=EGFR')
+  expect(requestedUrl).not.toContain('partners=egfr')
+})
