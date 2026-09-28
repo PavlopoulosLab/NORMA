@@ -297,3 +297,31 @@ test('Upload Data panels report loading progress at the bottom of their own sect
   })
   await expect(page.locator('#savedWorkStatus .note.ok')).toContainText(/applied settings/i)
 })
+
+test('multi-group nodes keep pie-slice coloring under WebGL rendering', async ({ page }) => {
+  // Cytoscape's WebGL renderer takes a "simple shape" fast path (solid
+  // background, drawn as WebGL geometry) for any node whose background-fill
+  // is 'solid' -- that check never looks at pie-*-background-* styles, so a
+  // node with pie slices used to render as a flat color under WebGL. The fix
+  // gives such nodes a one-stop gradient fill, which is enough to route them
+  // through the full (pie-aware) draw path.
+  await page.goto(`/norma.html?example=${EXAMPLE}&webgl=1`)
+  await expect(page.locator('#tabNetwork')).toHaveAttribute('aria-selected', 'true')
+  await expect.poll(() => nodeCount(page)).toBeGreaterThan(0)
+  await selectValue(page, '#nodeFillSelect', 'groups')
+
+  const styles = await page.evaluate(() => {
+    const nodes = window.__norma.cy.nodes()
+    const multi = nodes.find((n) => n.data('pieSize2') !== '0%')
+    const single = nodes.find((n) => n.data('pieSize2') === '0%')
+    return {
+      multiFill: multi?.pstyle('background-fill').value,
+      multiPieSize2: multi?.data('pieSize2'),
+      singleFill: single?.pstyle('background-fill').value,
+    }
+  })
+  expect(styles.multiPieSize2).not.toBe('0%')
+  expect(styles.multiFill).toBe('radial-gradient')
+  // single-group nodes stay on the fast "simple shape" path
+  expect(styles.singleFill).toBe('solid')
+})

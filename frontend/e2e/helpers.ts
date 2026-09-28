@@ -26,13 +26,21 @@ export async function selectValue(page: Page, selector: string, value: string) {
   }, value)
 }
 
+interface CyNode {
+  id(): string
+  position(k: 'x' | 'y'): number
+  data(key: string): unknown
+  pstyle(key: string): { value: unknown }
+}
+
 declare global {
   interface Window {
     __norma: {
       cy: {
         nodes(): {
           length: number
-          map<T>(f: (n: { id(): string; position(k: 'x' | 'y'): number }) => T): T[]
+          map<T>(f: (n: CyNode) => T): T[]
+          find(f: (n: CyNode) => boolean): CyNode | undefined
         }
         edges(): { length: number }
       }
