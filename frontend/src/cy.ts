@@ -12,6 +12,15 @@ import { webglPreference } from './enrichment'
    wins) stays fixed: node, node.dimmed, ..., edge, ..., edge.highlighted. */
 export const SELECTION_YELLOW = '#facc15'
 
+// WebGL drawing is chosen once, when the canvas is created (see Display → Performance).
+export const WEBGL_ACTIVE = (() => {
+  try {
+    return webglPreference()
+  } catch (e) {
+    return false
+  }
+})()
+
 const BASE_STYLE = [
   {
     selector: 'node',
@@ -41,6 +50,27 @@ const BASE_STYLE = [
       'overlay-opacity': 0,
     },
   },
+  // Cytoscape's WebGL renderer skips pie slices for any node it classifies as
+  // a "simple shape" (a fast path that only reads background-color/opacity
+  // and border, drawn as WebGL geometry instead of a texture) -- and that
+  // classification never looks at pie-*-background-* styles, so multi-group
+  // nodes silently lose their pie coloring under WebGL. pieSize2 is only
+  // ever non-zero for a node with 2+ visible groups (see
+  // computeNodeVisualFields); giving those nodes a one-stop gradient fill
+  // (visually identical to a flat color) is enough to fail the "simple
+  // shape" check and force the full (pie-aware) draw path, without touching
+  // plain canvas rendering, where it already works.
+  ...(WEBGL_ACTIVE
+    ? [
+        {
+          selector: 'node[pieSize2 != "0%"]',
+          style: {
+            'background-fill': 'radial-gradient',
+            'background-gradient-stop-colors': 'data(color)',
+          },
+        },
+      ]
+    : []),
   {
     selector: 'node.dimmed',
     style: { opacity: 0.12 },
@@ -152,15 +182,6 @@ export function setStyle(selector, props) {
     queueMicrotask(commitStyle)
   }
 }
-
-// WebGL drawing is chosen once, when the canvas is created (see Display → Performance).
-export const WEBGL_ACTIVE = (() => {
-  try {
-    return webglPreference()
-  } catch (e) {
-    return false
-  }
-})()
 
 export const cy = cytoscape({
   container: document.getElementById('cy'),

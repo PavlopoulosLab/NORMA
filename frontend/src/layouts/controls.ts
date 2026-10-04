@@ -949,10 +949,13 @@ export function init() {
 
   document.getElementById('btnFit').addEventListener('click', () => fitView())
 
-  document.getElementById('btnSample').addEventListener('click', () => {
+  document.getElementById('btnSample').addEventListener('click', async () => {
     const sel = document.getElementById('sampleSelect')
     const key = sel.value
     const title = sel.options[sel.selectedIndex].text.replace(/\s*\([^)]*nodes\)\s*$/, '')
+    const task = startProgress('examplesStatus', [1])
+    task.step(0, `Opening "${title}"…`)
+    await nextPaint()
     openInNewView(title, () => {
       if (key.startsWith('norma:')) {
         loadNormaExampleSet(key.slice(6))
@@ -966,6 +969,7 @@ export function init() {
       loadData(gen())
       setStatus('normaStatus', [])
     })
+    setStatus('examplesStatus', [{ level: 'ok', text: `Opened "${title}".` }])
   })
 
   document.getElementById('btnClear').addEventListener('click', () => {
@@ -1001,8 +1005,11 @@ export function init() {
       if (!parsed.nodes || !parsed.edges) throw new Error('JSON needs "nodes" and "edges" arrays.')
       openInNewView('Pasted JSON', () => loadData(parsed))
       document.getElementById('importBox').style.display = 'none'
+      setStatus('savedWorkStatus', [{ level: 'ok', text: 'Opened the pasted JSON.' }])
     } catch (err) {
-      alert('Could not parse JSON: ' + err.message)
+      setStatus('savedWorkStatus', [
+        { level: 'error', text: `Could not parse JSON: ${err.message}` },
+      ])
     }
   })
 
@@ -1013,15 +1020,21 @@ export function init() {
   document.getElementById('fileInput').addEventListener('change', (e) => {
     const file = e.target.files[0]
     if (!file) return
+    const task = startProgress('savedWorkStatus', [1])
+    task.step(0, `Reading "${file.name}"…`)
     const reader = new FileReader()
+    reader.onprogress = (ev) => task.bytes(ev.loaded, ev.lengthComputable ? ev.total : file.size)
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target.result)
         if (!parsed.nodes || !parsed.edges)
           throw new Error('JSON needs "nodes" and "edges" arrays.')
         openInNewView(file.name.replace(/\.json$/i, ''), () => loadData(parsed))
+        setStatus('savedWorkStatus', [{ level: 'ok', text: `Opened "${file.name}".` }])
       } catch (err) {
-        alert('Could not read file: ' + err.message)
+        setStatus('savedWorkStatus', [
+          { level: 'error', text: `Could not read the file: ${err.message}` },
+        ])
       }
     }
     reader.readAsText(file)
@@ -1091,13 +1104,21 @@ export function init() {
   document.getElementById('configFileInput').addEventListener('change', (e) => {
     const file = e.target.files[0]
     if (!file) return
+    const task = startProgress('savedWorkStatus', [1])
+    task.step(0, `Reading "${file.name}"…`)
     const reader = new FileReader()
+    reader.onprogress = (ev) => task.bytes(ev.loaded, ev.lengthComputable ? ev.total : file.size)
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target.result)
         applyConfig(parsed)
+        setStatus('savedWorkStatus', [
+          { level: 'ok', text: `Applied settings from "${file.name}".` },
+        ])
       } catch (err) {
-        alert('Could not read settings file: ' + err.message)
+        setStatus('savedWorkStatus', [
+          { level: 'error', text: `Could not read settings file: ${err.message}` },
+        ])
       }
     }
     reader.readAsText(file)

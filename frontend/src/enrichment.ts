@@ -1139,17 +1139,20 @@ export function loadSession(obj) {
 }
 
 async function openSessionFile(file) {
+  const task = startProgress('savedWorkStatus', [1])
+  task.step(0, `Reading "${file.name}"…`)
   try {
-    const obj = JSON.parse(await readFileText(file))
+    const text = await readFileText(file, (loaded, total) => task.bytes(loaded, total))
+    const obj = JSON.parse(text)
     const r = loadSession(obj)
-    setStatus('sessionStatus', [
+    setStatus('savedWorkStatus', [
       {
         level: 'ok',
         text: `Opened the session "${file.name}": ${plural(r.views, 'view')} and ${plural(r.files, 'file')}.`,
       },
     ])
   } catch (err) {
-    setStatus('sessionStatus', [
+    setStatus('savedWorkStatus', [
       { level: 'error', text: `The session couldn't be opened: ${err.message}` },
     ])
   }

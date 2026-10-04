@@ -16,13 +16,18 @@ import {
   renderLibraryLists,
   selectedNetworks,
   setStatus,
+  startProgress,
 } from './layouts/controls'
 import { convertArena3dNetwork, isArena3dNetworkText } from './arena3d'
 
 /* ---------- uploads ---------- */
-export function readFileText(file) {
+// onBytes(loaded, total), if given, is called as the file is read (total
+// falls back to the file's own size when the browser can't report progress).
+export function readFileText(file, onBytes) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
+    if (onBytes)
+      reader.onprogress = (ev) => onBytes(ev.loaded, ev.lengthComputable ? ev.total : file.size)
     reader.onload = (ev) => resolve(ev.target.result)
     reader.onerror = () =>
       reject(new Error('The file could not be read. Check that it is a plain text file.'))
@@ -55,9 +60,15 @@ export async function handleNormaUploads(fileList) {
   const notes = []
   const added = []
   const addedNotes = new Map()
-  for (const file of files) {
+  const task = startProgress(
+    'normaStatus',
+    files.map(() => 1)
+  )
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    task.step(i, `Reading "${file.name}"…`)
     try {
-      const text = await readFileText(file)
+      const text = await readFileText(file, (loaded, total) => task.bytes(loaded, total))
       checkNormaFileFormat(text)
       if ((chosenKind === 'auto' || chosenKind === 'network') && isArena3dNetworkText(text)) {
         // an Arena3D network file: a network plus its layers as groups
