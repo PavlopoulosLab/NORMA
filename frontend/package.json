@@ -10,7 +10,8 @@
     "lint": "eslint src e2e",
     "format": "prettier --write src e2e",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "runtime-table": "node scripts/runtime-table.mjs --grid --out ../docs/runtime-table.tsv"
   },
   "dependencies": {
     "cytoscape": "^3.34.3"

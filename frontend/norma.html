@@ -1790,11 +1790,18 @@
       </section>
       <section class="prof-section" id="runtimeSection">
         <h3>Runtime table</h3>
-        <p class="sub">Times the main steps on random networks of growing size (generated from fixed seeds; the table lists their edges), in this browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. The view is not changed.</p>
+        <p class="sub">Times the main steps on random networks of growing size (generated from fixed seeds; the table lists their edges), in this browser: reading the network file, building the network, the weighted layout, a group-aware layout (NORMA-2.0 virtual nodes), edge bundling, the profile statistics, Louvain and the group separation score, with the memory the network takes where the browser reports it. Density (average degree) and group overlap (the share of nodes that belong to two groups) can be varied, or all nine combinations run in one go. The view is not changed.</p>
         <div class="bench-controls">
           <label class="inline-num">Up to
             <select id="runtimeMax"><option value="1000">1,000 nodes</option><option value="2500">2,500 nodes</option><option value="5000" selected>5,000 nodes</option><option value="10000">10,000 nodes (the largest NORMA shows)</option></select>
           </label>
+          <label class="inline-num">Average degree
+            <select id="runtimeDegree" aria-label="Average degree"><option value="4" selected>4 (sparse)</option><option value="8">8</option><option value="16">16 (dense)</option></select>
+          </label>
+          <label class="inline-num">Group overlap
+            <select id="runtimeOverlap" aria-label="Group overlap"><option value="0">none</option><option value="0.1" selected>10% of nodes in two groups</option><option value="0.3">30% of nodes in two groups</option></select>
+          </label>
+          <label><input type="checkbox" id="runtimeGrid"> All nine density and overlap combinations</label>
           <button class="primary" id="btnRuntime">Time the main steps</button>
           <button id="btnRuntimeTsv" disabled>Download table</button>
         </div>
@@ -2652,7 +2659,7 @@ TP53&#9;NA&#9;NA</pre>
         <h2 id="help-performance">Performance</h2>
         <ul>
           <li><b>Display → Performance → Draw with WebGL</b> uses Cytoscape.js's WebGL renderer, which draws large networks much faster. It is experimental: the choice is made when the page starts, so NORMA asks to reload the page (save the session first to keep your views). Adding <code>?webgl=1</code> or <code>?webgl=0</code> to the address sets it for one visit. Exported images, group shading, the 3D page and everything else work the same.</li>
-          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 10,000 nodes in your browser: reading the network file, building the network, the weighted layout, edge bundling, the profile statistics, Louvain and the group separation score. Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
+          <li>The <b>Runtime table</b> at the end of the Network Profiler page times the main steps on random networks of 100 to 10,000 nodes in your browser: reading the network file, building the network, the weighted layout, the NORMA-2.0 virtual-node group layout, edge bundling, the profile statistics, Louvain and the group separation score. The networks' density (average degree 4, 8 or 16) and group overlap (none, 10% or 30% of nodes in two groups) can be chosen, or all nine combinations run at once, and the memory each network takes is listed where the browser reports it (Chrome and Edge). Drawing time depends on the screen and is not included. <b>Download table</b> saves the times with the browser and processor count, for a supplementary table.</li>
           <li><b>Network size:</b> NORMA shows networks of up to <b>10,000 nodes</b>. A network file, JSON file, session or combination of networks with more nodes is cut to its first 10,000 nodes (in the order they first appear) and the edges among them, and a message says how much was left out. To study part of a bigger network, filter it first (for example to a pathway, a STRING neighbourhood or a community).</li>
           <li>Networks of a few thousand nodes are comfortable; beyond that, turn on WebGL drawing, turn off labels, curved edges and edge bundling, and use the grid or weighted force-directed layout.</li>
         </ul>

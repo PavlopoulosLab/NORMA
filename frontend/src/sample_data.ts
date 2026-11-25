@@ -161,11 +161,13 @@ export function generateRandomNetwork(n, opts = {}) {
     'textmining',
   ]
 
+  // share of nodes that belong to a second group as well (group overlap)
+  const overlap = opts.overlap ?? 0.12
   const nodes = []
   for (let i = 0; i < n; i++) {
     const primary = groupNames[i % groupNames.length]
     const groups = [primary]
-    if (rand() < 0.12) {
+    if (rand() < overlap) {
       const second = groupNames[Math.floor(rand() * groupNames.length)]
       if (second !== primary) groups.push(second)
     }

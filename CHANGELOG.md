@@ -3,6 +3,7 @@
 ## [3.0.0dev] - unreleased
 
 ### Added
+- Runtime table (Network Profiler): the random networks' density (average degree 4, 8 or 16) and group overlap (none, 10% or 30% of nodes in two groups) can be chosen or all nine combinations run at once; new columns time the NORMA-2.0 virtual-node group layout and report the memory each network takes where the browser exposes it. Scripts under frontend/scripts regenerate the runtime grid, the use-case benchmark and example figures in headless Chromium.
 
 - The on-screen legend can be minimized to a small "Legend" tab (button in its corner) so it does
   not cover the network; the choice is remembered in the browser.
