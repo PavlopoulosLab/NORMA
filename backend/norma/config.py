@@ -31,7 +31,7 @@ DEFAULTS: Config = {
         "openBrowser": None,  # local: true
     },
     "api": {"enabled": True, "ttlHours": 24, "maxMB": 50, "maxSessions": 500},
-    "relays": {"string": True, "arena3d": True, "databases": True},
+    "relays": {"string": True, "arena3d": True, "flame": True, "databases": True},
     "site": {
         "name": "NORMA",
         "institution": "",

@@ -93,6 +93,7 @@ def norma(upstream, tmp_path, monkeypatch):
     config.CONFIG["server"]["accessLog"] = "off"
     monkeypatch.setattr(relays, "TEST_UPSTREAM", upstream)
     monkeypatch.setattr(relays, "TEST_ARENA", upstream)
+    monkeypatch.setattr(relays, "TEST_FLAME", upstream)
     monkeypatch.setattr(relays, "TEST_DB", upstream + "/db/")
     monkeypatch.setattr(relays, "MIN_GAP", 0.0)
     monkeypatch.setattr(api, "_store", {})

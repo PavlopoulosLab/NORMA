@@ -111,6 +111,37 @@ def test_arena_allowed_regex():
     assert not relays.ALLOWED_ARENA.match("https://arena3d.org.evil.com")
 
 
+def test_flame_relay(norma, upstream):
+    lists = {"Ribosome": ["RPL3", "RPS6"], "organism": 9606}
+    status, _, obj = norma.json(
+        "/flame-api/legacy?upstream=" + upstream, method="POST", body=lists
+    )
+    assert status == 200 and obj["method"] == "POST" and obj["path"] == "/api/v1/legacy"
+    assert obj["content_type"] == "application/json" and '"Ribosome"' in obj["body"]
+
+
+def test_flame_relay_validation(norma, upstream, monkeypatch):
+    assert (
+        norma.json("/flame-api/legacy?upstream=https://evil.org", method="POST", body={"a": 1})[0]
+        == 400
+    )
+    assert norma.json("/flame-api/legacy?upstream=" + upstream, method="POST", body=[])[0] == 400
+    monkeypatch.setattr(relays, "MAX_FLAME_BODY", 5)
+    assert (
+        norma.json("/flame-api/legacy?upstream=" + upstream, method="POST", body={"a": "long"})[0]
+        == 413
+    )
+    config.CONFIG["relays"]["flame"] = False
+    assert norma.json("/flame-api/legacy", method="POST", body={"a": 1})[0] == 404
+
+
+def test_flame_allowed_regex():
+    assert relays.ALLOWED_FLAME.match("https://flame-enrich.org")
+    assert relays.ALLOWED_FLAME.match("https://www.flame-enrich.org")
+    assert not relays.ALLOWED_FLAME.match("https://flame-enrich.org.evil.com")
+    assert not relays.ALLOWED_FLAME.match("http://flame-enrich.org")
+
+
 def test_db_relay_get_and_post(norma, upstream):
     target = upstream + "/db/pathway?id=1"
     status, h, obj = norma.json(

@@ -3,6 +3,7 @@ Relays: the browser only talks to this server, which passes read-only requests o
 
     GET/POST /string-api/<format>/<method>?upstream=<STRING address>
     POST     /arena3d-api/external?upstream=<Arena3D address>
+    POST     /flame-api/legacy?upstream=<Flame address>
     GET/POST /db-api/fetch?url=<address>
 
 Each relay has a strict allowlist of upstream addresses and a body limit.
@@ -49,6 +50,12 @@ ARENA_DEFAULT = "https://arena3d.org"
 ALLOWED_ARENA = re.compile(r"^https://([a-z0-9-]+\.)*arena3d\.org$", re.I)
 MAX_ARENA_BODY = 50 * 1024 * 1024  # networks can be large
 
+# Flame (gene-list enrichment): named gene lists go to /api/v1/legacy,
+# which answers with a link to a new Flame workspace holding them
+FLAME_DEFAULT = "https://flame-enrich.org"
+ALLOWED_FLAME = re.compile(r"^https://(www\.)?flame-enrich\.org$", re.I)
+MAX_FLAME_BODY = 2 * 1024 * 1024  # Flame accepts up to 2 MB per request
+
 # database importers
 ALLOWED_DB = [
     re.compile(p)
@@ -66,6 +73,7 @@ MAX_DB_BODY = 1024 * 1024
 # for automated tests only: allow local mocks of the upstreams
 TEST_UPSTREAM = os.environ.get("NORMA_STRING_TEST_UPSTREAM", "")
 TEST_ARENA = os.environ.get("NORMA_ARENA_TEST_UPSTREAM", "")
+TEST_FLAME = os.environ.get("NORMA_FLAME_TEST_UPSTREAM", "")
 TEST_DB = os.environ.get("NORMA_DB_TEST_PREFIX", "")
 
 _gap_lock = threading.Lock()
@@ -194,6 +202,41 @@ def arena3d(h: Responder) -> None:
         },
     )
     _forward(h, req, "Arena3D")
+
+
+def flame(h: Responder) -> None:
+    parsed = urllib.parse.urlsplit(h.path)
+    query = urllib.parse.parse_qs(parsed.query)
+    upstream = (query.get("upstream", [FLAME_DEFAULT])[0] or FLAME_DEFAULT).rstrip("/")
+    if not (ALLOWED_FLAME.match(upstream) or (TEST_FLAME and upstream == TEST_FLAME)):
+        return h.send_json(
+            400, {"message": "Only flame-enrich.org addresses can be used.", "norma_proxy": True}
+        )
+    length = _length(h)
+    if length > MAX_FLAME_BODY:
+        return h.send_json(
+            413, {"message": "The gene lists are too large to send.", "norma_proxy": True}
+        )
+    body = h.read_body(length)
+    try:
+        lists = json.loads(body.decode("utf-8"))
+    except ValueError:
+        return h.send_json(400, {"message": "The request body is not JSON.", "norma_proxy": True})
+    if not isinstance(lists, dict) or not lists:
+        return h.send_json(
+            400, {"message": "Send the gene lists as a JSON object.", "norma_proxy": True}
+        )
+    req = urllib.request.Request(
+        upstream + "/api/v1/legacy",
+        data=body,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json",
+        },
+    )
+    _forward(h, req, "Flame")
 
 
 def database(h: Responder, verb: str) -> None:

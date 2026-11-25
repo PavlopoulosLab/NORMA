@@ -12,6 +12,7 @@ const arg = (name, dflt) => {
 const url = arg('--url', 'http://127.0.0.1:8765/')
 const example = arg('--example', 'norma:tau')
 const grouping = parseInt(arg('--grouping', '0'), 10)
+const groupingLabel = arg('--grouping-label', '') // pick the grouping whose name contains this text
 const hulls = arg('--hulls', 'fog') // hull | bubble | fog | off
 const edges = arg('--edges', 'bundled') // haystack | bezier | bundled
 const layout = arg('--layout', '') // empty keeps the layout the example opens with
@@ -19,6 +20,15 @@ const arrangement = arg('--arrangement', '') // a group arrangement (fr, circle,
 const local = arg('--local', 'fr') // local layout inside groups for --arrangement
 const hideUngrouped = process.argv.includes('--hide-ungrouped')
 const bundleStrength = arg('--bundle-strength', '') // 1..100, the Bundling strength slider
+const theme = arg('--theme', '') // white | light | dark | midnight | gray | paper
+const fill = arg('--fill', '') // groups | data | values (node fill)
+const labels = arg('--labels', '') // off hides node labels
+const shapes = process.argv.includes('--shapes') // one node shape per group
+const direction = arg('--direction', '') // undirected | data | directed (arrows)
+const opacity = arg('--opacity', '') // shading opacity 0.05..0.9
+const spread = arg('--spread', '') // value of the Spread slider, if any
+const bg = arg('--bg', 'white') // export background: white | theme
+const groups = arg('--groups', '').split('|').filter(Boolean) // tick only these groups (by id/name)
 const regroup = parseInt(arg('--regroup', '-1'), 10) // switch to this grouping after the layout, keeping positions
 const tab = arg('--tab', '2d') // 2d | 3d
 const layout3d = arg('--layout3d', '') // a value of the 3D layout list, e.g. layers
@@ -67,13 +77,34 @@ await page.goto(`${url}?example=${encodeURIComponent(example)}`)
 await page.waitForFunction(() => window.__norma && window.__norma.cy.nodes().length > 0)
 await page.waitForTimeout(800)
 await idle('layoutStatus')
-if (grouping > 0) {
+if (groupingLabel) {
+  const idx = await page.evaluate((t) => {
+    const opts = [...document.getElementById('viewGrouping').options]
+    return opts.findIndex((o) => o.textContent.includes(t))
+  }, groupingLabel)
+  if (idx < 0) throw new Error(`no grouping contains "${groupingLabel}"`)
+  await page.selectOption('#viewGrouping', { index: idx })
+  await page.waitForTimeout(800)
+  await idle('layoutStatus')
+} else if (grouping > 0) {
   const n = await page.locator('#viewGrouping option').count()
   if (grouping < n) {
     await page.selectOption('#viewGrouping', { index: grouping })
     await page.waitForTimeout(800)
     await idle('layoutStatus')
   }
+}
+if (groups.length) {
+  await page.evaluate((wanted) => {
+    document.querySelectorAll('input[type=checkbox][data-group]').forEach((box) => {
+      const want = wanted.includes(box.getAttribute('data-group'))
+      if (box.checked !== want) {
+        box.checked = want
+        box.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    })
+  }, groups)
+  await page.waitForTimeout(500)
 }
 if (hideUngrouped) {
   await page.evaluate(() => {
@@ -114,6 +145,16 @@ if (regroup >= 0) {
     await page.waitForTimeout(400)
   }
 }
+if (theme) {
+  await setValue('#themeSelect', theme)
+  await page.waitForTimeout(400)
+}
+if (fill) await setValue('#nodeFillSelect', fill)
+if (labels === 'off') await setChecked('#showNodeLabels', false)
+if (shapes) await page.evaluate(() => document.getElementById('btnShapesAssign').click())
+if (direction) await setValue('#edgeDirection', direction)
+if (opacity) await setValue('#hullOpacity', opacity)
+if (spread) await setValue('#spreadSlider', spread)
 await setChecked('#showGroupHulls', hulls !== 'off')
 if (hulls !== 'off') await setValue('#hullStyle', hulls)
 if (bundleStrength) await setValue('#bundleStrength', bundleStrength)
@@ -150,13 +191,13 @@ if (tab === '3d') {
 await page.click('#btnExportImage')
 await page.check('input[name="imgFormat"][value="png"]')
 await setValue('#imgScale', scale)
-await page.evaluate(() => {
-  const bg = document.getElementById('imgBackground')
-  if ([...bg.options].some((o) => o.value === 'white')) {
-    bg.value = 'white'
-    bg.dispatchEvent(new Event('change', { bubbles: true }))
+await page.evaluate((bg) => {
+  const el = document.getElementById('imgBackground')
+  if ([...el.options].some((o) => o.value === bg)) {
+    el.value = bg
+    el.dispatchEvent(new Event('change', { bubbles: true }))
   }
-})
+}, bg)
 await setChecked('#imgLegend', legend)
 await page.fill('#imgFileName', 'figure')
 const [download] = await Promise.all([page.waitForEvent('download'), page.click('#btnImgSave')])

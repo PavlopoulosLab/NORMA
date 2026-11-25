@@ -325,3 +325,29 @@ test('multi-group nodes keep pie-slice coloring under WebGL rendering', async ({
   // single-group nodes stay on the fast "simple shape" path
   expect(styles.singleFill).toBe('solid')
 })
+
+test('Send genes to Flame asks for one list or one list per group first', async ({ page }) => {
+  await page.goto(`/norma.html?example=${EXAMPLE}`)
+  await expect.poll(() => nodeCount(page)).toBeGreaterThan(0)
+  await page.locator('#sideTabExport').click()
+  await page.locator('.section[data-tint="exflame"] h3').click()
+  await page.locator('#btnFlameOpen').click()
+  const dialog = page.locator('#flameDialog')
+  await expect(dialog).toBeVisible()
+  await expect(page.locator('#flameAllInfo')).toContainText(/genes? in one list/)
+  await expect(page.locator('#flameGroupsInfo')).toContainText(/lists?, one per group|no groups/)
+  // nothing is sent until the user chooses: cancelling leaves no status
+  await page.locator('#btnFlameCancel').click()
+  await expect(dialog).toBeHidden()
+  await expect(page.locator('#flameStatus')).toBeEmpty()
+  // saving the per-group lists writes one block per group
+  await page.locator('#btnFlameOpen').click()
+  const groups = page.locator('input[name="flameMode"][value="groups"]')
+  if (await groups.isEnabled()) await groups.check()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#btnFlameSave').click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^flame-lists-.*\.txt$/)
+  await expect(page.locator('#flameStatus .note.ok').first()).toContainText(/Saved .*lists?/)
+})
