@@ -3719,3 +3719,107 @@ details > summary + .menu-sep {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- searchable organism box (STRING importer) ---------- */
+.combo {
+  position: relative;
+}
+.combo-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 2px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+.combo-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.combo-list li:hover,
+.combo-list li[aria-selected='true'] {
+  background: var(--panel-2-hover);
+}
+.combo-list li .tax {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.combo-list li.combo-note {
+  color: var(--muted);
+  cursor: default;
+  font-style: italic;
+}
+/* a slider with an exact-number box beside it */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slider-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+.slider-row .num-input {
+  width: 68px;
+  flex: none;
+  padding: 4px 6px;
+}
+
+/* ---------- "what next?" card shown after a network loads ---------- */
+.next-steps {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  z-index: 7;
+  max-width: min(92%, 560px);
+  padding: 10px 14px 8px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  font-size: 12.5px;
+}
+.next-steps[hidden] {
+  display: none;
+}
+.next-steps .ns-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.next-steps .ns-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.next-steps .ns-actions button {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.next-steps .ns-close {
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+.next-steps .ns-off {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11.5px;
+}

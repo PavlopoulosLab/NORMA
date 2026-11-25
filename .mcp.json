@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "serena": {
+      "type": "stdio",
+      "command": "/Users/gpavlopoulos/.local/bin/serena",
+      "args": [
+        "start-mcp-server",
+        "--context", "claude-code",
+        "--project", "/Users/gpavlopoulos/Documents/GitHub/NORMA"
+      ]
+    }
+  }
+}

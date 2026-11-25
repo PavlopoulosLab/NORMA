@@ -29,11 +29,12 @@ export function drawScene3d(painter, W, H, opts) {
   const project = makeProjector(W, H, cam)
   const fast = !!opts.fast
   const bg = opts.bg
-  painter.clear(W, H, bg)
+  const k = opts.pixelScale || 1 // extra scaling for high-resolution export
+  // the export canvas is k times the screen size: clear all of it
+  painter.clear(W * k, H * k, bg)
   const fogColor = opts.fogColor || currentTheme.bg
   const fogAmount = parseFloat(el3('fog3d').value) || 0
   const shaded = el3('style3d').value === 'shaded'
-  const k = opts.pixelScale || 1 // extra scaling for high-resolution export
 
   const T = { t: performance.now() }
   const mark = (k) => {

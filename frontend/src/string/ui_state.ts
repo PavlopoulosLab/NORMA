@@ -1,19 +1,19 @@
 // @ts-nocheck
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
 import { S } from '../state'
-import { STRING_CATEGORIES, STRING_CHANNELS, STRING_SPECIES } from '../view3d/export'
+import { STRING_CATEGORIES, STRING_CHANNELS } from '../view3d/export'
+import { stringSpeciesName } from './species'
 import { libEntry } from '../layouts/controls'
 import { stringState } from './requests'
 
 /* ---------- UI state ---------- */
 export function stringSettings() {
-  const speciesSel = document.getElementById('stringSpecies').value
-  const taxon =
-    speciesSel === 'other' ? document.getElementById('stringTaxon').value.trim() : speciesSel
+  // the hidden field holds the taxon chosen in the organism box
+  const taxon = document.getElementById('stringSpecies').value.trim()
   const preset = document.getElementById('stringScorePreset').value
   const threshold =
     preset === 'custom'
-      ? parseFloat(document.getElementById('stringScore').value)
+      ? parseFloat(document.getElementById('stringScoreNum').value)
       : parseFloat(preset)
   return {
     names: document
@@ -22,12 +22,12 @@ export function stringSettings() {
       .map((s) => s.trim())
       .filter(Boolean),
     taxon,
-    speciesLabel:
-      speciesSel === 'other'
-        ? `taxon ${taxon}`
-        : (STRING_SPECIES.find((s) => String(s[0]) === speciesSel) || [0, speciesSel])[1],
+    speciesLabel: stringSpeciesName(taxon) || `taxon ${taxon}`,
     networkType: document.getElementById('stringNetType').value,
-    addNodes: parseInt(document.getElementById('stringAddNodes').value, 10) || 0,
+    addNodes: Math.max(
+      0,
+      Math.min(500, parseInt(document.getElementById('stringAddNodesNum').value, 10) || 0)
+    ),
     threshold: Number.isFinite(threshold) ? threshold : 0.4,
     channels: STRING_CHANNELS.filter((c) => document.getElementById('stringCh_' + c[1]).checked),
     edgeMode: document.getElementById('stringEdgeMode').value,
@@ -45,13 +45,11 @@ export function stringSettings() {
 
 export function updateStringUI() {
   const st = stringSettings()
-  document.getElementById('stringTaxonRow').hidden =
-    document.getElementById('stringSpecies').value !== 'other'
   document.getElementById('stringAddNodesValue').textContent = st.addNodes
   const preset = document.getElementById('stringScorePreset').value
   document.getElementById('stringScoreRow').hidden = preset !== 'custom'
-  document.getElementById('stringScoreValue').textContent = parseFloat(
-    document.getElementById('stringScore').value
+  document.getElementById('stringScoreValue').textContent = (
+    parseFloat(document.getElementById('stringScoreNum').value) || 0.4
   ).toFixed(2)
   document.getElementById('stringFdrRow').hidden = st.annotMode !== 'enrichment'
   document.getElementById('stringKeggNote').hidden = st.annotMode !== 'annotation'

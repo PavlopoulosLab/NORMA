@@ -2,6 +2,7 @@
 // ponytail: split verbatim from the former single-file script; typed one file at a time (remove @ts-nocheck as it lands)
 import { EDGE_TYPES } from '../palette'
 import { STRING_CATEGORIES, STRING_CHANNELS, STRING_SPECIES } from '../view3d/export'
+import { stringSpecies, stringSpeciesName } from './species'
 import { escapeHtml } from '../network_state'
 import { runStringGroupings } from './groupings'
 import { runStringImport } from './import'
@@ -68,13 +69,169 @@ function iconSpan(name) {
   return span
 }
 
+/* ---------- organism box: every STRING organism, searched by name or taxon ----------
+   The visible field is a combobox; the hidden #stringSpecies holds the chosen
+   taxon ID (what the STRING API wants). With nothing typed it lists the common
+   organisms of STRING_SPECIES; typing filters all 12,535 by name or ID. */
+const SPECIES_MAX_SHOWN = 40
+
+function setupSpeciesBox() {
+  const input = document.getElementById('stringSpeciesSearch')
+  const hidden = document.getElementById('stringSpecies')
+  const list = document.getElementById('stringSpeciesList')
+  let items = []
+  let active = -1
+
+  const favourites = () =>
+    STRING_SPECIES.map(([taxon, label]) => ({ taxon, name: label, core: true }))
+
+  // common organisms first (their labels carry everyday names such as
+  // "zebrafish"), then every other STRING organism by scientific name or ID
+  const matches = (q) => {
+    if (!q) return favourites()
+    const needle = q.toLowerCase()
+    const digits = /^\d+$/.test(q)
+    const hit = (sp) =>
+      digits ? String(sp.taxon).startsWith(q) : sp.name.toLowerCase().includes(needle)
+    const out = favourites().filter(hit)
+    const seen = new Set(out.map((sp) => sp.taxon))
+    for (const sp of stringSpecies()) {
+      if (seen.has(sp.taxon) || !hit(sp)) continue
+      out.push(sp)
+      if (out.length >= SPECIES_MAX_SHOWN) break
+    }
+    return out
+  }
+
+  const choose = (sp) => {
+    hidden.value = String(sp.taxon)
+    input.value = sp.name
+    close()
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+  }
+
+  const close = () => {
+    list.hidden = true
+    list.innerHTML = ''
+    input.setAttribute('aria-expanded', 'false')
+    active = -1
+  }
+
+  const render = () => {
+    list.innerHTML = ''
+    items.forEach((sp, i) => {
+      const li = document.createElement('li')
+      li.setAttribute('role', 'option')
+      li.id = `stringSpeciesOpt${i}`
+      li.innerHTML = `<span>${escapeHtml(sp.name)}</span><span class="tax">${sp.taxon}</span>`
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault() // keep the focus in the box
+        choose(sp)
+      })
+      list.appendChild(li)
+    })
+    if (!items.length) {
+      const li = document.createElement('li')
+      li.className = 'combo-note'
+      li.textContent = 'No organism matches; a taxon ID or STRGxxxxx identifier is used as typed.'
+      list.appendChild(li)
+    } else if (items.length >= SPECIES_MAX_SHOWN) {
+      const li = document.createElement('li')
+      li.className = 'combo-note'
+      li.textContent = 'Keep typing to narrow the list.'
+      list.appendChild(li)
+    }
+    list.hidden = false
+    input.setAttribute('aria-expanded', 'true')
+    setActive(-1)
+  }
+
+  const setActive = (i) => {
+    active = i
+    ;[...list.querySelectorAll('[role=option]')].forEach((li, k) => {
+      li.setAttribute('aria-selected', k === i ? 'true' : 'false')
+      if (k === i) li.scrollIntoView({ block: 'nearest' })
+    })
+    input.setAttribute('aria-activedescendant', i >= 0 ? `stringSpeciesOpt${i}` : '')
+  }
+
+  // typed text that is not a listed organism: a numeric ID or STRING's own
+  // identifiers are used as they are, anything else keeps the last choice
+  const commitTyped = () => {
+    const q = input.value.trim()
+    if (/^(\d+|STRG\w+)$/i.test(q)) {
+      hidden.value = q
+      input.value = stringSpeciesName(q) || q
+    } else {
+      const exact = stringSpecies().find((sp) => sp.name.toLowerCase() === q.toLowerCase())
+      if (exact) hidden.value = String(exact.taxon)
+      else input.value = stringSpeciesName(hidden.value) || hidden.value
+    }
+  }
+
+  input.addEventListener('focus', () => {
+    items = matches(input.value.trim())
+    render()
+  })
+  input.addEventListener('input', () => {
+    items = matches(input.value.trim())
+    render()
+  })
+  input.addEventListener('keydown', (e) => {
+    if (list.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      items = matches(input.value.trim())
+      render()
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActive(Math.min(items.length - 1, active + 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive(Math.max(0, active - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (active >= 0 && items[active]) choose(items[active])
+      else {
+        commitTyped()
+        close()
+      }
+    } else if (e.key === 'Escape') {
+      close()
+    }
+  })
+  input.addEventListener('blur', () => {
+    commitTyped()
+    close()
+  })
+  input.value = stringSpeciesName(hidden.value) || favourites()[0].name
+}
+
+// A range input and a number input that show the same value.
+function syncSliderAndNumber(sliderId, numberId, decimals) {
+  const slider = document.getElementById(sliderId)
+  const num = document.getElementById(numberId)
+  const clamp = (v) => Math.min(parseFloat(num.max), Math.max(parseFloat(num.min), v))
+  slider.addEventListener('input', () => {
+    num.value = parseFloat(slider.value).toFixed(decimals)
+  })
+  num.addEventListener('input', () => {
+    const v = parseFloat(num.value)
+    if (Number.isFinite(v)) slider.value = clamp(v)
+  })
+  num.addEventListener('change', () => {
+    const v = parseFloat(num.value)
+    num.value = (Number.isFinite(v) ? clamp(v) : parseFloat(slider.value)).toFixed(decimals)
+    slider.value = num.value
+  })
+}
+
 // page wiring, run by main.ts in the original order
 export function init() {
   /* ---------- wiring ---------- */
   ;(function setupStringImporter() {
-    const sel = document.getElementById('stringSpecies')
-    STRING_SPECIES.forEach(([id, name]) => sel.add(new Option(name, String(id))))
-    sel.add(new Option('Other organism (enter the taxon ID)…', 'other'))
+    setupSpeciesBox()
+    syncSliderAndNumber('stringAddNodes', 'stringAddNodesNum', 0)
+    syncSliderAndNumber('stringScore', 'stringScoreNum', 2)
     const chBox = document.getElementById('stringChannels')
     STRING_CHANNELS.forEach(([, key, label]) => {
       const row = document.createElement('label')
