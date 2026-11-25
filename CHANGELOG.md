@@ -4,6 +4,12 @@
 
 ### Added
 
+- The on-screen legend can be minimized to a small "Legend" tab (button in its corner) so it does
+  not cover the network; the choice is remembered in the browser.
+- Layout benchmark: two topology scores next to the separation scores, neighbourhood preservation
+  and distance stress, which measure how much a layout departs from the network's own structure
+  without looking at the groups (`topology_fidelity.ts`, with unit tests); Help explains why the
+  separation scores alone cannot judge group-aware layouts.
 - **Separate nodes** buttons in the 2D and 3D Layout sections: overlapping nodes are moved slightly
   apart, keeping the arrangement; one undo step.
 - A "What next?" card after a network loads, pointing to the 3D view, edge bundling and the layouts
@@ -27,6 +33,8 @@
 
 ### Changed
 
+- Pie-chart nodes (group colors) are the default node fill, also when an expression file is
+  selected; its colors or values are chosen under Node fill.
 - Networks open with the weighted Fruchterman-Reingold layout instead of cose, which left nodes on
   top of each other on dense networks; `fr` is also the default of the Layout list.
 - The legend is shown by default, and when parallel edges are merged per node pair it says so (grey:
@@ -47,7 +55,7 @@
   importers. Runs on a computer, as a public server or opened straight from disk.
 
 ### Fixed
-
+- Narrow browser windows: the View list no longer slides under the Grouping label; both lists shrink with the window, and below 1,200 px the View/Grouping labels keep only their icons so the whole header fits.
 - The "Size" separator sat inside the Nodes section above its title, so the section opened with the
   separator first; it is now above the section.
 - 3D image exports at more than screen resolution (without a legend) painted only the screen-sized

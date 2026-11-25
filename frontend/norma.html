@@ -23,7 +23,7 @@
   <div id="viewHeader">
     <label class="vh-label" for="viewSelect">
       <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-      View
+      <span class="vh-text">View</span>
     </label>
     <div class="vh-select" id="viewSelectRow">
       <select id="viewSelect"></select>
@@ -35,7 +35,7 @@
     <span class="vh-count" id="viewCount"></span>
     <label class="vh-label vh-sub" for="viewGrouping">
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="6" r="3.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="10.5" cy="9.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
-      Grouping
+      <span class="vh-text">Grouping</span>
     </label>
     <select id="viewGrouping" aria-describedby="viewGroupingHint"></select>
     <button type="button" id="btnGroupingDelete" class="icon-del" title="Completely remove this grouping file" aria-label="Completely remove this grouping" disabled>✕</button>
@@ -1274,7 +1274,10 @@
       </div>
       <output id="zoomLevel" aria-label="Zoom level">100%</output>
     </div>
-    <div id="legendPanel" hidden></div>
+    <div id="legendPanel" hidden>
+      <button type="button" id="legendMin" class="legend-min" aria-label="Minimize the legend" title="Minimize the legend" aria-expanded="true">&#8211;</button>
+      <div id="legendBody"></div>
+    </div>
     <div id="nextSteps" class="next-steps" role="dialog" aria-label="What to try next" hidden>
       <div class="ns-title">Network loaded. What next?</div>
       <div class="ns-actions">
@@ -1871,7 +1874,7 @@
           <tr><td><code>annotations</code></td><td>list</td><td>More groupings, each <code>{"name", "groups"}</code>; the view's <b>Grouping</b> list switches between them.</td></tr>
           <tr><td><code>expression</code></td><td>object</td><td><code>{"node": "#e11d48"}</code> (colors), <code>{"node": 1.7}</code> (one numeric value) or <code>{"node": {"t0": 0.2, "t1": 1.4}}</code> (several columns, e.g. time points).</td></tr>
           <tr><td><code>directed</code></td><td>true/false</td><td>Read <code>files.network</code> as directed.</td></tr>
-          <tr><td><code>settings</code></td><td>object</td><td>Display settings by their names in a settings file (for example <code>edgeDirection</code>, <code>edgeCurveStyle</code>, <code>showGroupHulls</code>, <code>hullStyle</code>, <code>nodeFillSelect</code>, <code>legendShow</code>), plus <code>theme</code> and <code>layout</code> (<code>fr</code>, <code>kk</code>, <code>stress</code>, <code>cose</code>, <code>circle</code>, …).</td></tr>
+          <tr><td><code>settings</code></td><td>object</td><td>Display settings by their names in a settings file (for example <code>edgeDirection</code>, <code>edgeCurveStyle</code>, <code>showGroupHulls</code>, <code>hullStyle</code>, <code>nodeFillSelect</code>, <code>legendShow</code>), plus <code>theme</code> and <code>layout</code> (<code>fr</code>, <code>kk</code>, <code>stress</code>, <code>cose</code>, <code>circle</code>, …; without it the network opens with <code>fr</code>). The legend is on unless <code>legendShow</code> is <code>false</code>.</td></tr>
           <tr><td><code>tab</code></td><td>text</td><td><code>"3d"</code> opens the 3D page instead of the 2D page.</td></tr>
           <tr><td><code>format</code> / <code>views</code></td><td>—</td><td>A whole <b>session file</b> (<code>"format": "norma3-session"</code>) can be sent as the payload too.</td></tr>
         </tbody>
@@ -2182,7 +2185,7 @@ BCL2L1&#9;-1.8&#9;0.0003
 TP53&#9;NA&#9;NA</pre>
         <h3>Choosing what to show</h3>
         <p>Tick one or more networks, choose one annotation and one expression file (or <b>None</b>), then choose <b>Show in this view</b> or <b>Open in new view</b>. A note under the buttons tells you when the selection differs from what the view shows. If only the annotation or expression changed, <b>Show in this view</b> updates in place and keeps node positions, so you can flip between GO, KEGG and community groupings of the same layout, or open each grouping in its own view to keep them side by side.</p>
-        <p>With an expression file selected, nodes are filled with its colors and groups are shaded behind them, as in NORMA. Without one, nodes are filled with their groups' colors, split into a pie for nodes in several groups.</p>
+        <p>Nodes open filled with their groups' colors, split into a pie for nodes in several groups. With an expression file selected, groups are also shaded behind the nodes, and <b>Node fill</b> in the Display tab switches the nodes to the file's expression colors or numeric values.</p>
         <h3>Annotation names not in the network</h3>
         <p>Node names in an annotation must also appear in the network. The check happens twice:</p>
         <ul>
@@ -2253,10 +2256,10 @@ TP53&#9;NA&#9;NA</pre>
         <h3>The network</h3>
         <ul>
           <li><b>Proteins or genes:</b> one or more names, such as <code>TP53</code>, <code>p53</code> or a UniProt accession, separated by spaces, commas or new lines. STRING matches each name to its best protein and the status notes say how each was matched and which names weren't found.</li>
-          <li><b>Organism:</b> pick one from the list, or choose <b>Other organism</b> and type its NCBI taxon ID (for example 7955 for zebrafish). Any organism in STRING can be used.</li>
+          <li><b>Organism:</b> type part of a name (<i>zebra</i>, <i>coli</i>) or an NCBI taxon ID and pick from the list, which covers all 12,535 organisms in STRING; common organisms are listed first, and a taxon ID or STRING's own <code>STRG…</code> identifier can also be entered as it is.</li>
           <li><b>Network:</b> <b>functional associations</b> use all of STRING's evidence; <b>physical interactions only</b> keeps proteins that bind each other or form a complex.</li>
-          <li><b>Interactors to add</b> (0–500) extends the network with the proteins most confidently connected to yours, best first. With 0 and several names, only the connections among them are fetched; with a single name STRING always adds its 10 best interactors.</li>
-          <li><b>Minimum confidence:</b> highest (0.900), high (0.700), medium (0.400), low (0.150) or a custom value; weaker connections are left out.</li>
+          <li><b>Interactors to add</b> (0–500; drag the slider or type the exact number in the box) extends the network with the proteins most confidently connected to yours, best first. With 0 and several names, only the connections among them are fetched; with a single name STRING always adds its 10 best interactors.</li>
+          <li><b>Minimum confidence:</b> highest (0.900), high (0.700), medium (0.400), low (0.150) or <b>Custom…</b>, where any value from 0.05 to 0.99 can be typed (for example 0.8); weaker connections are left out.</li>
           <li><b>Evidence channels:</b> gene neighborhood, gene fusion, co-occurrence, co-expression, experiments, curated databases and text mining. Untick channels to leave that evidence out: each connection's confidence is then recomputed from the ticked channels only, the way STRING combines them, and connections that fall below the minimum are dropped (the notes say how many).</li>
           <li><b>Edges:</b> <b>one edge per channel</b> makes a multi-edge network in which each channel has STRING's color and its own score as the weight, so you can tick channels on and off, merge or bundle them later. <b>One edge per pair</b> keeps a single edge with the combined score.</li>
         </ul>
@@ -2335,7 +2338,7 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>Groups on stacked layers:</b> the 2D layout lies flat and each group gets its own layer, one above the other, so the links between groups run between the layers.</li>
           <li><b>Same as 2D (flat)</b>, <b>Height by hierarchy level</b> and <b>Height by degree</b> keep the 2D layout and add height: none, the level from the top of a hierarchy (following edge directions when edges are directed), or the number of connections, so hubs rise above the rest. <b>Height step</b> sets the distance between levels.</li>
         </ul>
-        <p><b>Spread</b> pushes nodes apart or pulls them together, as in 2D. Double-click the slider to go back to 1×.</p>
+        <p><b>Spread</b> pushes nodes apart or pulls them together, as in 2D. Double-click the slider to go back to 1×. <b>Separate nodes</b> moves overlapping nodes slightly apart in three dimensions, keeping the arrangement.</p>
         <h3>Look</h3>
         <ul>
           <li><b>View from</b> turns the camera to the front, top, side or a tilted angle and fits the network.</li>
@@ -2349,9 +2352,10 @@ TP53&#9;NA&#9;NA</pre>
 
         <h2 id="help-layout">Layout</h2>
         <p>This section is about the <b>2D Network</b> page; the 3D page has its own layouts (see <a href="#help-3d">3D Network</a>). Every layout arranges only the shown part of the view: nodes in ticked groups, connected by edges of ticked channels while <b>Use checked channels only</b> is on. Nodes of unticked groups stay where they are, so ticking them again brings them back in place.</p>
+        <p>After a network has loaded, a small card at the bottom of the view offers the next steps most people look for: the <b>3D view</b>, <b>edge bundling</b> and the <b>layouts by groups</b>; <b>Don't show this again</b> hides it for good (the choice is kept in this browser).</p>
         <p>The switch at the top of <b>Layout</b> chooses how nodes are arranged. Only one side is active at a time; the other is shown greyed out and marked <i>frozen</i>, and <b>Run layout</b> runs only the active side. The choice is saved with the view.</p>
         <h3>By connections</h3>
-        <p>Positions come from the edges alone; groups play no part. Force-directed (cose) places connected nodes near each other. <b>Force-directed, weighted</b> is the Fruchterman–Reingold layout NORMA uses: heavier edges pull their nodes closer, and the result is the same every time for the same input. <b>Kamada–Kawai</b> (new in NORMA 3.0) treats every pair of nodes as a spring whose length is the number of steps between them and relaxes the springs one node at a time; <b>stress majorization</b> starts from a pivot-MDS layout and then minimises the same kind of stress (the mismatch between on-screen and network distances) for all nodes together, which is usually faster and keeps distances most faithfully. Both ignore edge weights, lay out each connected part separately, and handle parts of up to 2,500 nodes. They are also available as group strategies and inside groups. Concentric puts high-degree nodes in the middle; hierarchical arranges nodes in levels from a root, following edge directions when the view has directed edges. Networks above 700 nodes load with a grid layout, since a force-directed layout can freeze the page for a while at that size; you can still run it yourself.</p>
+        <p>Positions come from the edges alone; groups play no part. <b>Force-directed, weighted</b> is the layout a network opens with and the Fruchterman–Reingold layout NORMA uses: heavier edges pull their nodes closer, and the result is the same every time for the same input. <b>Kamada–Kawai</b> (new in NORMA 3.0) treats every pair of nodes as a spring whose length is the number of steps between them and relaxes the springs one node at a time; <b>stress majorization</b> starts from a pivot-MDS layout and then minimises the same kind of stress (the mismatch between on-screen and network distances) for all nodes together, which is usually faster and keeps distances most faithfully. Both ignore edge weights, lay out each connected part separately, and handle parts of up to 2,500 nodes. Force-directed (cose) is Cytoscape.js's own force layout; on dense networks it may leave nodes on top of each other (use <b>Separate nodes</b>). They are also available as group strategies and inside groups. Concentric puts high-degree nodes in the middle; hierarchical arranges nodes in levels from a root, following edge directions when the view has directed edges. Networks above 700 nodes load with a grid layout, since a force-directed layout can freeze the page for a while at that size; you can still run it yourself.</p>
         <h3>By groups</h3>
         <p><b>Group arrangement</b> decides where each group goes, and <b>Layout inside each group</b> arranges the group's own nodes (circle, force-directed, concentric, hierarchical, grid or random). A node in several groups sits at the average of its positions, between those groups. Only groups ticked under Node groups count.</p>
         <ul>
@@ -2365,7 +2369,7 @@ TP53&#9;NA&#9;NA</pre>
             Strategies 1 and 2 place every node themselves. With them, <b>Layout inside each group</b> can also be <b>Keep the strategy's arrangement</b>; any other choice rearranges each group around where the strategy put it and keeps groups from overlapping.</li>
         </ul>
         <p><b>Group size</b> scales each group's local layout. Force strength runs from 1 to 20 (NORMA's default is 10). <b>Use checked channels only</b> applies to both sides. A group with more than 400 nodes gets 60 random partner links per node instead of links to every other member, to keep the layout fast. While <b>By groups</b> is active, it is also used when a network loads and when you switch annotations.</p>
-        <p><b>Fit to screen</b> zooms to show the whole network. <b>Spread</b> changes how strongly nodes repel each other compared with the pull of their links, from a quarter to four times the strength of the current arrangement. To the right, dense clusters open up and loosely linked parts move apart; to the left, linked nodes are drawn together while nodes are kept from overlapping. It starts from the current positions and keeps the overall arrangement, and going back to 1× restores them. Double-click the slider to go back to 1×. Moving nodes by hand starts again from their new positions, and running a layout resets it.</p>
+        <p><b>Fit to screen</b> zooms to show the whole network. <b>Separate nodes</b> moves nodes that overlap slightly apart, along the lines between them, until none overlap; everything else stays where it is, and the step can be undone. <b>Spread</b> changes how strongly nodes repel each other compared with the pull of their links, from a quarter to four times the strength of the current arrangement. To the right, dense clusters open up and loosely linked parts move apart; to the left, linked nodes are drawn together while nodes are kept from overlapping. It starts from the current positions and keeps the overall arrangement, and going back to 1× restores them. Double-click the slider to go back to 1×. Moving nodes by hand starts again from their new positions, and running a layout resets it.</p>
 
         <h2 id="help-groups">Node groups</h2>
         <p>Groups are listed <b>A–Z</b> (numbers in numeric order, so Group-2 comes before Group-10). The <b>Order</b> menu under the filter also sorts them by their number of nodes (the count shown on each row), <b>Most nodes first</b> or <b>Fewest nodes first</b> (groups of equal size stay A–Z), or keeps the <b>File order</b> of the annotation file. Nodes in no group always come last. The legend follows the same order, each view remembers the choice, and group colors don't change. Node names in the details panels, and the files in <b>Files</b> and in every file menu (Grouping, Network Profiler, Network Comparison, enrichment) are always listed A–Z.</p>
@@ -2427,7 +2431,7 @@ TP53&#9;NA&#9;NA</pre>
         <p>Lists each kind of edge with its count. Untick a channel to hide its edges; click its swatch to recolor it. For files loaded from <b>Files</b>, each network (or each value of its Type column) is a channel.</p>
 
         <h2 id="help-legend">Legend</h2>
-        <p><b>Display → Legend → Show a legend on the network</b> places a legend at the bottom right of the 2D and 3D network (it steps aside while a node's or edge's details are open). It can include the <b>color scale</b> of numeric values with its ticks and the "no value" color, the <b>groups</b> with their colors and, with <b>Group shapes</b>, their node shapes, and the <b>edge channels</b> when there are two or more. An optional title goes on top. Groups and channels follow what is ticked, and the legend updates as colors, shapes or settings change.</p>
+        <p>A legend is shown by default at the bottom right of the 2D and 3D network (<b>Display → Legend → Show a legend on the network</b> turns it off; it steps aside while a node's or edge's details are open). The <b>–</b> button in its corner folds it to a small <b>Legend</b> tab so that it does not cover the network; click the tab to unfold it. The choice is kept in this browser. It can include the <b>color scale</b> of numeric values with its ticks and the "no value" color, the <b>groups</b> with their colors and, with <b>Group shapes</b>, their node shapes, and the <b>edge channels</b> when there are two or more. An optional title goes on top. Groups and channels follow what is ticked, and the legend updates as colors, shapes or settings change; when parallel edges are <a href="#help-edges">merged per node pair</a>, it adds the grey entry for pairs whose channels differ and notes that wider lines carry more channels.</p>
         <p>Views made by <a href="#help-compare">Show as network</a> on the comparison page come with the legend switched on and an extra <b>Networks</b> part that says which letter stands for which network.</p>
         <p>In <b>Export image</b>, <b>Add the legend</b> puts the same legend to the right of the picture, at the picture's scale, in every format; in SVG files it is a separate, editable group. The legend is included whether or not it is shown on screen.</p>
 
@@ -2482,7 +2486,13 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>Inside other outlines</b>: the share of shown nodes that lie inside the convex outline of a group they don't belong to. These are the nodes a hull drawing would misleadingly shade.</li>
           <li><b>Outline overlap</b>: the share of the outlined area that is covered by two or more group outlines. Groups of fewer than three nodes have no outline.</li>
         </ul>
-        <p>The <b>Layout benchmark</b> at the end of the <b>Network Profiler</b> page runs every layout on the current view without changing it: the seven layouts by connections (random as a baseline), the six group arrangements and the three NORMA-2.0 strategies, with the Layout section's settings for group layouts. For each it reports the run time and the three scores, as the mean (and standard deviation) over 1, 3 or 5 runs; the best value in each column is highlighted. <b>Use</b> applies a layout to the view, and <b>Download table</b> saves the results as tab-separated text, ready for a supplementary table.</p>
+        <p>The <b>Layout benchmark</b> at the end of the <b>Network Profiler</b> page runs every layout on the current view without changing it: the seven layouts by connections (random as a baseline), the six group arrangements and the three NORMA-2.0 strategies, with the Layout section's settings for group layouts. For each it reports the run time, the three separation scores and two <b>topology scores</b>, as the mean (and standard deviation) over 1, 3 or 5 runs; the best value in each column is highlighted. <b>Use</b> applies a layout to the view, and <b>Download table</b> saves the results as tab-separated text, ready for a supplementary table.</p>
+        <p>Layouts by groups and the NORMA-2.0 strategies separate the ticked groups on purpose, so high separation scores are expected from them and say nothing about the network; they can only show how much a layout gave up to achieve it. The two topology scores measure that, without looking at the groups:</p>
+        <ul>
+          <li><b>Neighbours kept</b> (neighbourhood preservation): for each node with <i>d</i> connections, the share of its network neighbours among its <i>d</i> nearest nodes on screen, averaged over the nodes. 100% means the picture keeps every neighbourhood; a layout that pulls groups apart typically loses neighbours that sit in other groups.</li>
+          <li><b>Distance stress</b>: how far the on-screen distances between nodes depart from their shortest-path distances in the network, after the best uniform scaling (Gansner, Koren and North, 2005), from 0 (distances kept) to 1. Only pairs in the same connected part count. On large networks both scores use a fixed sample of 400 nodes.</li>
+        </ul>
+        <p>To judge whether groups are separated <i>in the network</i>, read the separation scores of a layout by connections, or use <a href="#help-group-analysis">Group analysis</a> (density inside, conductance, modularity share), which looks at the edges rather than the picture.</p>
 
         <h2 id="help-compare">Network Comparison</h2>
         <p>The <b>Network Comparison</b> page sets two to ten networks side by side. Tick them in the list: <b>Open views</b> compare what each view shows: its files, and only its ticked groups and channels, and <b>Network files</b> compare uploaded or example networks directly. Choose <b>Compare</b>; each network gets a letter (A to J) and a color used throughout the results. Nodes are matched by name and edges by the pair of nodes they join, ignoring channels. With <b>Use edge direction</b> ticked (off by default), direction counts: A→B, B→A and an undirected A–B are three different edges, and directed statistics are added to the topology table. Untick it to match edges regardless of direction.</p>
@@ -2688,7 +2698,7 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>An exported image is smaller than chosen</b>: the browser can't draw images beyond about 16,000 pixels per side; the dialog says when the size was reduced. Choose a lower resolution or export only what is on screen, or use SVG, which has no size limit.</li>
           <li><b>The 3D picture is slow</b>: turn off group shading or shaded spheres, lower <b>Depth fading</b>, hide labels, or untick groups and channels you don't need. Large networks are drawn simplified while they move.</li>
           <li><b>The 3D network looks flat</b>: the layout is <b>Same as 2D (flat)</b>, or the camera is facing it from the front. Run another 3D layout or choose <b>View from → Tilted</b>.</li>
-          <li><b>A few edges are missing</b>: edges between two nodes that sit on top of each other can't be drawn. Run a layout again or use <b>Spread</b>.</li>
+          <li><b>A few edges are missing</b>: edges between two nodes that sit on top of each other can't be drawn. Click <b>Separate nodes</b> in the Layout section, run a layout again or use <b>Spread</b>.</li>
         </ul>
 
       </article>

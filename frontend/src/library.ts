@@ -167,14 +167,12 @@ function resolveGroupsAndColors(nodeIds, viewName, annEntry, colEntry) {
   return { groupsOf, colorOf, valuesOf, notes, groupCount, groupOrder }
 }
 
-// NORMA's look: node fill from expression colors with groups shaded behind;
-// without an expression file, fill nodes with their group colors.
+// Nodes open filled with their group colors, split into pies for nodes in
+// several groups; an expression file's colors or values are a Node fill
+// choice away. With both an annotation and an expression file, groups are
+// also shaded behind the nodes (NORMA's classic look).
 function applyLibraryDisplayDefaults(annEntry, colEntry) {
-  document.getElementById('nodeFillSelect').value = colEntry
-    ? colEntry.parsed.numeric
-      ? 'values'
-      : 'data'
-    : 'groups'
+  document.getElementById('nodeFillSelect').value = 'groups'
   if (colEntry && annEntry) {
     document.getElementById('showGroupHulls').checked = true
     document.getElementById('hullControls').style.display = 'block'

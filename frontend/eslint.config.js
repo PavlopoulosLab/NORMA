@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 // rules apply to every typed module; add a file to TYPED as its @ts-nocheck is removed.
 const LEGACY = ['src/**/*.ts']
 // tests import the untyped modules, so they inherit the LEGACY rules for now
-const TYPED = ['src/state.ts']
+const TYPED = ['src/state.ts', 'src/topology_fidelity.ts']
 
 export default tseslint.config(
   ...tseslint.configs.recommendedTypeChecked,

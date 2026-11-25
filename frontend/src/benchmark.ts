@@ -27,6 +27,7 @@ import {
 } from './layouts/controls'
 import { escapeHtml } from './network_state'
 import { groupSeparation } from './clustering/mapping'
+import { topologyFidelity } from './topology_fidelity'
 import { runActiveLayout } from './layouts/run'
 import { switchTab } from './wiring'
 
@@ -142,7 +143,11 @@ export async function runLayoutBenchmark() {
         await nextPaint()
         const ms = performance.now() - t0
         if (!pos) continue
-        runs.push({ ms, ...groupSeparation(pos, graph.groupsOf) })
+        runs.push({
+          ms,
+          ...groupSeparation(pos, graph.groupsOf),
+          ...topologyFidelity(pos, graph.nodeIds, graph.edges),
+        })
       }
       const agg = (key) => {
         const vals = runs.map((r) => r[key]).filter(Number.isFinite)
@@ -163,6 +168,8 @@ export async function runLayoutBenchmark() {
         silhouette: agg('silhouette'),
         intruders: agg('intruders'),
         overlap: agg('overlap'),
+        neighbourhood: agg('neighbourhood'),
+        stress: agg('stress'),
       })
       benchState.rows = rows
       renderBenchmark(graph)
@@ -191,18 +198,20 @@ function renderBenchmark(graph) {
   const best = (key) => {
     const vals = rows.map((r) => r[key].mean).filter(Number.isFinite)
     if (!vals.length) return null
-    return key === 'silhouette' ? Math.max(...vals) : Math.min(...vals)
+    return key === 'silhouette' || key === 'neighbourhood' ? Math.max(...vals) : Math.min(...vals)
   }
   const bS = best('silhouette'),
     bI = best('intruders'),
-    bO = best('overlap')
+    bO = best('overlap'),
+    bN = best('neighbourhood'),
+    bT = best('stress')
   const cell = (v, fmt, isBest) =>
     `<td class="num${isBest ? ' cmp-max' : ''}">${Number.isFinite(v.mean) ? fmt(v.mean) + (Number.isFinite(v.sd) ? ` <span class="sd">± ${fmt(v.sd)}</span>` : '') : '—'}</td>`
   const pct = (v) => `${(v * 100).toFixed(1)}%`
   const num = (v) => v.toFixed(3)
   const ms = (v) => (v < 1000 ? `${Math.round(v)} ms` : `${(v / 1000).toFixed(1)} s`)
   root.innerHTML = `<div class="table-wrap"><table class="data bench-table">
-    <thead><tr><th scope="col">Layout</th><th scope="col">Time</th><th scope="col">Silhouette ↑</th><th scope="col">Inside other outlines ↓</th><th scope="col">Outline overlap ↓</th><th scope="col"></th></tr></thead>
+    <thead><tr><th scope="col">Layout</th><th scope="col">Time</th><th scope="col">Silhouette ↑</th><th scope="col">Inside other outlines ↓</th><th scope="col">Outline overlap ↓</th><th scope="col" title="Share of each node's network neighbours among its nearest nodes on screen">Neighbours kept ↑</th><th scope="col" title="How far on-screen distances depart from shortest-path distances">Distance stress ↓</th><th scope="col"></th></tr></thead>
     <tbody>${rows
       .map(
         (r, i) => `<tr>
@@ -211,6 +220,8 @@ function renderBenchmark(graph) {
       ${cell(r.silhouette, num, r.silhouette.mean === bS)}
       ${cell(r.intruders, pct, r.intruders.mean === bI)}
       ${cell(r.overlap, pct, r.overlap.mean === bO)}
+      ${cell(r.neighbourhood, pct, r.neighbourhood.mean === bN)}
+      ${cell(r.stress, num, r.stress.mean === bT)}
       <td><button type="button" class="bench-use" data-row="${i}" title="Apply this layout to the view">Use</button></td>
     </tr>`
       )
@@ -251,6 +262,10 @@ export function benchmarkTsv() {
       'Inside other outlines (sd)',
       'Outline overlap (mean)',
       'Outline overlap (sd)',
+      'Neighbourhood preservation (mean)',
+      'Neighbourhood preservation (sd)',
+      'Distance stress (mean)',
+      'Distance stress (sd)',
     ].join('\t'),
   ]
   rows.forEach((r) =>
@@ -266,6 +281,10 @@ export function benchmarkTsv() {
         f(r.intruders.sd),
         f(r.overlap.mean),
         f(r.overlap.sd),
+        f(r.neighbourhood.mean),
+        f(r.neighbourhood.sd),
+        f(r.stress.mean),
+        f(r.stress.sd),
       ].join('\t')
     )
   )

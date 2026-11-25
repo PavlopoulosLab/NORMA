@@ -18,6 +18,22 @@ the MIT License; no login, no cookies, no tracking.
 
 The server needs only Python 3.9+ (standard library); the page is built once with Node.
 
+## What the app does
+
+* Groups drawn as convex hulls, bubble sets or fog clouds; nodes in several groups as pie
+  charts (the default fill); one node shape per group; colour-blind-safe palettes; a legend
+  that can be folded to a tab.
+* 18 two-dimensional layouts (nine by connections, six non-overlapping group arrangements,
+  the three NORMA-2.0 strategies) and nine 3D layouts; networks open with the weighted
+  Fruchterman–Reingold layout; **Separate nodes** pushes overlapping nodes apart in 2D and 3D.
+* A layout benchmark that scores every layout for group separation (silhouette, outline
+  intrusion and overlap) and for how much of the network's own structure it keeps
+  (neighbourhood preservation, distance stress).
+* Parallel and directed edges with evidence channels, curved or bundled edges; importers for
+  STRING (any of its organisms), Reactome, OmniPath, NDEx, IntAct and the Gene Ontology;
+  topological, group and enrichment statistics; comparison of up to ten networks; exports
+  as images, GraphML, GEXF, SIF, Cytoscape JSON, sessions and Arena3D layers.
+
 ## Settings
 
 Settings come from (increasing priority) built-in defaults, `norma.config.json`
@@ -147,5 +163,11 @@ logo from <https://string-db.org> as `frontend/public/assets/string-logo.png` (b
 * When using Arena3D: Karatzas E, Baltoumas FA, Panayiotou NA, Schneider R,
   Pavlopoulos GA. Arena3Dweb: interactive 3D visualization of multilayered networks.
   *Nucleic Acids Research* 2021;49(W1):W36–W45. doi:10.1093/nar/gkab278
-* When using STRING data: Szklarczyk D *et al.* The STRING database in 2023.
-  *Nucleic Acids Research* 2023;51(D1):D638–D646. doi:10.1093/nar/gkac1000
+* When using Arena3D: Kokoli M, Karatzas E, Baltoumas FA, Schneider R, Pafilis E,
+  Paragkamian S, Doncheva NT, Jensen LJ, Pavlopoulos GA. Arena3Dweb: interactive 3D
+  visualization of multilayered networks supporting multiple directional information
+  channels, clustering analysis and application integration.
+  *NAR Genomics and Bioinformatics* 2023;5(2):lqad053. doi:10.1093/nargab/lqad053
+* When using STRING data: Szklarczyk D *et al.* The STRING database in 2025: protein
+  networks with directionality of regulation.
+  *Nucleic Acids Research* 2025;53(D1):D730–D737. doi:10.1093/nar/gkae1113
