@@ -88,6 +88,7 @@ import { init as initApiTester } from './api/tester'
 import { init as initSidePanel } from './side_panel'
 import { init as initDeoverlap } from './deoverlap'
 import { init as initNextSteps } from './next_steps'
+import { init as initFlame } from './flame'
 
 initHulls()
 initLayoutsControls()
@@ -112,6 +113,7 @@ initApiWiring()
 initApiTester()
 initDeoverlap()
 initNextSteps()
+initFlame()
 
 document.getElementById('btnViewDelete').addEventListener('click', () => {
   const lv = S.currentLibView

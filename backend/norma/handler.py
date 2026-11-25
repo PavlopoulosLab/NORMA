@@ -12,7 +12,7 @@ from typing import Any
 
 from norma import API_VERSION, APP_VERSION, api, config, relays, static
 
-_RELAY_PREFIXES = ("/string-api/", "/arena3d-api/", "/db-api/", "/api/")
+_RELAY_PREFIXES = ("/string-api/", "/arena3d-api/", "/flame-api/", "/db-api/", "/api/")
 
 
 class NormaHandler(http.server.SimpleHTTPRequestHandler):
@@ -104,6 +104,7 @@ class NormaHandler(http.server.SimpleHTTPRequestHandler):
             (bare.startswith("/string-api/") and not cfg["relays"]["string"])
             or (bare.startswith("/db-api/") and not cfg["relays"]["databases"])
             or (bare.startswith("/arena3d-api/") and not cfg["relays"]["arena3d"])
+            or (bare.startswith("/flame-api/") and not cfg["relays"]["flame"])
             or (bare.startswith("/api/") and not cfg["api"]["enabled"])
         )
         if off:
@@ -112,6 +113,8 @@ class NormaHandler(http.server.SimpleHTTPRequestHandler):
             return relays.string(self, "POST")
         if bare == "/arena3d-api/external":
             return relays.arena3d(self)
+        if bare == "/flame-api/legacy":
+            return relays.flame(self)
         if bare == "/db-api/fetch":
             return relays.database(self, "POST")
         if bare == "/api/external":

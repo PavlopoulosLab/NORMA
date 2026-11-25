@@ -3034,6 +3034,7 @@ button.danger:hover {
   }
 }
 #exportDialog,
+#flameDialog,
 #deleteDialog {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -3044,6 +3045,7 @@ button.danger:hover {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 #exportDialog::backdrop,
+#flameDialog::backdrop,
 #deleteDialog::backdrop {
   background: rgba(15, 20, 32, 0.45);
 }
@@ -3534,6 +3536,33 @@ button.danger:hover {
 }
 .section[data-tint='exarena'] {
   --tint: #0d9488;
+}
+.section[data-tint='exflame'] {
+  --tint: #dc4f1c;
+}
+/* logos of the tools NORMA sends data to */
+.tool-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 6px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 16px;
+}
+.tool-brand img {
+  display: block;
+  max-width: 100%;
+}
+.flame-choices {
+  grid-template-columns: 1fr 1fr;
+}
+#flameDialog .toggle-row {
+  margin: 0 0 10px;
+}
+#flameDialog .dlg-grid {
+  margin-bottom: 4px;
 }
 .section[data-tint='exother'] {
   --tint: #ea580c;

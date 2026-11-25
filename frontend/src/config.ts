@@ -15,7 +15,7 @@ export const NORMA_CFG = (() => {
     publicUrl: '',
     features: {
       restApi: null,
-      relays: { string: true, arena3d: true, databases: true },
+      relays: { string: true, arena3d: true, flame: true, databases: true },
       apiTtlHours: 24,
     },
     site: {

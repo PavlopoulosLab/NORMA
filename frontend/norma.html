@@ -1106,6 +1106,7 @@
 
       <div class="section collapsible collapsed" data-tint="exarena">
         <h3 role="button" tabindex="0" aria-expanded="false">Arena3D<button type="button" class="helplink" data-help="help-arena3d" aria-label="Help: Arena3D">?</button></h3>
+        <a class="tool-brand" href="https://arena3d.org" target="_blank" rel="noopener" title="Arena3D: multilayered networks in 3D"><img src="assets/arena3d-logo.png" alt="Arena3D" height="34" onerror="this.parentNode.hidden=true"></a>
         <p class="db-tag">Each group becomes a layer.</p>
         <div class="menu-sep"><span>Send</span></div>
         <div class="row" style="margin-top:0;">
@@ -1133,6 +1134,16 @@
         <div id="arenaStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
+      <div class="section collapsible collapsed" data-tint="exflame">
+        <h3 role="button" tabindex="0" aria-expanded="false">Flame: enrichment of gene lists<button type="button" class="helplink" data-help="help-flame" aria-label="Help: Flame">?</button></h3>
+        <a class="tool-brand tool-brand-flame" href="https://flame-enrich.org" target="_blank" rel="noopener" title="Flame: functional enrichment of gene lists"><img src="assets/flame-logo.png" alt="" height="40" onerror="this.hidden=true"><span>Flame</span></a>
+        <p class="db-tag">Send the network's genes to Flame for functional enrichment (GO, KEGG, Reactome, WikiPathways and more): all nodes as one list, or one list per group.</p>
+        <div class="row" style="margin-top:0;">
+          <button class="primary" id="btnFlameOpen" title="Choose the gene lists, then open them in flame-enrich.org"><span class="ico" data-icon="spark"></span>Send genes to Flame…</button>
+        </div>
+        <div id="flameStatus" class="status" role="status" aria-live="polite"></div>
+      </div>
+
     </div>
 
   </div>
@@ -1145,6 +1156,40 @@
       <div class="dlg-actions">
         <button type="button" id="btnDeleteCancel">Cancel</button>
         <button type="button" class="danger" id="btnDeleteConfirm">Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="flameDialog" aria-labelledby="flameTitle">
+    <form method="dialog" class="dlg" onsubmit="return false">
+      <h2 id="flameTitle">Send genes to Flame</h2>
+      <p class="dlg-sub">Flame runs functional enrichment on up to 10 gene lists of up to 3,000 genes each. Node names are sent as they are; Flame converts gene symbols, UniProt, Ensembl and other identifiers.</p>
+      <fieldset class="fmt-grid flame-choices">
+        <legend>Which genes?</legend>
+        <label><input type="radio" name="flameMode" value="all" checked><span><b>All nodes as one list</b><small id="flameAllInfo"></small></span></label>
+        <label><input type="radio" name="flameMode" value="groups"><span><b>One list per group</b><small id="flameGroupsInfo"></small></span></label>
+      </fieldset>
+      <label class="toggle-row"><input type="checkbox" id="flameShownOnly"><span class="label">Only the shown part (ticked groups and channels)</span></label>
+      <div class="dlg-grid">
+        <label for="flameOrganism">Organism</label>
+        <input id="flameOrganism" class="text-input" type="text" inputmode="numeric" value="9606" list="flameOrganisms" autocomplete="off" aria-describedby="flameOrganismHint">
+      </div>
+      <p class="dlg-sub" id="flameOrganismHint">NCBI taxon ID, for example 9606 (human), 10090 (mouse), 7227 (fly).</p>
+      <datalist id="flameOrganisms">
+        <option value="9606">Homo sapiens</option>
+        <option value="10090">Mus musculus</option>
+        <option value="10116">Rattus norvegicus</option>
+        <option value="7955">Danio rerio</option>
+        <option value="7227">Drosophila melanogaster</option>
+        <option value="6239">Caenorhabditis elegans</option>
+        <option value="9031">Gallus gallus</option>
+        <option value="559292">Saccharomyces cerevisiae</option>
+        <option value="3702">Arabidopsis thaliana</option>
+      </datalist>
+      <div class="dlg-actions">
+        <button type="button" id="btnFlameCancel">Cancel</button>
+        <button type="button" id="btnFlameSave" title="One block per list: a # name line, then one gene per line">Save lists (.txt)</button>
+        <button type="button" class="primary" id="btnFlameSend">Open in Flame</button>
       </div>
     </form>
   </dialog>

@@ -50,7 +50,7 @@ def test_precedence_file_env_cli(monkeypatch, tmp_path):
     )  # deep merge
     assert cfg["app"]["maxNodes"] == 10  # env typed as int
     assert cfg["api"]["enabled"] is False
-    assert cfg["relays"] == {"string": False, "arena3d": False, "databases": False}
+    assert cfg["relays"] == {"string": False, "arena3d": False, "flame": False, "databases": False}
     assert cfg["_file"] == str(f)
 
 
