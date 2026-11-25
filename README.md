@@ -158,12 +158,16 @@ See `AGENTS.md` for the architecture and the rules for coding agents, `CHANGELOG
 
 ## STRING logo
 
-STRING's logo is not bundled. To show it in the importer, save the official
-logo from <https://string-db.org> as `frontend/public/assets/string-logo.png` (before building); otherwise a plain
-"STRING" label is shown (and the browser logs a harmless 404 for the missing file).
+The logos of the databases NORMA imports from (STRING, Reactome, OmniPath, NDEx, IntAct,
+Gene Ontology) and of the tools it sends data to (Arena3D, Flame, Cytoscape, Gephi) are in
+`frontend/public/assets/logos` and `frontend/public/assets`. They identify these resources
+and remain the property of their owners; their sources are listed in
+`frontend/public/assets/logos/SOURCES.txt`.
 
 ## Citing
 
+* Baltoumas FA, Karatzas E, Koutrouli M, Galaras A, Aplakidou E, Chasapi IN, Chasapi MN, Lazanas P, Lamari E, Pržulj N, Georgakopoulos-Soares I, Pavlopoulos GA. NORMA 3.0: aesthetic and group-aware visualization and analysis of annotated biological networks.
+  *bioRxiv* 2026. doi:10.64898/2026.11.03.763961 (NORMA 3.0, preprint)
 * Karatzas E, Koutrouli M, Baltoumas FA, Papanikolopoulou K, Bouyioukos C,
   Pavlopoulos GA. The network makeup artist (NORMA-2.0): distinguishing annotated
   groups in a network using innovative layout strategies.

@@ -23,6 +23,11 @@ const bundleStrength = arg('--bundle-strength', '') // 1..100, the Bundling stre
 const theme = arg('--theme', '') // white | light | dark | midnight | gray | paper
 const fill = arg('--fill', '') // groups | data | values (node fill)
 const labels = arg('--labels', '') // off hides node labels
+const labelSize = arg('--label-size', '') // node label size in px (4 to 48)
+const labelFixed = process.argv.includes('--label-fixed') // same label size for every node
+const sizeBy = arg('--size-by', '') // node size: degree, betweenness, closeness, clustering
+const sizeMax = arg('--size-max', '') // largest node size in px when sizing by a measure
+const legendJson = arg('--legend-json', '') // write the ticked groups (label, color, shape) as JSON
 const shapes = process.argv.includes('--shapes') // one node shape per group
 const direction = arg('--direction', '') // undirected | data | directed (arrows)
 const opacity = arg('--opacity', '') // shading opacity 0.05..0.9
@@ -151,10 +156,26 @@ if (theme) {
 }
 if (fill) await setValue('#nodeFillSelect', fill)
 if (labels === 'off') await setChecked('#showNodeLabels', false)
+else {
+  await setChecked('#showNodeLabels', true)
+  // exported figures show every label, however small it is on screen
+  await setValue('#labelMinScreenSize', '0')
+}
+if (labelSize) await setValue('#nodeLabelSize', labelSize)
+if (labelFixed) await setChecked('#labelScaleWithNode', false)
+if (sizeBy) {
+  if (sizeMax) await setValue('#sizeMax', sizeMax)
+  await setValue('#sizeMetric', sizeBy)
+  await setChecked('#labelScaleWithNode', true)
+  await page.waitForTimeout(500)
+}
 if (shapes) await page.evaluate(() => document.getElementById('btnShapesAssign').click())
 if (direction) await setValue('#edgeDirection', direction)
 if (opacity) await setValue('#hullOpacity', opacity)
-if (spread) await setValue('#spreadSlider', spread)
+if (spread) {
+  await setValue('#spreadSlider', spread)
+  await page.waitForTimeout(1500)
+}
 await setChecked('#showGroupHulls', hulls !== 'off')
 if (hulls !== 'off') await setValue('#hullStyle', hulls)
 if (bundleStrength) await setValue('#bundleStrength', bundleStrength)
@@ -202,6 +223,25 @@ await setChecked('#imgLegend', legend)
 await page.fill('#imgFileName', 'figure')
 const [download] = await Promise.all([page.waitForEvent('download'), page.click('#btnImgSave')])
 await download.saveAs(out)
+if (legendJson) {
+  const groups = await page.evaluate(() =>
+    [...document.querySelectorAll('input[type=checkbox][data-group]')]
+      .filter((b) => b.checked && b.getAttribute('data-group') !== '__ungrouped__')
+      .map((b) => {
+        const row = b.closest('.toggle-row')
+        const shape = (row.querySelector('.gshape')?.getAttribute('aria-label') || '')
+          .split(': ')
+          .pop()
+        return {
+          label: row.querySelector('.label')?.textContent.trim(),
+          color: row.querySelector('input[type=color]')?.value,
+          shape,
+        }
+      })
+  )
+  const { writeFileSync } = await import('node:fs')
+  writeFileSync(legendJson, JSON.stringify(groups, null, 1))
+}
 const info = await page.evaluate(() => ({
   nodes: window.__norma.cy.nodes().filter((n) => !n.hasClass('hidden-group')).length,
   edges: window.__norma.cy.edges(':visible').length,
