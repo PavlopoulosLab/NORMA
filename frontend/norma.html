@@ -2093,6 +2093,7 @@ window.addEventListener("message", (e) =&gt; {
         <div class="help-nav-group">Saving and sharing</div>
         <a href="#help-save">Export and saved work</a>
         <a href="#help-arena3d">Arena3D</a>
+        <a href="#help-flame">Flame</a>
         <div class="help-nav-group">Running, API and troubleshooting</div>
         <a href="#help-api">API for other applications</a>
         <a href="#help-hosting">Running NORMA locally or on a server</a>
@@ -2629,9 +2630,20 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>Other tools</b>: <b>GraphML</b> (yEd, Cytoscape, igraph, NetworkX), <b>GEXF</b> 1.3 with node colors, sizes and positions (Gephi), <b>SIF</b> (Cytoscape's simple interaction format: source, channel, target) and <b>Cytoscape (.cyjs)</b> (with positions, for Cytoscape desktop and Cytoscape.js). Nodes carry their groups (separated by semicolons), color, size, numeric values and attributes; edges their channel, color, weight, direction and attributes. Like the other exports, they include only ticked groups and channels unless that option is off.</li>
           <li><b>Session</b>: <b>Save session file</b> saves every open view (network, positions, settings, 3D camera) and every file in Files, including groupings fetched from STRING, in one JSON file; <b>Open session file…</b> brings it all back, replacing the current views and files.</li>
           <li><b>Arena3D</b>: open the view in Arena3D, or save it in Arena3D's formats, with each group as a layer (see <a href="#help-arena3d">Arena3D</a>).</li>
+          <li><b>Flame</b>: send the network's genes to Flame for functional enrichment, as one list or one list per group (see <a href="#help-flame">Flame</a>).</li>
           <li><b>Save view file</b> saves everything in the current view, including attributes, colors and group descriptions. <b>Open view file…</b> and <b>Paste JSON…</b> load that format into a new view.</li>
           <li><b>Save settings file</b> stores the current view's display options (palettes, layout, sizing, labels, shading, edges) and the theme in a small file that <b>Open settings file…</b> applies to the current view.</li>
         </ul>
+
+        <h2 id="help-flame">Flame: enrichment of the network's genes</h2>
+        <p><a href="https://flame-enrich.org" target="_blank" rel="noopener">Flame</a> runs functional enrichment (GO, KEGG, Reactome, WikiPathways and other sources, with several tools) on gene lists and compares lists with each other. <b>Export → Flame → Send genes to Flame…</b> first asks which genes to send:</p>
+        <ul>
+          <li><b>All nodes as one list</b>: every node of the network, named after the view.</li>
+          <li><b>One list per group</b>: one list for each group of the view's annotation (pathway, complex, community…), named after the group, so Flame can enrich and compare the groups side by side. Flame takes up to <b>10 lists</b> of up to <b>3,000 genes</b>; with more groups, the 10 largest are sent.</li>
+          <li><b>Only the shown part</b> keeps the ticked groups and channels; otherwise the whole network and all its groups are used.</li>
+          <li><b>Organism</b> is an NCBI taxon ID (9606 for human, 10090 for mouse, 7227 for fly…). Node names are sent as they are; Flame converts gene symbols, UniProt, Ensembl and other identifiers.</li>
+        </ul>
+        <p><b>Open in Flame</b> opens a new Flame workspace holding the lists. With <code>server.py</code>, the lists go through the server's read-only relay to Flame's API and keep their names; without a server, NORMA uses Flame's link format, which keeps the lists but not their names and is limited to lists that fit in a link. <b>Save lists (.txt)</b> writes one block per list (a <code># name</code> line, then one gene per line) to paste into Flame yourself.</p>
 
         <h2 id="help-arena3d">Arena3D</h2>
         <p><a href="https://arena3d.org" target="_blank" rel="noopener">Arena3D</a> shows multilayer networks in 3D. Under <b>Export → Arena3D</b>, NORMA turns the current view into an Arena3D network in which <b>each ticked group is a layer</b>:</p>
@@ -2697,6 +2709,7 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>STRING relay:</b> <code>/string-api/</code> passes read-only STRING calls to string-db.org addresses, spaced a second apart. With <b>Database importers → STRING → STRING server → Connect</b> set to <b>Automatically</b>, NORMA uses the relay when it is available and otherwise calls STRING directly.</li>
           <li><b>Database relay:</b> <code>/db-api/fetch</code> passes the importers' calls to Reactome, OmniPath, NDEx, IntAct, QuickGO and the GO API, and only to those services' API addresses.</li>
           <li><b>Arena3D relay:</b> <code>/arena3d-api/external</code> passes <b>Open in Arena3D</b> to arena3d.org.</li>
+          <li><b>Flame relay:</b> <code>/flame-api/legacy</code> passes <b>Open in Flame</b> (named gene lists) to flame-enrich.org.</li>
           <li><b>Package contents:</b> <code>norma.html</code>, <code>index.html</code> (forwards static web servers' root address to <code>norma.html</code>), <code>norma-config.js</code>, <code>server.py</code>, <code>norma.config.json</code> and <code>norma.config.hosted.json</code>, <code>norma_api_client.py</code> (Python template), <code>run_local.sh</code> / <code>run_local.bat</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code>, <code>deploy/</code> (nginx, systemd), <code>vendor/</code> (Cytoscape.js), <code>assets/</code>, <code>README.md</code> and <code>NAR_CHECKLIST.md</code>.</li>
           <li><b>STRING logo:</b> to show STRING's official logo in the importer, save it as <code>assets/string-logo.png</code>.</li>
         </ul>

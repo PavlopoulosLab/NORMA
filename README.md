@@ -32,7 +32,8 @@ The server needs only Python 3.9+ (standard library); the page is built once wit
 * Parallel and directed edges with evidence channels, curved or bundled edges; importers for
   STRING (any of its organisms), Reactome, OmniPath, NDEx, IntAct and the Gene Ontology;
   topological, group and enrichment statistics; comparison of up to ten networks; exports
-  as images, GraphML, GEXF, SIF, Cytoscape JSON, sessions and Arena3D layers.
+  as images, GraphML, GEXF, SIF, Cytoscape JSON, sessions and Arena3D layers; gene lists (all
+  nodes, or one list per group) go to Flame for functional enrichment.
 
 ## Settings
 
@@ -53,7 +54,7 @@ log, security headers). The page receives its part of the settings as
 | `server.trustProxy` | `NORMA_TRUST_PROXY` | trust `X-Forwarded-*` headers |
 | `server.accessLog` | `--access-log`, `NORMA_ACCESS_LOG` | `off`, `anonymous` (no IPs) or `full` |
 | `api.enabled`, `ttlHours`, `maxMB`, `maxSessions` | `--no-api`, `NORMA_API`, `NORMA_API_TTL_HOURS`, `NORMA_API_MAX_MB` | REST API |
-| `relays.string`, `arena3d`, `databases` | `--no-relays`, `NORMA_RELAYS` | relays for STRING, Arena3D and the database importers |
+| `relays.string`, `arena3d`, `flame`, `databases` | `--no-relays`, `NORMA_RELAYS` | relays for STRING, Arena3D, Flame and the database importers |
 | `site.*` | `NORMA_CONTACT_EMAIL`, `NORMA_INSTITUTION`, `NORMA_NOTICE` | contact, institution, licence, privacy/imprint links, maintenance statement, tested browsers, notice banner |
 | `app.maxNodes`, `theme`, `startTab`, `cdnFallback` | `NORMA_MAX_NODES` | page defaults |
 
@@ -110,6 +111,16 @@ server  ──▶ https://arena3d.org/api/external   (JSON body; answer: { token
 ```
 
 Only `arena3d.org` addresses are accepted.
+
+and **Open in Flame** (named gene lists for functional enrichment):
+
+```
+browser ──▶ http://localhost:8000/flame-api/legacy?upstream=https://flame-enrich.org
+server  ──▶ https://flame-enrich.org/api/v1/legacy   (JSON: { "list name": [genes], "organism": 9606 }; answer: { workspace, url })
+```
+
+Only `flame-enrich.org` addresses are accepted. Without the server, NORMA opens Flame's own link
+format (`?url_genes=A,B;C,D&organism=9606`), which keeps the lists but not their names.
 
 The **database importers** (Reactome, OmniPath, NDEx, IntAct, QuickGO and the
 GO API) go through `/db-api/fetch?url=…`; only those services' API addresses
