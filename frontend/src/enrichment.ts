@@ -54,6 +54,7 @@ import {
 } from './layouts/controls'
 import { S } from './state'
 import { WEBGL_ACTIVE, cy } from './cy'
+import { strategyVirtualNodes } from './layouts/input'
 import {
   applyGroupColorOverrides,
   benjaminiHochberg,
@@ -1182,6 +1183,25 @@ export function webglPreference() {
    separation score. Nothing on screen changes.
    ============================================================ */
 const RUNTIME_SIZES = [100, 500, 1000, 2500, 5000, 10000]
+const RUNTIME_DEGREES = [4, 8, 16]
+const RUNTIME_OVERLAPS = [0, 0.1, 0.3]
+
+// JavaScript heap in use, in MB, where the browser reports it (Chromium)
+function heapMb() {
+  const m = performance.memory
+  return m && Number.isFinite(m.usedJSHeapSize) ? m.usedJSHeapSize / 1048576 : NaN
+}
+// the heap once pending garbage is gone: with --js-flags=--expose-gc (as
+// scripts/runtime-table.mjs passes) collect twice with a pause between, so the
+// previous network's structures are released before the next reading
+async function settledHeapMb() {
+  if (typeof globalThis.gc === 'function') {
+    globalThis.gc()
+    await new Promise((r) => setTimeout(r, 50))
+    globalThis.gc()
+  }
+  return heapMb()
+}
 
 const runtimeState = { rows: [], running: false, cancel: false }
 
@@ -1194,6 +1214,16 @@ async function runRuntimeTable() {
   const sizes = RUNTIME_SIZES.filter(
     (n) => n <= (parseInt(document.getElementById('runtimeMax').value, 10) || 5000)
   )
+  const grid = document.getElementById('runtimeGrid').checked
+  const degrees = grid
+    ? RUNTIME_DEGREES
+    : [parseInt(document.getElementById('runtimeDegree').value, 10) || 4]
+  const overlaps = grid
+    ? RUNTIME_OVERLAPS
+    : [parseFloat(document.getElementById('runtimeOverlap').value) || 0]
+  const configs = []
+  for (const degree of degrees)
+    for (const overlap of overlaps) for (const n of sizes) configs.push({ n, degree, overlap })
   runtimeState.running = true
   runtimeState.cancel = false
   btn.textContent = 'Stop'
@@ -1204,22 +1234,48 @@ async function runRuntimeTable() {
     return [performance.now() - t, r]
   }
   try {
-    // larger networks take much longer: weigh each size by n^1.5
-    const weightOf = (n) => Math.pow(n, 1.5)
-    const totalWeight = sizes.reduce((a, n) => a + weightOf(n), 0)
+    // larger and denser networks take much longer: weigh each by n^1.5 * degree
+    const weightOf = (c) => Math.pow(c.n, 1.5) * c.degree
+    const totalWeight = configs.reduce((a, c) => a + weightOf(c), 0)
     let doneWeight = 0
-    for (const n of sizes) {
+    for (const c of configs) {
       if (runtimeState.cancel) break
-      const text = `Timing a network of ${n.toLocaleString()} nodes…`
+      const n = c.n
+      const text = `Timing a network of ${n.toLocaleString()} nodes (average degree ${c.degree}, ${Math.round(c.overlap * 100)}% shared nodes)…`
       const show = (f) =>
         setStatus('runtimeStatus', [
-          { level: 'busy', text, progress: (doneWeight + weightOf(n) * f) / totalWeight },
+          { level: 'busy', text, progress: (doneWeight + weightOf(c) * f) / totalWeight },
         ])
       show(0)
       await nextPaint()
-      const demo = generateRandomNetwork(n, { seed: n + 3 })
+      // average degree d means d/2 edges per node: one from the spanning
+      // backbone and d/2 - 1 extra random edges per node
+      const demo = generateRandomNetwork(n, {
+        seed: n + 3,
+        avgExtraEdges: Math.max(0, c.degree / 2 - 1),
+        overlap: c.overlap,
+      })
       const texts = demoToNormaTexts(demo)
-      const row = { nodes: n }
+      const row = { nodes: n, degree: c.degree, overlap: c.overlap }
+      // the layout and bundling workers keep their last job's data until the
+      // next job replaces it, so run tiny jobs first: otherwise the previous
+      // (large) network would still be counted in the heap
+      await frLayoutAsync(['a', 'b'], [{ source: 'a', target: 'b', weight: 1 }], () => {})
+      await strategyVirtualNodes(
+        {
+          nodeIds: ['a', 'b'],
+          groupsOf: { a: ['g'], b: ['g'] },
+          groupMembers: new Map([['g', ['a', 'b']]]),
+          edges: [{ source: 'a', target: 'b', weight: 1 }],
+        },
+        'fr'
+      )
+      await bundleAsync(
+        [{ sx: 0, sy: 0, tx: 10, ty: 10 }],
+        { threshold: 0.6, iterations: 1 },
+        () => {}
+      )
+      const heapBefore = await settledHeapMb()
       const [tParse, parsed] = await time(() => parseNormaNetwork(texts.network, {}))
       row.edges = parsed.edges.length
       row.parse = tParse
@@ -1236,11 +1292,32 @@ async function runRuntimeTable() {
         })
       )
       row.build = tBuild
+      // memory the parsed file and the built network take together (the
+      // browser's heap figure is coarse and may include garbage)
+      // growth of the heap; a non-positive figure means the previous network
+      // was released only now and the reading says nothing, so it is left out
+      const heapGrowth = (await settledHeapMb()) - heapBefore
+      row.heap = heapGrowth > 0 ? heapGrowth : NaN
       headless.destroy()
       const edges = demo.edges.map((e) => ({ source: e.source, target: e.target, weight: 1 }))
       const ids = demo.nodes.map((x) => x.id)
-      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges, (f) => show(0.1 + 0.4 * f)))
+      const [tLayout, pos] = await time(() => frLayoutAsync(ids, edges, (f) => show(0.1 + 0.3 * f)))
       row.layout = tLayout
+      if (runtimeState.cancel) break
+      // the NORMA-2.0 virtual-node strategy on the weighted layout
+      const groupsOf = Object.fromEntries(demo.nodes.map((x) => [x.id, x.groups || []]))
+      const groupMembers = new Map()
+      demo.nodes.forEach((x) =>
+        (x.groups || []).forEach((g) => {
+          if (!groupMembers.has(g)) groupMembers.set(g, [])
+          groupMembers.get(g).push(x.id)
+        })
+      )
+      show(0.4)
+      const [tGroup] = await time(() =>
+        strategyVirtualNodes({ nodeIds: ids, groupsOf, groupMembers, edges }, 'fr')
+      )
+      row.groupLayout = tGroup
       if (runtimeState.cancel) break
       const segs = demo.edges.map((e) => ({
         sx: pos[e.source].x * 40,
@@ -1265,18 +1342,17 @@ async function runRuntimeTable() {
       row.profile = tProfile
       const [tLouvain] = await time(() => louvain(g))
       row.louvain = tLouvain
-      const groupsOf = Object.fromEntries(demo.nodes.map((x) => [x.id, x.groups || []]))
       const [tSep] = await time(() => groupSeparation(pos, groupsOf))
       row.separation = tSep
       runtimeState.rows.push(row)
       renderRuntimeTable()
-      doneWeight += weightOf(n)
+      doneWeight += weightOf(c)
       await new Promise((r) => setTimeout(r, 30))
     }
     setStatus('runtimeStatus', [
       {
         level: runtimeState.cancel ? 'warn' : 'ok',
-        text: `${runtimeState.cancel ? 'Stopped' : 'Done'}: timed ${plural(runtimeState.rows.length, 'network size')} in this browser (${navigator.hardwareConcurrency || '?'} logical processors). Rendering time depends on the screen and is not included.`,
+        text: `${runtimeState.cancel ? 'Stopped' : 'Done'}: timed ${plural(runtimeState.rows.length, 'network')} in this browser (${navigator.hardwareConcurrency || '?'} logical processors). Rendering time depends on the screen and is not included.${Number.isFinite(heapMb()) ? '' : ' This browser does not report memory use.'}`,
       },
     ])
     document.getElementById('btnRuntimeTsv').disabled = !runtimeState.rows.length
@@ -1290,6 +1366,7 @@ const RUNTIME_COLUMNS = [
   ['parse', 'Read file'],
   ['build', 'Build network'],
   ['layout', 'Weighted layout'],
+  ['groupLayout', 'Group layout (virtual nodes)'],
   ['bundle', 'Edge bundling'],
   ['profile', 'Profile statistics'],
   ['louvain', 'Louvain'],
@@ -1300,19 +1377,30 @@ function renderRuntimeTable() {
   const root = document.getElementById('runtimeResults')
   const fmt = (v) =>
     !Number.isFinite(v) ? '—' : v < 1000 ? `${Math.round(v)} ms` : `${(v / 1000).toFixed(2)} s`
+  const mb = (v) => (Number.isFinite(v) ? `${v.toFixed(v < 10 ? 1 : 0)} MB` : '—')
   root.innerHTML = `<div class="table-wrap"><table class="data">
-    <thead><tr><th scope="col">Nodes</th><th scope="col">Edges</th>${RUNTIME_COLUMNS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}</tr></thead>
-    <tbody>${runtimeState.rows.map((r) => `<tr><td class="num">${r.nodes.toLocaleString()}</td><td class="num">${r.edges.toLocaleString()}</td>${RUNTIME_COLUMNS.map(([k]) => `<td class="num">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody>
+    <thead><tr><th scope="col">Nodes</th><th scope="col">Edges</th><th scope="col">Avg. degree</th><th scope="col">Shared nodes</th><th scope="col">Memory</th>${RUNTIME_COLUMNS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}</tr></thead>
+    <tbody>${runtimeState.rows.map((r) => `<tr><td class="num">${r.nodes.toLocaleString()}</td><td class="num">${r.edges.toLocaleString()}</td><td class="num">${r.degree}</td><td class="num">${Math.round(r.overlap * 100)}%</td><td class="num">${mb(r.heap)}</td>${RUNTIME_COLUMNS.map(([k]) => `<td class="num">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>`
 }
 
 function runtimeTsv() {
   const lines = [
-    ['Nodes', 'Edges', ...RUNTIME_COLUMNS.map(([, l]) => `${l} (ms)`)].join('\t'),
+    [
+      'Nodes',
+      'Edges',
+      'Average degree',
+      'Nodes in two groups (%)',
+      'Memory (MB)',
+      ...RUNTIME_COLUMNS.map(([, l]) => `${l} (ms)`),
+    ].join('\t'),
     ...runtimeState.rows.map((r) =>
       [
         r.nodes,
         r.edges,
+        r.degree,
+        Math.round(r.overlap * 100),
+        Number.isFinite(r.heap) ? r.heap.toFixed(1) : '',
         ...RUNTIME_COLUMNS.map(([k]) => (Number.isFinite(r[k]) ? r[k].toFixed(1) : '')),
       ].join('\t')
     ),
