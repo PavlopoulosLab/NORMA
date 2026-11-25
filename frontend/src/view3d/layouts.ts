@@ -339,13 +339,23 @@ export async function runLayout3d(algo) {
     net3d.spreadApplied = 0
     el3('spread3d').value = 0
     updateSpread3dReadout()
+    // nodes go straight to non-overlapping places, unless switched off
+    const auto = el3('autoSeparate3d')
+    const moved =
+      auto && auto.checked && typeof S.separateTarget3d === 'function'
+        ? S.separateTarget3d(result)
+        : 0
     animatePositions3d(result)
     net3d.hasLayout = true
     if (algo === 'layers' || algo === 'hierarchy' || algo === 'degree') {
       moveCamera3d({ ...VIEW_PRESETS_3D.tilted, pitch: 0.55 }, false)
     }
     setTimeout(() => fit3d(null, true), 520)
-    setLayoutStatus3d([])
+    setLayoutStatus3d(
+      moved
+        ? [{ level: 'ok', text: `Moved ${moved} overlapping nodes apart after the layout.` }]
+        : []
+    )
   } catch (err) {
     setLayoutStatus3d([
       { level: 'error', text: `The 3D layout couldn't be computed: ${err.message}` },

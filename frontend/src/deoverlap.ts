@@ -2,11 +2,14 @@
 /* ---------- "Separate nodes": push overlapping nodes slightly apart ----------
    Nodes closer than the sum of their radii (plus a small gap) are moved
    away from each other along the line between their centres, in a few
-   relaxation passes over a spatial grid. Nothing else moves, so the
+   relaxation passes over a spatial grid, repeated until no pair overlaps
+   (layouts such as cose can stack many nodes on top of each other, which
+   takes many passes to undo). Nothing else moves, so the
    arrangement a layout produced is kept; nodes exactly on top of each
    other are pushed in a fixed direction so the result is reproducible.
    Works on the shown nodes of the 2D view and of the 3D view. */
 import { cy } from './cy'
+import { S } from './state'
 import { setStatus } from './layouts/controls'
 import { shownNodes } from './metrics'
 import { animatePositions3d, setLayoutStatus3d } from './view3d/layouts'
@@ -15,7 +18,9 @@ import { pos3dOf } from './view3d/cache'
 import { shownIds3d } from './view3d/camera'
 
 const GAP = 6 // pixels kept free between two nodes
-const PASSES = 40
+// relaxation passes: until nothing overlaps, at most this many or this long
+const MAX_PASSES = 400
+const MAX_MS = 900
 
 // positions: Float64Array of dims * n; radii: per node. Returns the number of
 // nodes that moved.
@@ -45,7 +50,8 @@ function separate(positions, radii, dims) {
     walk(0, [])
     return out
   }
-  for (let pass = 0; pass < PASSES; pass++) {
+  const started = performance.now()
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
     const grid = new Map()
     for (let i = 0; i < n; i++) {
       const k = key(i)
@@ -86,14 +92,15 @@ function separate(positions, radii, dims) {
         }
       }
     }
-    if (!any) break
+    if (!any || performance.now() - started > MAX_MS) break
   }
   let count = 0
   for (let i = 0; i < n; i++) count += moved[i]
   return count
 }
 
-export function separateNodes2d() {
+// auto: run after a layout; says nothing when no node overlaps
+export function separateNodes2d(opts = {}) {
   const nodes = shownNodes()
   if (nodes.length < 2) return
   const pos = new Float64Array(nodes.length * 2)
@@ -105,7 +112,7 @@ export function separateNodes2d() {
   })
   const count = separate(pos, radii, 2)
   if (!count) {
-    setStatus('layoutStatus', [{ level: 'ok', text: 'No nodes overlap.' }])
+    if (!opts.auto) setStatus('layoutStatus', [{ level: 'ok', text: 'No nodes overlap.' }])
     return
   }
   const positions = {}
@@ -121,7 +128,36 @@ export function separateNodes2d() {
       fit: false,
     })
     .run()
-  setStatus('layoutStatus', [{ level: 'ok', text: `Moved ${count} overlapping nodes apart.` }])
+  setStatus('layoutStatus', [
+    {
+      level: 'ok',
+      text: opts.auto
+        ? `Moved ${count} overlapping nodes apart after the layout.`
+        : `Moved ${count} overlapping nodes apart.`,
+    },
+  ])
+}
+
+// Separates a computed 3D layout in place before it is shown:
+// target is { id: [x, y, z] }; returns how many nodes were moved.
+export function separateTarget3d(target) {
+  const ids = Object.keys(target)
+  if (ids.length < 2) return 0
+  const pos = new Float64Array(ids.length * 3)
+  const radii = ids.map((id, i) => {
+    const p = target[id]
+    pos[3 * i] = p[0]
+    pos[3 * i + 1] = p[1]
+    pos[3 * i + 2] = p[2]
+    const n = cy.getElementById(id)
+    return (n.length ? n.width() : 40) / 2
+  })
+  const count = separate(pos, radii, 3)
+  if (count)
+    ids.forEach((id, i) => {
+      target[id] = [pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]]
+    })
+  return count
 }
 
 export function separateNodes3d() {
@@ -151,6 +187,12 @@ export function separateNodes3d() {
 }
 
 export function init() {
-  document.getElementById('btnDeoverlap').addEventListener('click', separateNodes2d)
+  document.getElementById('btnDeoverlap').addEventListener('click', () => separateNodes2d())
+  // run.ts calls this after every layout when "Separate overlapping nodes
+  // after each layout" is ticked
+  S.autoSeparate = () => separateNodes2d({ auto: true })
+  // and view3d/layouts.ts calls this on each new 3D layout when "Separate
+  // overlapping nodes after each layout" is ticked on the 3D page
+  S.separateTarget3d = separateTarget3d
   el3('btnDeoverlap3d').addEventListener('click', separateNodes3d)
 }

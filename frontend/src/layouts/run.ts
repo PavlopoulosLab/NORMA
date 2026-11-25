@@ -43,6 +43,15 @@ export function setLayoutBusy(busy) {
   )
 }
 
+// After a layout has finished (and is still the latest one), moves nodes
+// that overlap slightly apart, unless "Separate overlapping nodes after each
+// layout" is off.
+function afterLayout(run) {
+  if (run !== S.layoutRunSeq) return
+  const box = document.getElementById('autoSeparate')
+  if (box && box.checked && typeof S.autoSeparate === 'function') S.autoSeparate()
+}
+
 async function runComputedLayout(compute) {
   cancelFrJobs()
   cancelCoseJob()
@@ -55,10 +64,14 @@ async function runComputedLayout(compute) {
   })
   // let the busy note paint before any work on the page starts
   await new Promise((r) => setTimeout(r, 0))
+  let applied = false
   try {
     const positions = await compute()
     if (run !== S.layoutRunSeq || cy.nodes().length !== nodeCount) return
-    if (positions) applyPositions(positions)
+    if (positions) {
+      await applyPositions(positions)
+      applied = true
+    }
   } catch (err) {
     if (run === S.layoutRunSeq)
       setStatus('layoutStatus', [
@@ -72,6 +85,7 @@ async function runComputedLayout(compute) {
     }
   }
   if (run === S.layoutRunSeq) setStatus('layoutStatus', [])
+  if (applied) afterLayout(run)
 }
 
 // Layout by connections: groups play no part.
@@ -88,7 +102,7 @@ export function runLayout(name) {
   // a Cytoscape layout replaces any computed one still running
   cancelFrJobs()
   cancelCoseJob()
-  S.layoutRunSeq++
+  const run = ++S.layoutRunSeq
   setLayoutBusy(false)
   // Animating every force-directed iteration is slow on bigger graphs;
   // there, compute first and animate only to the final positions.
@@ -104,14 +118,15 @@ export function runLayout(name) {
   if (!nodes.length) return
   const eles = nodes.union(shownEdges(channelOnly))
   if (animate !== 'end') {
-    eles.layout(opts).run()
+    const layout = eles.layout(opts)
+    layout.promiseOn('layoutstop').then(() => afterLayout(run))
+    layout.run()
     return
   }
   // Computed in one go, in a worker, then animated to the final positions.
   // Once the page has painted a frame, Cytoscape's cose runs 5-7x slower on
   // the main thread (a V8 effect, reproducible with plain Cytoscape); a
   // worker is a fresh isolate, so it stays fast and the page stays usable.
-  const run = S.layoutRunSeq
   document.getElementById('btnRunLayout').disabled = true
   setStatus('layoutStatus', [{ level: 'busy', text: 'Computing layout…', progress: null }])
   const finish = () => {
@@ -122,10 +137,8 @@ export function runLayout(name) {
   coseInWorker(eles, opts)
     .then((positions) => {
       if (run !== S.layoutRunSeq) return
-      if (positions) {
-        eles
-          .nodes()
-          .layout({
+      const layout = positions
+        ? eles.nodes().layout({
             name: 'preset',
             positions,
             fit: true,
@@ -133,8 +146,9 @@ export function runLayout(name) {
             animate: true,
             animationDuration: opts.animationDuration,
           })
-          .run()
-      } else eles.layout(opts).run() // no worker (very old browser): as before
+        : eles.layout(opts) // no worker (very old browser): as before
+      layout.promiseOn('layoutstop').then(() => afterLayout(run))
+      layout.run()
     })
     .finally(finish)
 }

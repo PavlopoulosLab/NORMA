@@ -3,6 +3,7 @@
 ## [3.0.0dev] - unreleased
 
 ### Added
+- Overlapping nodes are moved apart automatically after every layout, in 2D and in 3D, including the first layout of a newly opened network. The Layout and 3D layout sections each gain a "Separate overlapping nodes after each layout" box (on by default, saved with the view). Separate nodes now repeats its relaxation until no pair overlaps (at most 400 passes or 0.9 s), so layouts that stack many nodes, such as cose, are fully separated in one step.
 - Logos of the connected resources: each database importer (STRING, Reactome, OmniPath, NDEx, IntAct, Gene Ontology) shows its logo, the Export panel shows Cytoscape and Gephi next to Arena3D and Flame, and the Welcome page has a strip of all of them. Sources are listed in `assets/logos/SOURCES.txt`.
 - Help, About and README cite the NORMA 3.0 bioRxiv preprint first; the Help's resource list is brought up to date (STRING 2025, Reactome, OmniPath and Gene Ontology 2026, Arena3D 3.0, Flame) and credits the topology scores.
 - **Export → Flame**: send the network's genes to Flame (flame-enrich.org) for functional enrichment. A dialog first asks for all nodes as one list or one list per group of the annotation (up to 10 lists of 3,000 genes; optionally only the ticked groups and channels) and the organism. With server.py the named lists go through a new read-only relay (`/flame-api/legacy`, flame-enrich.org only) to Flame's API; without a server, Flame's link format is used. The lists can also be saved as text. The Arena3D and Flame boxes show the tools' logos.
