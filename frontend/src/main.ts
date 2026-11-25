@@ -86,6 +86,8 @@ import { init as initEnrichment } from './enrichment'
 import { init as initApiWiring } from './api/wiring'
 import { init as initApiTester } from './api/tester'
 import { init as initSidePanel } from './side_panel'
+import { init as initDeoverlap } from './deoverlap'
+import { init as initNextSteps } from './next_steps'
 
 initHulls()
 initLayoutsControls()
@@ -108,6 +110,8 @@ initContours()
 initEnrichment()
 initApiWiring()
 initApiTester()
+initDeoverlap()
+initNextSteps()
 
 document.getElementById('btnViewDelete').addEventListener('click', () => {
   const lv = S.currentLibView

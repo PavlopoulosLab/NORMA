@@ -223,18 +223,23 @@
         <label class="field-label" for="stringQuery" style="margin-top:0;">Proteins or genes</label>
         <textarea id="stringQuery" class="text-input string-query" rows="2" placeholder="e.g. TP53" spellcheck="false" aria-describedby="stringQueryHint"></textarea>
         <div class="hint-line" id="stringQueryHint">One or more names, separated by spaces, commas or new lines. Ctrl+Enter fetches.</div>
-        <label class="field-label" for="stringSpecies">Organism</label>
-        <select id="stringSpecies"></select>
-        <div id="stringTaxonRow" hidden>
-          <input id="stringTaxon" class="text-input" type="text" inputmode="numeric" placeholder="NCBI taxon ID, e.g. 7955" aria-label="NCBI taxon ID" style="margin-top:6px;">
+        <label class="field-label" for="stringSpeciesSearch">Organism</label>
+        <div class="combo" id="stringSpeciesCombo">
+          <input id="stringSpeciesSearch" class="text-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="stringSpeciesList" aria-expanded="false" placeholder="Species name or NCBI taxon ID" aria-describedby="stringSpeciesHint">
+          <input type="hidden" id="stringSpecies" value="9606">
+          <ul id="stringSpeciesList" class="combo-list" role="listbox" hidden></ul>
         </div>
+        <div class="hint-line" id="stringSpeciesHint">Any of the 12,535 organisms in STRING; type to search by name or taxon ID.</div>
         <label class="field-label" for="stringNetType">Network</label>
         <select id="stringNetType">
           <option value="functional">Functional associations (all evidence)</option>
           <option value="physical">Physical interactions only</option>
         </select>
         <label class="slider-label" for="stringAddNodes"><span>Interactors to add</span><span id="stringAddNodesValue">20</span></label>
-        <input type="range" id="stringAddNodes" min="0" max="500" step="5" value="20">
+        <div class="slider-row">
+          <input type="range" id="stringAddNodes" min="0" max="500" step="1" value="20">
+          <input type="number" id="stringAddNodesNum" class="num-input" min="0" max="500" step="1" value="20" aria-label="Interactors to add, exact number">
+        </div>
         <div class="hint-line" id="stringNodesHint"></div>
         <label class="field-label" for="stringScorePreset">Minimum confidence</label>
         <select id="stringScorePreset">
@@ -246,7 +251,10 @@
         </select>
         <div id="stringScoreRow" hidden>
           <label class="slider-label" for="stringScore"><span>Confidence</span><span id="stringScoreValue">0.40</span></label>
-          <input type="range" id="stringScore" min="0.05" max="0.99" step="0.01" value="0.4">
+          <div class="slider-row">
+            <input type="range" id="stringScore" min="0.05" max="0.99" step="0.01" value="0.4">
+            <input type="number" id="stringScoreNum" class="num-input" min="0.05" max="0.99" step="0.01" value="0.40" aria-label="Confidence, exact value">
+          </div>
         </div>
         <details class="string-more">
           <summary>Evidence channels</summary>
@@ -535,6 +543,7 @@
         <div class="row">
           <button class="primary" id="btnRun3d">Run 3D layout</button>
           <button id="btnFit3d">Fit to screen</button>
+          <button id="btnDeoverlap3d" title="Move overlapping nodes slightly apart, keeping the arrangement">Separate nodes</button>
         </div>
         <div id="layout3dStatus" class="status" role="status" aria-live="polite"></div>
         <label class="slider-label" for="spread3d"><span>Spread</span><span id="spread3dValue">1.00×</span></label>
@@ -585,8 +594,8 @@
           <legend>Arrange by connections</legend>
           <label class="field-label" for="layoutSelect" style="margin-top:0;">Algorithm</label>
           <select id="layoutSelect">
-            <option value="cose">Force-directed (cose)</option>
             <option value="fr">Force-directed, weighted (Fruchterman–Reingold)</option>
+            <option value="cose">Force-directed (cose)</option>
             <option value="kk">Kamada–Kawai (spring distances)</option>
             <option value="stress">Stress majorization</option>
             <option value="circle">Circle</option>
@@ -723,6 +732,7 @@
         <div class="row" style="margin-top:6px;">
           <button class="primary" id="btnRunLayout">Run layout</button>
           <button id="btnFit">Fit to screen</button>
+          <button id="btnDeoverlap" title="Move overlapping nodes slightly apart, keeping the arrangement">Separate nodes</button>
         </div>
         <div id="layoutStatus" class="status" role="status" aria-live="polite"></div>
         <label class="slider-label" for="spreadSlider"><span>Spread</span><span id="spreadValue">1.00×</span></label>
@@ -823,8 +833,8 @@
         </select>
       </div>
 
+      <div class="menu-sep"><span>Size</span></div>
       <div class="section collapsible collapsed" data-tint="nodes">
-        <div class="menu-sep"><span>Size</span></div>
         <h3 role="button" tabindex="0" aria-expanded="false">Nodes<button type="button" class="helplink" data-help="help-size" aria-label="Help: node size">?</button></h3>
         <select id="sizeMetric" aria-label="Size nodes by">
           <option value="fixed">Fixed (from data)</option>
@@ -1007,7 +1017,7 @@
       <div class="section collapsible collapsed" data-tint="legend" id="legendSection">
         <h3 role="button" tabindex="0" aria-expanded="false">Legend<button type="button" class="helplink" data-help="help-legend" aria-label="Help: legend">?</button></h3>
         <label class="toggle-row" style="margin-top:0;">
-          <input type="checkbox" id="legendShow">
+          <input type="checkbox" id="legendShow" checked>
           <span class="label">Show a legend on the network</span>
         </label>
         <div class="menu-sep"><span>Include</span></div>
@@ -1265,6 +1275,16 @@
       <output id="zoomLevel" aria-label="Zoom level">100%</output>
     </div>
     <div id="legendPanel" hidden></div>
+    <div id="nextSteps" class="next-steps" role="dialog" aria-label="What to try next" hidden>
+      <div class="ns-title">Network loaded. What next?</div>
+      <div class="ns-actions">
+        <button type="button" data-action="view3d">See it in 3D</button>
+        <button type="button" data-action="bundle">Bundle the edges</button>
+        <button type="button" data-action="groups">Arrange by groups</button>
+        <button type="button" data-action="close" class="ns-close">Not now</button>
+      </div>
+      <label class="ns-off"><input type="checkbox" id="nextStepsOff"> Don't show this again</label>
+    </div>
     <div id="frameBadge" hidden></div>
     <div id="infopanel">
       <button class="close" id="infoClose">✕</button>

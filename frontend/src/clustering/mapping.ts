@@ -21,6 +21,7 @@ import { plural } from '../layouts/controls'
 import { rgbOf } from '../view3d/state'
 import { stopFramePlay, updateFrameControls } from '../enrichment'
 import { updateContextInfo } from '../recording'
+import { edgeMergeOn } from '../parallel_edges'
 
 /* ---------- mapping ---------- */
 export function viewHasValues() {
@@ -269,6 +270,12 @@ export function legendModel() {
       }))
       if (types.length > 30)
         items.push({ kind: 'note', label: `and ${types.length - 30} more channels` })
+      if (edgeMergeOn()) {
+        // one edge per node pair: it keeps its channel's colour only when all
+        // the pair's channels agree, and widens with their number
+        items.push({ kind: 'line', label: 'Several channels (merged)', color: currentTheme.muted })
+        items.push({ kind: 'note', label: 'wider: more channels on the pair' })
+      }
       model.sections.push({
         title: legendExtra ? 'Edges (in which networks)' : 'Edge channels',
         items,

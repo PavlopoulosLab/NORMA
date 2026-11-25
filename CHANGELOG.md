@@ -4,6 +4,13 @@
 
 ### Added
 
+- **Separate nodes** buttons in the 2D and 3D Layout sections: overlapping nodes are moved slightly
+  apart, keeping the arrangement; one undo step.
+- A "What next?" card after a network loads, pointing to the 3D view, edge bundling and the layouts
+  by groups (with a "Don't show this again" option, kept in the browser).
+- STRING importer: the organism box searches all 12,535 STRING organisms by name or taxon ID (common
+  organisms listed first); the number of interactors and a custom confidence cutoff can be typed exactly
+  next to their sliders.
 - Test suites: pytest for the server (config precedence, token API, relays, static blocklist,
   security headers), Vitest unit tests for the pure browser modules (community detection, hull
   geometry, Arena3D conversion, enrichment statistics, value parsing, config merge) and Playwright
@@ -20,6 +27,10 @@
 
 ### Changed
 
+- Networks open with the weighted Fruchterman-Reingold layout instead of cose, which left nodes on
+  top of each other on dense networks; `fr` is also the default of the Layout list.
+- The legend is shown by default, and when parallel edges are merged per node pair it says so (grey:
+  mixed channels; wider: more channels).
 - **Spread** now makes nodes repel (right) or attract (left) each other relative to the current
   arrangement, using stress majorization over nearby pairs, instead of scaling distances around the
   centre; links hold groups together and nodes stop before overlapping. Returning to 1x restores the
@@ -37,6 +48,10 @@
 
 ### Fixed
 
+- The "Size" separator sat inside the Nodes section above its title, so the section opened with the
+  separator first; it is now above the section.
+- 3D image exports at more than screen resolution (without a legend) painted only the screen-sized
+  area and left the rest unfilled.
 - Large networks took 25-35 s to lay out on opening (cose). Once the page has painted a frame,
   Cytoscape's cose runs 5-7x slower on the main thread (a V8 effect, reproducible with plain
   Cytoscape); the progress-bar change had moved the computation after that first paint. cose for

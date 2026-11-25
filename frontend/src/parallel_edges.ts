@@ -6,6 +6,7 @@ import { applyNodeSizing, invalidateFullMetrics } from './metrics'
 import { currentTheme } from './themes'
 import { cy } from './cy'
 import { edgeIsDirected } from './export/dialog'
+import { scheduleLegend } from './clustering/mapping'
 
 /* ---------- parallel edges: merge per node pair ---------- */
 // In merge mode each node pair keeps one visible edge (its first edge in an
@@ -13,7 +14,7 @@ import { edgeIsDirected } from './export/dialog'
 // on the pair and turns gray when they disagree; the popup lists them all.
 // Uses per-edge style bypasses so it layers over whatever width and color
 // rules the stylesheet currently has.
-function edgeMergeOn() {
+export function edgeMergeOn() {
   const el = document.getElementById('edgeMergeMode')
   return !!el && el.value === 'merge'
 }
@@ -66,6 +67,7 @@ export function applyEdgeMerge() {
   })
   applyEdgeLabels()
   if (typeof scheduleBundling === 'function') scheduleBundling()
+  scheduleLegend()
 }
 
 export function applyTypeVisibility() {

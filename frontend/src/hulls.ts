@@ -687,11 +687,13 @@ export function loadData(data, opts = {}) {
   } else {
     // a data file's settings may pick the opening layout
     const preferred = (data.config && data.config.layoutSelect) || takeNextLoadLayout()
-    runLayout(nodeCount > LARGE_NETWORK_NODES ? 'grid' : preferred || 'cose')
+    runLayout(nodeCount > LARGE_NETWORK_NODES ? 'grid' : preferred || 'fr')
   }
   applyEdgeDirection() // also merges parallel edges
   if (typeof applyValueColors === 'function') applyValueColors()
   updateStats()
+  // a freshly laid-out network: point to the 3D view, bundling and group layouts
+  if (!opts.positions && typeof S.offerNextSteps === 'function') setTimeout(S.offerNextSteps, 900)
 }
 
 export function buildLegend(typesInData) {

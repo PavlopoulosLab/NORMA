@@ -20,7 +20,7 @@ import { render3d } from './draw'
 import { setStatus } from '../layouts/controls'
 
 /* ---------- layouts ---------- */
-function setLayoutStatus3d(items) {
+export function setLayoutStatus3d(items) {
   setStatus('layout3dStatus', items)
 }
 
@@ -355,7 +355,7 @@ export async function runLayout3d(algo) {
   }
 }
 
-function animatePositions3d(target) {
+export function animatePositions3d(target) {
   const ids = Object.keys(target)
   const from = new Map(ids.map((id) => [id, pos3dOf(id).slice()]))
   const start = performance.now()
