@@ -3188,13 +3188,15 @@ button.danger:hover {
 
 #viewSelect {
   width: 230px;
-  min-width: 140px;
+  min-width: 0;
+  max-width: 100%;
   font-weight: 600;
   padding: 6px 10px;
   border-color: color-mix(in srgb, #6366f1 35%, var(--line));
 }
 .vh-select {
   flex: 0 1 auto;
+  min-width: 110px; /* the view and grouping lists shrink together on narrow windows, never under their labels */
 }
 #viewNameInput {
   width: 240px;
@@ -3452,6 +3454,32 @@ button.danger:hover {
   }
   .vh-count {
     display: none;
+  }
+}
+/* narrow windows: the View and Grouping labels keep their icons (and their
+   accessible names) but lose their text, so the lists next to them keep room */
+@media (max-width: 1200px) {
+  #viewHeader .vh-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  #viewHeader .vh-label {
+    gap: 0;
+  }
+  #viewHeader .vh-label svg {
+    width: 18px;
+    height: 18px;
+  }
+  #viewHeader {
+    gap: 6px;
+    padding-right: 10px;
+  }
+  #viewHeader #themeSelect {
+    width: 84px !important;
   }
 }
 
@@ -3822,4 +3850,43 @@ details > summary + .menu-sep {
   margin-top: 8px;
   color: var(--muted);
   font-size: 11.5px;
+}
+
+/* ---------- minimizable on-screen legend ---------- */
+#legendPanel {
+  padding-top: 0;
+}
+#legendPanel .legend-min {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  line-height: 18px;
+  font-size: 13px;
+  border-radius: 4px;
+  color: var(--muted);
+}
+#legendPanel.min {
+  overflow: visible;
+  box-shadow: none;
+  background: transparent;
+  border: none;
+}
+#legendPanel.min #legendBody {
+  display: none;
+}
+#legendPanel.min .legend-min {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
 }

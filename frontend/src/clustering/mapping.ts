@@ -531,8 +531,35 @@ function renderLegendPanel() {
   }
   const layout = layoutLegend(m)
   const colors = { text: currentTheme.text, muted: currentTheme.muted, line: currentTheme.line }
-  el.innerHTML = `<svg viewBox="0 0 ${layout.w} ${layout.h}" width="${layout.w}" height="${layout.h}" role="img" aria-label="Legend">${legendSvg(layout, 1, colors)}</svg>`
+  document.getElementById('legendBody').innerHTML =
+    `<svg viewBox="0 0 ${layout.w} ${layout.h}" width="${layout.w}" height="${layout.h}" role="img" aria-label="Legend">${legendSvg(layout, 1, colors)}</svg>`
+  el.classList.toggle('min', legendMinimized())
   el.hidden = false
+}
+
+// The legend can be folded to a small tab so it does not cover the network;
+// the choice is kept in the browser.
+const LEGEND_MIN_KEY = 'norma3-legend-min'
+function legendMinimized() {
+  try {
+    return localStorage.getItem(LEGEND_MIN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+export function setLegendMinimized(min) {
+  try {
+    localStorage.setItem(LEGEND_MIN_KEY, min ? '1' : '0')
+  } catch {
+    /* no storage: the choice lasts for this page only */
+  }
+  const el = document.getElementById('legendPanel')
+  el.classList.toggle('min', min)
+  const btn = document.getElementById('legendMin')
+  btn.setAttribute('aria-expanded', String(!min))
+  btn.setAttribute('aria-label', min ? 'Show the legend' : 'Minimize the legend')
+  btn.title = min ? 'Show the legend' : 'Minimize the legend'
+  btn.innerHTML = min ? 'Legend &#9656;' : '&#8211;'
 }
 
 // Adds the legend to the right of an exported picture.
@@ -818,4 +845,8 @@ function updateSeparationBox() {
 // page wiring, run by main.ts in the original order
 export function init() {
   cy.on('layoutstop dragfree', scheduleSeparation)
+  document.getElementById('legendMin').addEventListener('click', () => {
+    setLegendMinimized(!document.getElementById('legendPanel').classList.contains('min'))
+  })
+  setLegendMinimized(legendMinimized())
 }
