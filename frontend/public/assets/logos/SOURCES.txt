@@ -1,0 +1,15 @@
+Logos of the resources NORMA 3.0 imports from or sends data to. They identify
+these resources and remain the property of their owners. Downloaded on
+25 November 2026 and resized to 64 px height.
+
+string.png     https://string-db.org/images/STRING_logo.png
+reactome.png   https://reactome.org/templates/favourite/images/logo/logo.png
+omnipath.png   https://omnipathdb.org/img/omnipath_logo.png
+ndex.png       https://www.ndexbio.org/ndex-logo.svg
+intact.png     https://www.ebi.ac.uk/intact/assets/images/logo/intact_logo.svg
+               (white logo, shown on IntAct's header color #007c82)
+go.png         https://geneontology.org/assets/go-logo.large.png
+cytoscape.png  https://cytoscape.org/images/logo/cy3logoOrange.svg
+gephi.png      https://gephi.org/gephi-logo.svg
+../arena3d-logo.png  https://arena3d.org/images/logo_dark.webp
+../flame-logo.png    https://flame-enrich.org/flame-logo.png

@@ -3919,3 +3919,60 @@ details > summary + .menu-sep {
   border-radius: 8px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
 }
+
+/* logos of the databases NORMA imports from and the tools it exports to */
+.db-brand {
+  margin: 0 0 6px;
+}
+.db-brand img {
+  max-width: 100%;
+}
+.tool-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 2px 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tool-logos a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.tool-logos img {
+  height: 24px;
+  width: auto;
+}
+.welcome-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 4px 0 14px;
+}
+.welcome-logos .wl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.welcome-logos a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+}
+.welcome-logos img {
+  height: 26px;
+  width: auto;
+  display: block;
+}
