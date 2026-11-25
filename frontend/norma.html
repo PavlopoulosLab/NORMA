@@ -550,6 +550,7 @@
           <button id="btnFit3d">Fit to screen</button>
           <button id="btnDeoverlap3d" title="Move overlapping nodes slightly apart, keeping the arrangement">Separate nodes</button>
         </div>
+        <label class="toggle-row" title="When a 3D layout finishes, overlapping nodes are moved slightly apart"><input type="checkbox" id="autoSeparate3d" checked><span class="label">Separate overlapping nodes after each layout</span></label>
         <div id="layout3dStatus" class="status" role="status" aria-live="polite"></div>
         <label class="slider-label" for="spread3d"><span>Spread</span><span id="spread3dValue">1.00×</span></label>
         <input type="range" id="spread3d" min="-2" max="2" step="0.02" value="0">
@@ -739,6 +740,7 @@
           <button id="btnFit">Fit to screen</button>
           <button id="btnDeoverlap" title="Move overlapping nodes slightly apart, keeping the arrangement">Separate nodes</button>
         </div>
+        <label class="toggle-row" title="When a layout finishes, overlapping nodes are moved slightly apart"><input type="checkbox" id="autoSeparate" checked><span class="label">Separate overlapping nodes after each layout</span></label>
         <div id="layoutStatus" class="status" role="status" aria-live="polite"></div>
         <label class="slider-label" for="spreadSlider"><span>Spread</span><span id="spreadValue">1.00×</span></label>
         <input type="range" id="spreadSlider" min="-2" max="2" step="0.02" value="0" aria-describedby="spreadHint">
@@ -2415,7 +2417,7 @@ TP53&#9;NA&#9;NA</pre>
           <li><b>Groups on stacked layers:</b> the 2D layout lies flat and each group gets its own layer, one above the other, so the links between groups run between the layers.</li>
           <li><b>Same as 2D (flat)</b>, <b>Height by hierarchy level</b> and <b>Height by degree</b> keep the 2D layout and add height: none, the level from the top of a hierarchy (following edge directions when edges are directed), or the number of connections, so hubs rise above the rest. <b>Height step</b> sets the distance between levels.</li>
         </ul>
-        <p><b>Spread</b> pushes nodes apart or pulls them together, as in 2D. Double-click the slider to go back to 1×. <b>Separate nodes</b> moves overlapping nodes slightly apart in three dimensions, keeping the arrangement.</p>
+        <p><b>Spread</b> pushes nodes apart or pulls them together, as in 2D. Double-click the slider to go back to 1×. <b>Separate nodes</b> moves overlapping nodes slightly apart in three dimensions, keeping the arrangement. With <b>Separate overlapping nodes after each layout</b> ticked (the default), every new 3D layout is separated before it is shown.</p>
         <h3>Look</h3>
         <ul>
           <li><b>View from</b> turns the camera to the front, top, side or a tilted angle and fits the network.</li>
@@ -2446,7 +2448,7 @@ TP53&#9;NA&#9;NA</pre>
             Strategies 1 and 2 place every node themselves. With them, <b>Layout inside each group</b> can also be <b>Keep the strategy's arrangement</b>; any other choice rearranges each group around where the strategy put it and keeps groups from overlapping.</li>
         </ul>
         <p><b>Group size</b> scales each group's local layout. Force strength runs from 1 to 20 (NORMA's default is 10). <b>Use checked channels only</b> applies to both sides. A group with more than 400 nodes gets 60 random partner links per node instead of links to every other member, to keep the layout fast. While <b>By groups</b> is active, it is also used when a network loads and when you switch annotations.</p>
-        <p><b>Fit to screen</b> zooms to show the whole network. <b>Separate nodes</b> moves nodes that overlap slightly apart, along the lines between them, until none overlap; everything else stays where it is, and the step can be undone. <b>Spread</b> changes how strongly nodes repel each other compared with the pull of their links, from a quarter to four times the strength of the current arrangement. To the right, dense clusters open up and loosely linked parts move apart; to the left, linked nodes are drawn together while nodes are kept from overlapping. It starts from the current positions and keeps the overall arrangement, and going back to 1× restores them. Double-click the slider to go back to 1×. Moving nodes by hand starts again from their new positions, and running a layout resets it.</p>
+        <p><b>Fit to screen</b> zooms to show the whole network. <b>Separate nodes</b> moves nodes that overlap slightly apart, along the lines between them, until none overlap; everything else stays where it is, and the step can be undone. It also runs by itself after every layout, including the first layout of a new network, while <b>Separate overlapping nodes after each layout</b> is ticked (the default). <b>Spread</b> changes how strongly nodes repel each other compared with the pull of their links, from a quarter to four times the strength of the current arrangement. To the right, dense clusters open up and loosely linked parts move apart; to the left, linked nodes are drawn together while nodes are kept from overlapping. It starts from the current positions and keeps the overall arrangement, and going back to 1× restores them. Double-click the slider to go back to 1×. Moving nodes by hand starts again from their new positions, and running a layout resets it.</p>
 
         <h2 id="help-groups">Node groups</h2>
         <p>Groups are listed <b>A–Z</b> (numbers in numeric order, so Group-2 comes before Group-10). The <b>Order</b> menu under the filter also sorts them by their number of nodes (the count shown on each row), <b>Most nodes first</b> or <b>Fewest nodes first</b> (groups of equal size stay A–Z), or keeps the <b>File order</b> of the annotation file. Nodes in no group always come last. The legend follows the same order, each view remembers the choice, and group colors don't change. Node names in the details panels, and the files in <b>Files</b> and in every file menu (Grouping, Network Profiler, Network Comparison, enrichment) are always listed A–Z.</p>

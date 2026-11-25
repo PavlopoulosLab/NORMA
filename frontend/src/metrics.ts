@@ -1369,13 +1369,17 @@ export function normalizeSpacing(positions, spacing) {
   return out
 }
 
+// Moves the nodes to the given positions; resolves when they have arrived.
 export function applyPositions(positions) {
-  cy.layout({
+  const layout = cy.layout({
     name: 'preset',
     positions: (node) => positions[node.id()] || node.position(),
     animate: cy.nodes().length <= 1500,
     animationDuration: 500,
     fit: true,
     padding: 50,
-  }).run()
+  })
+  const done = layout.promiseOn('layoutstop')
+  layout.run()
+  return done
 }

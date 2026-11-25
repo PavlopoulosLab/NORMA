@@ -398,6 +398,8 @@ export const CONFIG_FIELDS = [
   { id: 'edgeLabelOrientation', prop: 'value' },
   { id: 'edgeLabelSize', prop: 'value' },
   { id: 'labelMinScreenSize', prop: 'value' },
+  { id: 'autoSeparate', prop: 'checked' },
+  { id: 'autoSeparate3d', prop: 'checked' },
   { id: 'edgeOpacity', prop: 'value' },
   { id: 'bundleStrength', prop: 'value' },
   { id: 'valueColumn', prop: 'value' },
